@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# macOS duplicates
+package 2.json
+postcss.config 2.mjs
+tsconfig 2.json

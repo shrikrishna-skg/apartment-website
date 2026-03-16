@@ -1,7 +1,34 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useState } from "react";
+import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import type { Property } from "@/data/site-data";
+
+const containerStyle = {
+  width: "100%",
+  height: "100%",
+  borderRadius: 12,
+};
+
+const mapOptions: google.maps.MapOptions = {
+  disableDefaultUI: false,
+  zoomControl: true,
+  streetViewControl: false,
+  mapTypeControl: false,
+  fullscreenControl: true,
+  styles: [
+    {
+      featureType: "poi",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }],
+    },
+    {
+      featureType: "transit",
+      elementType: "labels",
+      stylers: [{ visibility: "off" }],
+    },
+  ],
+};
 
 interface PropertyMapProps {
   /** Single property view */
@@ -17,24 +44,33 @@ export default function PropertyMap({
   properties,
   height = 400,
 }: PropertyMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [activePopup, setActivePopup] = useState<string | null>(null);
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "",
+  });
+
+  const [activeMarker, setActiveMarker] = useState<string | null>(null);
 
   const allProperties = properties ?? (property ? [property] : []);
 
-  const center: [number, number] =
+  const center =
     allProperties.length === 1
-      ? [allProperties[0].lat, allProperties[0].lng]
-      : [35.8512, -86.358]; // Murfreesboro center
+      ? { lat: allProperties[0].lat, lng: allProperties[0].lng }
+      : { lat: 35.8512, lng: -86.358 }; // Murfreesboro center
 
   const zoom = allProperties.length === 1 ? 16 : 14;
 
-  useEffect(() => {
-    setLoaded(true);
-  }, []);
+  const onLoad = useCallback(
+    (map: google.maps.Map) => {
+      if (allProperties.length > 1) {
+        const bounds = new google.maps.LatLngBounds();
+        allProperties.forEach((p) => bounds.extend({ lat: p.lat, lng: p.lng }));
+        map.fitBounds(bounds, 60);
+      }
+    },
+    [allProperties],
+  );
 
-  if (!loaded) {
+  if (!isLoaded) {
     return (
       <div
         style={{
@@ -54,37 +90,60 @@ export default function PropertyMap({
     );
   }
 
-  return <LeafletMap
-    allProperties={allProperties}
-    center={center}
-    zoom={zoom}
-    height={height}
-    activePopup={activePopup}
-    setActivePopup={setActivePopup}
-  />;
-}
-
-/* ── Leaflet map (lazy-loaded to avoid SSR issues) ── */
-
-import dynamic from "next/dynamic";
-
-const LeafletMap = dynamic(() => import("./LeafletMapInner"), {
-  ssr: false,
-  loading: () => (
-    <div
-      style={{
-        width: "100%",
-        height: 400,
-        borderRadius: 12,
-        background: "#f3f4f6",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#9ca3af",
-        fontSize: 14,
-      }}
-    >
-      Loading map...
+  return (
+    <div style={{ width: "100%", height, borderRadius: 12, overflow: "hidden" }}>
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={center}
+        zoom={zoom}
+        onLoad={onLoad}
+        options={mapOptions}
+      >
+        {allProperties.map((p) => (
+          <Marker
+            key={p.id}
+            position={{ lat: p.lat, lng: p.lng }}
+            title={p.name}
+            onClick={() => setActiveMarker(p.id)}
+          >
+            {activeMarker === p.id && (
+              <InfoWindow onCloseClick={() => setActiveMarker(null)}>
+                <div style={{ padding: 4, minWidth: 160 }}>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      color: "#1f2937",
+                    }}
+                  >
+                    {p.name}
+                  </p>
+                  <p
+                    style={{
+                      margin: "4px 0 0",
+                      fontSize: 12,
+                      color: "#6b7280",
+                    }}
+                  >
+                    {p.address}
+                  </p>
+                  <p
+                    style={{
+                      margin: "6px 0 0",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#2563eb",
+                    }}
+                  >
+                    From ${p.startingPrice}/mo
+                  </p>
+                </div>
+              </InfoWindow>
+            )}
+          </Marker>
+        ))}
+      </GoogleMap>
     </div>
-  ),
-});
+  );
+}
