@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import {
@@ -61,6 +62,7 @@ export default function PropertiesPage() {
   const [selectedBedrooms, setSelectedBedrooms] = useState("");
   const [selectedPrice, setSelectedPrice] = useState("");
   const [viewMode, setViewMode] = useState<"properties" | "floorplans">("properties");
+  const router = useRouter();
 
   const filteredProperties = useMemo(() => {
     return PROPERTIES.filter((property) => {
@@ -333,7 +335,16 @@ export default function PropertiesPage() {
                     key={property.id}
                     variants={fadeUp}
                     transition={{ duration: 0.5 }}
-                    className="glass group overflow-hidden"
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/properties/${property.slug}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        router.push(`/properties/${property.slug}`);
+                      }
+                    }}
+                    className="glass group overflow-hidden cursor-pointer hover:border-blue-300 transition-all"
                   >
                     {/* Real property image */}
                     <div className="img-container relative" style={{ aspectRatio: "16/10" }}>
@@ -406,13 +417,15 @@ export default function PropertiesPage() {
                       {/* Actions */}
                       <div className="flex gap-3">
                         <Link
-                          href="/schedule-tour"
+                          href={`/schedule-tour?property=${property.slug}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="btn-outline flex-1 justify-center text-center"
                         >
                           Schedule Tour
                         </Link>
                         <Link
                           href={`/properties/${property.slug}`}
+                          onClick={(e) => e.stopPropagation()}
                           className="btn-glow flex-1 justify-center text-center"
                         >
                           View Details
@@ -461,7 +474,16 @@ export default function PropertiesPage() {
                   key={`${fp.propertySlug}-${fp.name}-${i}`}
                   variants={fadeUp}
                   transition={{ duration: 0.5 }}
-                  className="glass flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between"
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => router.push(`/properties/${fp.propertySlug}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(`/properties/${fp.propertySlug}`);
+                    }
+                  }}
+                  className="glass flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between cursor-pointer hover:border-blue-300 transition-all"
                 >
                   <div className="flex-1">
                     <div className="mb-1 flex items-center gap-3">
@@ -499,11 +521,11 @@ export default function PropertiesPage() {
                       <div className="text-xs text-gray-500">/mo</div>
                     </div>
                     <div className="flex gap-3">
-                      <Link href="/schedule-tour" className="btn-outline">
+                      <Link href={`/schedule-tour?property=${fp.propertySlug}`} onClick={(e) => e.stopPropagation()} className="btn-outline">
                         Tour
                       </Link>
-                      <Link href={`/properties/${fp.propertySlug}`} className="btn-glow">
-                        Apply
+                      <Link href={`/properties/${fp.propertySlug}`} onClick={(e) => e.stopPropagation()} className="btn-glow">
+                        Details
                       </Link>
                     </div>
                   </div>

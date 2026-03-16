@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -63,6 +64,7 @@ const AMENITIES = [
 /* ──────────────────────────── component ──────────────────────────── */
 
 export default function HomePage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
 
   return (
@@ -381,6 +383,7 @@ export default function HomePage() {
               {[
                 {
                   name: "College Place",
+                  slug: "college-place-apartments",
                   address: "1002 Old Lascassas Rd",
                   image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a542d9281_CollegePlaceBirdeyeview1.png",
                   color: "#1a73e8",
@@ -388,6 +391,7 @@ export default function HomePage() {
                 },
                 {
                   name: "College Center",
+                  slug: "college-center-apartments",
                   address: "1023 Old Lascassas Rd",
                   image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/0955675c5_CollegeCenter1.jpg",
                   color: "#7c3aed",
@@ -395,6 +399,7 @@ export default function HomePage() {
                 },
                 {
                   name: "College Pointe",
+                  slug: "college-pointe-apartments",
                   address: "915 Brown Dr",
                   image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/556db2975_college-center-murfreesboro-tn-building-photo.jpg",
                   color: "#0d9488",
@@ -402,6 +407,7 @@ export default function HomePage() {
                 },
                 {
                   name: "University Center",
+                  slug: "university-center-apartments",
                   address: "1030 Greenland Dr",
                   image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/3bef6ff09_Universitycenterapartments.jpg",
                   color: "#ea580c",
@@ -411,6 +417,15 @@ export default function HomePage() {
                 <motion.div
                   key={property.name}
                   variants={fadeUp}
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => router.push(`/properties/${property.slug}`)}
+                  onKeyDown={(e: React.KeyboardEvent) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      router.push(`/properties/${property.slug}`);
+                    }
+                  }}
                   className="relative rounded-xl overflow-hidden group cursor-pointer flex-shrink-0 snap-start"
                   style={{ aspectRatio: "4 / 3", width: "calc(33.333% - 0.67rem)", minWidth: "280px" }}
                 >

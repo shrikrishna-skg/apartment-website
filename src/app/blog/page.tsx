@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Search, ArrowRight } from "lucide-react";
 import { BLOG_POSTS } from "@/data/site-data";
@@ -16,6 +17,7 @@ const POST_COLORS = [
 ];
 
 export default function BlogPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
 
@@ -97,7 +99,16 @@ export default function BlogPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: idx * 0.1 }}
-                className="glass group overflow-hidden transition-all hover:border-blue-200"
+                role="link"
+                tabIndex={0}
+                onClick={() => router.push(`/blog/${post.slug}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`/blog/${post.slug}`);
+                  }
+                }}
+                className="glass group overflow-hidden transition-all hover:border-blue-200 cursor-pointer"
               >
                 {/* Gradient Image Placeholder */}
                 <div
@@ -116,7 +127,7 @@ export default function BlogPage() {
 
                   {/* Title */}
                   <h2 className="mt-3 text-xl font-semibold text-gray-900 transition-colors group-hover:text-blue-500">
-                    <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                    <Link href={`/blog/${post.slug}`} onClick={(e) => e.stopPropagation()}>{post.title}</Link>
                   </h2>
 
                   {/* Date & Read Time */}
@@ -134,6 +145,7 @@ export default function BlogPage() {
                   {/* Read More */}
                   <Link
                     href={`/blog/${post.slug}`}
+                    onClick={(e) => e.stopPropagation()}
                     className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-500"
                   >
                     Read More
