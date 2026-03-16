@@ -54,6 +54,8 @@ export interface Property {
   utilities: string[];
   leaseTerms: string[];
   photos: string[];
+  lat: number;
+  lng: number;
 }
 
 export interface FloorPlan {
@@ -159,6 +161,8 @@ export const PROPERTIES: Property[] = [
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a1d476e80_CollegePlaceLeftsideDoorview.png",
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/506200265_CollegePlaceRightsideview.png",
     ],
+    lat: 35.8525,
+    lng: -86.3546,
   },
   {
     id: "2",
@@ -209,6 +213,8 @@ export const PROPERTIES: Property[] = [
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/610804cc0_CollegeCenter3.jpg",
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a542d9281_CollegePlaceBirdeyeview1.png",
     ],
+    lat: 35.8532,
+    lng: -86.3538,
   },
   {
     id: "3",
@@ -252,6 +258,8 @@ export const PROPERTIES: Property[] = [
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/e28987513_college-center-murfreesboro-tn-living-area--shared-unit.jpg",
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6626e8df8_Screenshot_31-7-2024_105220_earthgooglecom.jpg",
     ],
+    lat: 35.8489,
+    lng: -86.3601,
   },
   {
     id: "4",
@@ -311,6 +319,8 @@ export const PROPERTIES: Property[] = [
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/630fe1a3d_72eb0c956b0efaeac8dde4b1383d83be.png",
       "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/f6c5cf5bb_b98e1bfe804e4e69ed898f0c27ff1ac3.png",
     ],
+    lat: 35.8497,
+    lng: -86.3635,
   },
 ];
 

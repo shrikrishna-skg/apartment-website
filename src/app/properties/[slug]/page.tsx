@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { PROPERTIES, SITE } from "@/data/site-data";
+import PropertyMap from "@/components/PropertyMap";
 import type { FloorPlan, Property } from "@/data/site-data";
 import { motion } from "framer-motion";
 import {
@@ -666,6 +667,23 @@ export default function PropertyDetailPage() {
           </aside>
         </div>
       </div>
+
+      {/* ── Location Map ── */}
+      <motion.section
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-50px" }}
+        variants={fadeUp}
+        custom={0}
+        className="max-w-7xl mx-auto px-4 sm:px-6 pb-12"
+      >
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-blue-600" />
+          Location
+        </h2>
+        <p className="text-sm text-gray-500 mb-6">{property.address}</p>
+        <PropertyMap property={property} height={420} />
+      </motion.section>
 
       {/* ── Section 5: Other Properties ── */}
       <motion.section

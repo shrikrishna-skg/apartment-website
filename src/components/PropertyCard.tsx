@@ -12,228 +12,230 @@ interface PropertyCardProps {
 
 export default function PropertyCard({ property }: PropertyCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      whileHover={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        borderRadius: 12,
-        background: "#ffffff",
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        transition: "box-shadow 300ms ease",
-      }}
+    <Link
+      href={`/properties/${property.slug}`}
+      style={{ textDecoration: "none", display: "block" }}
     >
-      {/* Image Container - 16:10 aspect ratio */}
-      <Link
-        href={`/properties/${property.slug}`}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-40px" }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        whileHover={{ boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
         style={{
-          display: "block",
           position: "relative",
-          aspectRatio: "16 / 10",
           overflow: "hidden",
+          borderRadius: 12,
+          background: "#ffffff",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+          transition: "box-shadow 300ms ease",
+          cursor: "pointer",
         }}
       >
-        <Image
-          src={property.image}
-          alt={property.name}
-          fill
-          unoptimized
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        {/* Image Container - 16:10 aspect ratio */}
+        <div
           style={{
-            objectFit: "cover",
-            transition: "transform 300ms ease",
-          }}
-          className="group-hover:scale-[1.03]"
-        />
-
-        {/* Price Badge - top right */}
-        <span
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            padding: "6px 12px",
-            fontSize: 13,
-            fontWeight: 600,
-            borderRadius: 6,
-            background: "rgba(17, 24, 39, 0.85)",
-            color: "#ffffff",
-            backdropFilter: "blur(4px)",
-            letterSpacing: "0.01em",
+            display: "block",
+            position: "relative",
+            aspectRatio: "16 / 10",
+            overflow: "hidden",
           }}
         >
-          Starting at ${property.startingPrice}/mo
-        </span>
+          <Image
+            src={property.image}
+            alt={property.name}
+            fill
+            unoptimized
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            style={{
+              objectFit: "cover",
+              transition: "transform 300ms ease",
+            }}
+            className="group-hover:scale-[1.03]"
+          />
 
-        {/* Popular Badge - top left */}
-        {property.featured && (
+          {/* Price Badge - top right */}
           <span
             style={{
               position: "absolute",
               top: 12,
-              left: 12,
-              padding: "5px 12px",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.03em",
-              textTransform: "uppercase",
+              right: 12,
+              padding: "6px 12px",
+              fontSize: 13,
+              fontWeight: 600,
               borderRadius: 6,
-              background: "#f59e0b",
+              background: "rgba(17, 24, 39, 0.85)",
               color: "#ffffff",
-              boxShadow: "0 1px 4px rgba(245,158,11,0.4)",
+              backdropFilter: "blur(4px)",
+              letterSpacing: "0.01em",
             }}
           >
-            Popular
-          </span>
-        )}
-      </Link>
-
-      {/* Content - clickable area */}
-      <Link
-        href={`/properties/${property.slug}`}
-        style={{ textDecoration: "none", display: "block", padding: "16px 18px 12px" }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {/* Property Name */}
-          <span
-            style={{
-              fontSize: 19,
-              fontWeight: 700,
-              color: "#1f2937",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.3,
-            }}
-          >
-            {property.name}
+            Starting at ${property.startingPrice}/mo
           </span>
 
-          {/* Address */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 5,
-            }}
-          >
-            <MapPin
-              size={14}
-              style={{ color: "#6b7280", flexShrink: 0 }}
-            />
+          {/* Popular Badge - top left */}
+          {property.featured && (
             <span
               style={{
-                fontSize: 13,
-                color: "#6b7280",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                position: "absolute",
+                top: 12,
+                left: 12,
+                padding: "5px 12px",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "0.03em",
+                textTransform: "uppercase",
+                borderRadius: 6,
+                background: "#f59e0b",
+                color: "#ffffff",
+                boxShadow: "0 1px 4px rgba(245,158,11,0.4)",
               }}
             >
-              {property.address}
+              Popular
             </span>
-          </div>
+          )}
+        </div>
 
-          {/* Stats Row */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 18,
-              paddingTop: 4,
-            }}
-          >
-            <div
+        {/* Content */}
+        <div style={{ padding: "20px 20px 16px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            {/* Property Name */}
+            <span
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 13,
-                color: "#374151",
+                fontSize: 19,
+                fontWeight: 700,
+                color: "#1f2937",
+                letterSpacing: "-0.01em",
+                lineHeight: 1.3,
               }}
             >
-              <Bed size={15} style={{ color: "#3b82f6" }} />
-              <span>{property.beds} Beds</span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 13,
-                color: "#374151",
-              }}
-            >
-              <Bath size={15} style={{ color: "#3b82f6" }} />
-              <span>{property.baths} Baths</span>
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                fontSize: 13,
-                color: "#374151",
-              }}
-            >
-              <Maximize size={15} style={{ color: "#3b82f6" }} />
-              <span>{property.sqft} sqft</span>
-            </div>
-          </div>
+              {property.name}
+            </span>
 
-          {/* Amenity Tags */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 6,
-              paddingTop: 4,
-            }}
-          >
-            {property.tags.map((tag) => (
+            {/* Address */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              <MapPin
+                size={14}
+                style={{ color: "#6b7280", flexShrink: 0 }}
+              />
               <span
-                key={tag}
                 style={{
-                  padding: "4px 10px",
-                  fontSize: 11,
-                  fontWeight: 500,
-                  borderRadius: 9999,
-                  background: "#f3f4f6",
-                  color: "#4b5563",
-                  letterSpacing: "0.01em",
-                  border: "1px solid #e5e7eb",
+                  fontSize: 13,
+                  color: "#6b7280",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {tag}
+                {property.address}
               </span>
-            ))}
+            </div>
+
+            {/* Stats Row */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
+                paddingTop: 2,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  color: "#374151",
+                }}
+              >
+                <Bed size={15} style={{ color: "#3b82f6" }} />
+                <span>{property.beds} Beds</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  color: "#374151",
+                }}
+              >
+                <Bath size={15} style={{ color: "#3b82f6" }} />
+                <span>{property.baths} Baths</span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 13,
+                  color: "#374151",
+                }}
+              >
+                <Maximize size={15} style={{ color: "#3b82f6" }} />
+                <span>{property.sqft} sqft</span>
+              </div>
+            </div>
+
+            {/* Amenity Tags */}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 8,
+                paddingTop: 2,
+              }}
+            >
+              {property.tags.map((tag) => (
+                <span
+                  key={tag}
+                  style={{
+                    padding: "5px 12px",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    borderRadius: 9999,
+                    background: "#f3f4f6",
+                    color: "#4b5563",
+                    letterSpacing: "0.01em",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </Link>
 
-      {/* Divider */}
-      <div
-        style={{
-          height: 1,
-          background: "#e5e7eb",
-          margin: "0 18px",
-        }}
-      />
+        {/* Divider */}
+        <div
+          style={{
+            height: 1,
+            background: "#e5e7eb",
+            margin: "0 20px",
+          }}
+        />
 
-      {/* Action Row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: "8px 18px 18px",
-        }}
-      >
+        {/* Action Row */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "14px 20px 20px",
+          }}
+        >
         <Link
           href={`/schedule-tour?property=${property.slug}`}
+          onClick={(e) => e.stopPropagation()}
           style={{
             flex: 1,
             display: "block",
@@ -261,6 +263,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         </Link>
         <Link
           href="/apply"
+          onClick={(e) => e.stopPropagation()}
           style={{
             flex: 1,
             display: "block",
@@ -288,7 +291,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
         >
           Apply Now
         </Link>
-      </div>
-    </motion.div>
+          </div>
+        </motion.div>
+      </Link>
   );
 }

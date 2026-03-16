@@ -562,13 +562,14 @@ export default function HomePage() {
           <motion.div
             style={{
               display: "grid",
+              padding: "0.5rem 0",
               gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: "1.5rem",
+              gap: "2rem",
             }}
             variants={stagger}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
+            viewport={{ once: true, margin: "-50px" }}
           >
             {PROPERTIES.map((property) => (
               <motion.div key={property.id} variants={fadeUp}>
