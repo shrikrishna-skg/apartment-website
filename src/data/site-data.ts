@@ -56,6 +56,7 @@ export interface Property {
   photos: string[];
   lat: number;
   lng: number;
+  matterportId?: string;
 }
 
 export interface FloorPlan {
@@ -163,6 +164,7 @@ export const PROPERTIES: Property[] = [
     ],
     lat: 35.8553144,
     lng: -86.3648509,
+    matterportId: "RsoupLY68y4",
   },
   {
     id: "2",
@@ -215,6 +217,7 @@ export const PROPERTIES: Property[] = [
     ],
     lat: 35.856177,
     lng: -86.3657117,
+    matterportId: "MiqAALNUxjg",
   },
   {
     id: "3",
