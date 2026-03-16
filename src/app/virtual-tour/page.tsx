@@ -34,20 +34,21 @@ const itemVariants = {
 
 export default function VirtualTourPage() {
   const [selectedProperty, setSelectedProperty] = useState(0);
+  const [selectedTour, setSelectedTour] = useState(0);
   const router = useRouter();
 
-  const property = PROPERTIES[selectedProperty];
-  const hasTour = !!property.matterportId;
-
-  /* Properties that have tours come first */
-  const sortedProperties = [...PROPERTIES].sort((a, b) => {
-    if (a.matterportId && !b.matterportId) return -1;
-    if (!a.matterportId && b.matterportId) return 1;
-    return 0;
-  });
-
-  /* Find the current property in sorted list for display */
   const currentProperty = PROPERTIES[selectedProperty];
+  const tours = currentProperty.matterportTours ?? [];
+  const hasTour = tours.length > 0 || !!currentProperty.matterportId;
+  const activeTourId =
+    tours.length > 0
+      ? tours[selectedTour]?.id
+      : currentProperty.matterportId;
+
+  const handlePropertySelect = (idx: number) => {
+    setSelectedProperty(idx);
+    setSelectedTour(0);
+  };
 
   return (
     <>
@@ -94,7 +95,7 @@ export default function VirtualTourPage() {
             {PROPERTIES.map((p, idx) => (
               <button
                 key={p.id}
-                onClick={() => setSelectedProperty(idx)}
+                onClick={() => handlePropertySelect(idx)}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
                   selectedProperty === idx
                     ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200"
@@ -128,25 +129,47 @@ export default function VirtualTourPage() {
           >
             {hasTour ? (
               /* Live Matterport 3D Tour Embed */
-              <div className="relative w-full" style={{ height: "min(70vh, 600px)" }}>
-                <iframe
-                  src={`https://my.matterport.com/show/?m=${currentProperty.matterportId}&play=1&qs=1`}
-                  width="100%"
-                  height="100%"
-                  frameBorder="0"
-                  allow="fullscreen; xr-spatial-tracking"
-                  allowFullScreen
-                  style={{ border: 0 }}
-                  title={`${currentProperty.name} 3D Tour`}
-                />
-                {/* Overlay label */}
-                <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-xs text-white font-medium">
-                  <Box size={12} />
-                  Matterport 3D Tour
-                </div>
-                <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-xs text-white font-medium">
-                  <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                  Interactive
+              <div>
+                {/* Tour tab selector (when multiple tours) */}
+                {tours.length > 1 && (
+                  <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50/50">
+                    <span className="text-xs font-medium text-gray-500 mr-1">Floor Plan:</span>
+                    {tours.map((tour, idx) => (
+                      <button
+                        key={tour.id}
+                        onClick={() => setSelectedTour(idx)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                          selectedTour === idx
+                            ? "bg-[#1a73e8] text-white shadow-md"
+                            : "bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600"
+                        }`}
+                      >
+                        {tour.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="relative w-full" style={{ height: "min(70vh, 600px)" }}>
+                  <iframe
+                    key={activeTourId}
+                    src={`https://my.matterport.com/show/?m=${activeTourId}&play=1&qs=1`}
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    allow="fullscreen; xr-spatial-tracking"
+                    allowFullScreen
+                    style={{ border: 0 }}
+                    title={`${currentProperty.name} 3D Tour${tours.length > 1 ? ` - ${tours[selectedTour]?.label}` : ""}`}
+                  />
+                  {/* Overlay label */}
+                  <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-xs text-white font-medium">
+                    <Box size={12} />
+                    {tours.length > 1 ? tours[selectedTour]?.label : "Matterport 3D Tour"}
+                  </div>
+                  <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-xs text-white font-medium">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                    Interactive
+                  </div>
                 </div>
               </div>
             ) : (
@@ -316,11 +339,11 @@ export default function VirtualTourPage() {
                   variants={itemVariants}
                   role="link"
                   tabIndex={0}
-                  onClick={() => setSelectedProperty(idx)}
+                  onClick={() => handlePropertySelect(idx)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      setSelectedProperty(idx);
+                      handlePropertySelect(idx);
                       window.scrollTo({ top: 0, behavior: "smooth" });
                     }
                   }}
@@ -334,7 +357,11 @@ export default function VirtualTourPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <h3 className="font-bold text-gray-900">{p.name}</h3>
-                        {p.matterportId ? (
+                        {p.matterportTours && p.matterportTours.length > 0 ? (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 border border-teal-200 font-bold">
+                            {p.matterportTours.length} 3D TOUR{p.matterportTours.length > 1 ? "S" : ""}
+                          </span>
+                        ) : p.matterportId ? (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 border border-teal-200 font-bold">
                             3D TOUR
                           </span>
@@ -365,7 +392,7 @@ export default function VirtualTourPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSelectedProperty(idx);
+                        handlePropertySelect(idx);
                         window.scrollTo({ top: 0, behavior: "smooth" });
                       }}
                       className={`shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${

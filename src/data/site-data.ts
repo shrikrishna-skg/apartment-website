@@ -57,6 +57,7 @@ export interface Property {
   lat: number;
   lng: number;
   matterportId?: string;
+  matterportTours?: { id: string; label: string }[];
 }
 
 export interface FloorPlan {
@@ -165,6 +166,10 @@ export const PROPERTIES: Property[] = [
     lat: 35.8553144,
     lng: -86.3648509,
     matterportId: "RsoupLY68y4",
+    matterportTours: [
+      { id: "RsoupLY68y4", label: "1 Bedroom" },
+      { id: "19FrAE6LcKs", label: "2 Bedroom" },
+    ],
   },
   {
     id: "2",
@@ -218,6 +223,11 @@ export const PROPERTIES: Property[] = [
     lat: 35.856177,
     lng: -86.3657117,
     matterportId: "MiqAALNUxjg",
+    matterportTours: [
+      { id: "MiqAALNUxjg", label: "2 Bed / 2 Bath" },
+      { id: "7p3t4qWMZe4", label: "Studio" },
+      { id: "79gLjrXJuqu", label: "4 Bed / 4 Bath" },
+    ],
   },
   {
     id: "3",
