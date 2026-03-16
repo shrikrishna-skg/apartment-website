@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { SITE, PROPERTIES, type Property } from "@/data/site-data";
 import PropertyCard from "@/components/PropertyCard";
+import PropertyMap from "@/components/PropertyMap";
 
 /* ──────────────────────────── animation helpers ──────────────────────────── */
 
@@ -731,31 +732,14 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            {/* Map placeholder */}
+            {/* Live Map — all properties */}
             <motion.div
               variants={fadeUp}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
-              style={{
-                minHeight: 360,
-                borderRadius: "var(--shape-xl)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "linear-gradient(135deg, rgba(26,115,232,0.04), rgba(26,115,232,0.02), rgba(6,182,212,0.04))",
-                border: "1px solid var(--outline-variant)",
-              }}
             >
-              <div style={{ textAlign: "center" }}>
-                <Map size={48} style={{ margin: "0 auto 0.75rem", color: "var(--outline)", opacity: 0.5 }} />
-                <p style={{ fontSize: "0.875rem", color: "var(--outline)" }}>
-                  Interactive Map Placeholder
-                </p>
-                <p style={{ marginTop: "0.25rem", fontSize: "0.75rem", color: "var(--outline-variant)" }}>
-                  {SITE.address.full}
-                </p>
-              </div>
+              <PropertyMap properties={PROPERTIES} height={360} />
             </motion.div>
           </div>
         </div>

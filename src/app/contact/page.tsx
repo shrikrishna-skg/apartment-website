@@ -10,7 +10,8 @@ import {
   Clock,
   CheckCircle2,
 } from "lucide-react";
-import { SITE } from "@/data/site-data";
+import { SITE, PROPERTIES } from "@/data/site-data";
+import PropertyMap from "@/components/PropertyMap";
 
 const subjectOptions = [
   "General Inquiry",
@@ -353,46 +354,8 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              {/* Map Placeholder */}
-              <div
-                className="glass overflow-hidden"
-                style={{ minHeight: "240px" }}
-              >
-                <div
-                  className="w-full h-full min-h-[240px] flex items-center justify-center relative"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1), rgba(6,182,212,0.15))",
-                  }}
-                >
-                  {/* Grid overlay */}
-                  <div
-                    className="absolute inset-0 opacity-10"
-                    style={{
-                      backgroundImage:
-                        "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-                      backgroundSize: "30px 30px",
-                    }}
-                  />
-                  <div className="text-center z-10">
-                    <MapPin
-                      size={32}
-                      className="text-blue-600 mx-auto mb-2"
-                    />
-                    <p className="text-sm text-gray-700 font-medium">
-                      {SITE.address.full}
-                    </p>
-                    <a
-                      href={SITE.mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-blue-600 hover:text-blue-500 transition-colors mt-1 inline-block"
-                    >
-                      View on Google Maps
-                    </a>
-                  </div>
-                </div>
-              </div>
+              {/* Live Map — all properties */}
+              <PropertyMap properties={PROPERTIES} height={280} />
             </motion.div>
           </div>
         </div>

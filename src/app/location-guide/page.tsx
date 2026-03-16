@@ -18,7 +18,8 @@ import {
   DollarSign,
   Star,
 } from "lucide-react";
-import { NEARBY_PLACES, SITE } from "@/data/site-data";
+import { NEARBY_PLACES, SITE, PROPERTIES } from "@/data/site-data";
+import PropertyMap from "@/components/PropertyMap";
 
 const iconMap: Record<string, React.ElementType> = {
   GraduationCap,
@@ -260,7 +261,7 @@ export default function LocationGuidePage() {
             </div>
           </motion.section>
 
-          {/* Map Placeholder */}
+          {/* Live Map — all properties */}
           <motion.section
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -269,33 +270,9 @@ export default function LocationGuidePage() {
             className="mb-20"
           >
             <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
-              Our Location
+              Our Locations
             </h2>
-            <div className="glass overflow-hidden">
-              <div className="relative h-80 sm:h-96 bg-gradient-to-br from-blue-50 via-blue-50/50 to-cyan-50/50 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.15),transparent_70%)]" />
-                <div className="text-center relative z-10">
-                  <div className="w-16 h-16 rounded-full bg-[#1a73e8] flex items-center justify-center mx-auto mb-4 animate-pulse-glow">
-                    <Navigation size={28} className="text-white" />
-                  </div>
-                  <p className="text-xl font-semibold text-gray-900 mb-2">
-                    Interactive Map
-                  </p>
-                  <p className="text-gray-500 text-sm mb-4">
-                    {SITE.address.full}
-                  </p>
-                  <a
-                    href={SITE.mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-glow inline-flex items-center gap-2 text-sm"
-                  >
-                    <MapPin size={16} />
-                    View on Google Maps
-                  </a>
-                </div>
-              </div>
-            </div>
+            <PropertyMap properties={PROPERTIES} height={420} />
           </motion.section>
 
           {/* Bottom CTA */}
