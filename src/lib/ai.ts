@@ -1,6 +1,11 @@
 import Groq from "groq-sdk";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Lazy-init to avoid build-time crash when GROQ_API_KEY isn't set
+let _groq: Groq | null = null;
+function getGroq() {
+  if (!_groq) _groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "" });
+  return _groq;
+}
 
 const SYSTEM_PROMPT = `You are a deeply empathetic, thoughtful AI assistant for College Place Apartments — student housing near MTSU in Murfreesboro, TN.
 
@@ -99,7 +104,7 @@ NEVER add [SUGGEST_TICKET] for:
 export async function chatWithGroq(
   messages: { role: "user" | "assistant"; content: string }[]
 ) {
-  const response = await groq.chat.completions.create({
+  const response = await getGroq().chat.completions.create({
     model: "llama-3.3-70b-versatile",
     messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
     temperature: 0.55,
