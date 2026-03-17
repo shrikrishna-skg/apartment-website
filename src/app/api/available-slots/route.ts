@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-
-const ALL_SLOTS = [
-  "9:00 AM",
-  "10:00 AM",
-  "11:00 AM",
-  "1:00 PM",
-  "2:00 PM",
-  "3:00 PM",
-  "4:00 PM",
-];
+import {
+  getBusyPeriods,
+  generateAllSlots,
+  isSlotBusy,
+  timeToMinutes,
+} from "@/lib/google-calendar";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,25 +27,60 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: bookings, error } = await supabase
-      .from("tour_bookings")
-      .select("tour_time")
-      .eq("tour_date", date)
-      .neq("status", "cancelled");
+    // Fetch busy periods from Google Calendar AND Supabase bookings in parallel
+    const [calendarBusy, supabaseResult] = await Promise.all([
+      getBusyPeriods(date),
+      supabase
+        .from("tour_bookings")
+        .select("tour_time")
+        .eq("tour_date", date)
+        .neq("status", "cancelled"),
+    ]);
 
-    if (error) {
+    if (supabaseResult.error) {
       return NextResponse.json(
-        { error: error.message },
+        { error: supabaseResult.error.message },
         { status: 400 }
       );
     }
 
-    const bookedTimes = new Set(bookings.map((b) => b.tour_time));
-    const availableSlots = ALL_SLOTS.filter((slot) => !bookedTimes.has(slot));
+    // Build a set of booked time strings from Supabase
+    const supabaseBookedTimes = new Set(
+      (supabaseResult.data || []).map((b) => b.tour_time)
+    );
+
+    // Generate all 10-minute slots and filter out busy ones
+    const allSlots = generateAllSlots();
+    const availableSlots = allSlots.filter((slot) => {
+      // Check if booked in Supabase
+      if (supabaseBookedTimes.has(slot)) return false;
+      // Check if overlaps with any Google Calendar event
+      const slotMin = timeToMinutes(slot);
+      if (isSlotBusy(slotMin, calendarBusy)) return false;
+      return true;
+    });
+
+    // Also filter out past slots if the date is today
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+    let finalSlots = availableSlots;
+
+    if (date === todayStr) {
+      // Get current time in Central Time (approximate: UTC-6 for CST, UTC-5 for CDT)
+      const centralNow = new Date(
+        now.toLocaleString("en-US", { timeZone: "America/Chicago" })
+      );
+      const currentMinutes = centralNow.getHours() * 60 + centralNow.getMinutes();
+      // Only show slots that start at least 30 minutes from now
+      finalSlots = availableSlots.filter(
+        (slot) => timeToMinutes(slot) > currentMinutes + 30
+      );
+    }
 
     return NextResponse.json({
       date,
-      availableSlots,
+      availableSlots: finalSlots,
+      totalSlots: allSlots.length,
     });
   } catch {
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { sendStaffNotification } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,26 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Send staff notification (best-effort)
+    try {
+      const details = [
+        `Apartment: ${body.apartment}`,
+        body.category ? `Category: ${body.category}` : null,
+        `Urgency: ${body.urgency || "medium"}`,
+        body.phone ? `Phone: ${body.phone}` : null,
+        `\nDescription:\n${body.description}`,
+      ].filter(Boolean).join("\n");
+
+      await sendStaffNotification({
+        type: "maintenance",
+        name: body.full_name,
+        email: body.email,
+        details,
+      });
+    } catch {
+      // Email is best-effort
     }
 
     return NextResponse.json(data, { status: 201 });

@@ -7,8 +7,10 @@ CREATE TABLE IF NOT EXISTS applications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now(),
+  deleted_at TIMESTAMPTZ DEFAULT null,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'reviewing', 'approved', 'denied', 'withdrawn')),
   applicant_type TEXT NOT NULL CHECK (applicant_type IN ('student', 'international', 'professional')),
+  notes TEXT,
 
   -- Personal Info (Step 1)
   full_name TEXT NOT NULL,
@@ -65,6 +67,8 @@ CREATE TABLE IF NOT EXISTS applications (
 CREATE TABLE IF NOT EXISTS tour_bookings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  deleted_at TIMESTAMPTZ DEFAULT null,
   status TEXT DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'completed', 'cancelled', 'no_show')),
 
   first_name TEXT NOT NULL,
@@ -81,10 +85,16 @@ CREATE TABLE IF NOT EXISTS tour_bookings (
   notes TEXT
 );
 
+-- Prevents double-booking per time slot
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tour_bookings_unique_slot
+  ON tour_bookings (tour_date, tour_time)
+  WHERE status != 'cancelled' AND deleted_at IS NULL;
+
 -- 3. Contact inquiries / lease inquiries
 CREATE TABLE IF NOT EXISTS contact_inquiries (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now(),
+  deleted_at TIMESTAMPTZ DEFAULT null,
   status TEXT DEFAULT 'new' CHECK (status IN ('new', 'contacted', 'resolved', 'archived')),
 
   name TEXT NOT NULL,
@@ -99,13 +109,55 @@ CREATE TABLE IF NOT EXISTS contact_inquiries (
 CREATE TABLE IF NOT EXISTS email_subscribers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now(),
+  deleted_at TIMESTAMPTZ DEFAULT null,
   email TEXT UNIQUE NOT NULL,
   name TEXT,
   source TEXT DEFAULT 'website',
   subscribed BOOLEAN DEFAULT true
 );
 
--- 5. Staff users (for dashboard auth)
+-- 5. Maintenance requests
+CREATE TABLE IF NOT EXISTS maintenance_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  deleted_at TIMESTAMPTZ DEFAULT null,
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
+
+  apartment TEXT NOT NULL,
+  full_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  category TEXT,
+  urgency TEXT DEFAULT 'medium' CHECK (urgency IN ('low', 'medium', 'high', 'emergency')),
+  description TEXT NOT NULL
+);
+
+-- 6. Referrals
+CREATE TABLE IF NOT EXISTS referrals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  deleted_at TIMESTAMPTZ DEFAULT null,
+  status TEXT DEFAULT 'submitted' CHECK (status IN ('submitted', 'contacted', 'toured', 'leased', 'expired', 'rejected')),
+
+  referrer_name TEXT NOT NULL,
+  referrer_email TEXT NOT NULL,
+  referrer_phone TEXT,
+  referrer_unit TEXT,
+  preferred_contact TEXT DEFAULT 'email',
+  relationship TEXT DEFAULT 'friend',
+  friend_name TEXT NOT NULL,
+  friend_email TEXT,
+  friend_phone TEXT,
+  move_in_timeline TEXT,
+  budget_range TEXT,
+  occupants TEXT,
+  notes TEXT,
+  consent_share BOOLEAN DEFAULT false,
+  consent_contact BOOLEAN DEFAULT false
+);
+
+-- 7. Staff users (for dashboard auth)
 CREATE TABLE IF NOT EXISTS staff_users (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now(),
@@ -121,29 +173,57 @@ ALTER TABLE applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tour_bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE contact_inquiries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE maintenance_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE referrals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff_users ENABLE ROW LEVEL SECURITY;
 
--- Policies: allow inserts from anon (public forms), reads only for authenticated/service role
+-- Policies: allow inserts from anon (public forms)
 CREATE POLICY "Allow public inserts on applications" ON applications FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public inserts on tour_bookings" ON tour_bookings FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public inserts on contact_inquiries" ON contact_inquiries FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public inserts on email_subscribers" ON email_subscribers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public inserts on maintenance_requests" ON maintenance_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public inserts on referrals" ON referrals FOR INSERT WITH CHECK (true);
 
 -- Allow public reads for staff dashboard (using anon key with pin-based auth in app)
 CREATE POLICY "Allow public reads on applications" ON applications FOR SELECT USING (true);
 CREATE POLICY "Allow public reads on tour_bookings" ON tour_bookings FOR SELECT USING (true);
 CREATE POLICY "Allow public reads on contact_inquiries" ON contact_inquiries FOR SELECT USING (true);
 CREATE POLICY "Allow public reads on email_subscribers" ON email_subscribers FOR SELECT USING (true);
+CREATE POLICY "Allow public reads on maintenance_requests" ON maintenance_requests FOR SELECT USING (true);
+CREATE POLICY "Allow public reads on referrals" ON referrals FOR SELECT USING (true);
 CREATE POLICY "Allow public reads on staff_users" ON staff_users FOR SELECT USING (true);
 
--- Allow updates for status changes
+-- Allow updates for status changes and soft deletes
 CREATE POLICY "Allow public updates on applications" ON applications FOR UPDATE USING (true);
 CREATE POLICY "Allow public updates on tour_bookings" ON tour_bookings FOR UPDATE USING (true);
 CREATE POLICY "Allow public updates on contact_inquiries" ON contact_inquiries FOR UPDATE USING (true);
+CREATE POLICY "Allow public updates on maintenance_requests" ON maintenance_requests FOR UPDATE USING (true);
+CREATE POLICY "Allow public updates on referrals" ON referrals FOR UPDATE USING (true);
+CREATE POLICY "Allow public updates on email_subscribers" ON email_subscribers FOR UPDATE USING (true);
 
 -- Indexes for common queries
 CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
 CREATE INDEX IF NOT EXISTS idx_applications_created_at ON applications(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_applications_deleted_at ON applications(deleted_at) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_tour_bookings_date ON tour_bookings(tour_date);
 CREATE INDEX IF NOT EXISTS idx_tour_bookings_status ON tour_bookings(status);
+CREATE INDEX IF NOT EXISTS idx_tour_bookings_deleted_at ON tour_bookings(deleted_at) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_contact_inquiries_status ON contact_inquiries(status);
+CREATE INDEX IF NOT EXISTS idx_contact_inquiries_deleted_at ON contact_inquiries(deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_maintenance_requests_status ON maintenance_requests(status);
+CREATE INDEX IF NOT EXISTS idx_maintenance_requests_deleted_at ON maintenance_requests(deleted_at) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_referrals_deleted_at ON referrals(deleted_at) WHERE deleted_at IS NULL;
+
+-- =============================================
+-- Migration: Add deleted_at to existing tables
+-- Run this if tables already exist without deleted_at
+-- =============================================
+-- ALTER TABLE applications ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT null;
+-- ALTER TABLE applications ADD COLUMN IF NOT EXISTS notes TEXT;
+-- ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT null;
+-- ALTER TABLE tour_bookings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+-- ALTER TABLE contact_inquiries ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT null;
+-- ALTER TABLE email_subscribers ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT null;
+-- ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT null;
+-- ALTER TABLE referrals ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ DEFAULT null;

@@ -14,11 +14,11 @@ interface Inquiry {
   created_at: string;
 }
 
-const STATUS_OPTIONS = ["new", "read", "replied", "archived"];
+const STATUS_OPTIONS = ["new", "contacted", "resolved", "archived"];
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-blue-50 text-blue-700 border-blue-200",
-  read: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  replied: "bg-green-50 text-green-700 border-green-200",
+  contacted: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  resolved: "bg-green-50 text-green-700 border-green-200",
   archived: "bg-gray-50 text-gray-500 border-gray-200",
 };
 
@@ -181,7 +181,7 @@ export default function InquiriesPage() {
               }`}
               onClick={() => {
                 setSelected(inquiry);
-                if (inquiry.status === "new") updateStatus(inquiry.id, "read");
+                if (inquiry.status === "new") updateStatus(inquiry.id, "contacted");
               }}
             >
               <div className="flex items-start justify-between gap-4">

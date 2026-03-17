@@ -4,9 +4,6 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PROPERTIES, SITE } from "@/data/site-data";
 
-/* ── all possible time slots ── */
-const ALL_TIME_SLOTS = ["9:00 AM", "10:00 AM", "11:00 AM", "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM"];
-
 /* ── generate next 14 days ── */
 function getNextDays(count: number) {
   const days: { label: string; date: string; dayName: string }[] = [];
@@ -20,6 +17,19 @@ function getNextDays(count: number) {
     days.push({ label, date, dayName });
   }
   return days;
+}
+
+/* ── group slots by hour for display ── */
+function groupSlotsByHour(slots: string[]): { hour: string; slots: string[] }[] {
+  const groups: Map<string, string[]> = new Map();
+  for (const slot of slots) {
+    const [timePart, meridiem] = slot.split(" ");
+    const hourStr = timePart.split(":")[0];
+    const key = `${hourStr} ${meridiem}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(slot);
+  }
+  return Array.from(groups.entries()).map(([hour, slots]) => ({ hour, slots }));
 }
 
 /* ── icons ── */
@@ -90,7 +100,7 @@ function ScheduleTourPage() {
   /* schedule form state */
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [availableSlots, setAvailableSlots] = useState<string[]>(ALL_TIME_SLOTS);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
   const days = getNextDays(14);
@@ -102,12 +112,12 @@ function ScheduleTourPage() {
       const res = await fetch(`/api/available-slots?date=${date}`);
       if (res.ok) {
         const data = await res.json();
-        setAvailableSlots(data.availableSlots || ALL_TIME_SLOTS);
+        setAvailableSlots(data.availableSlots || []);
       } else {
-        setAvailableSlots(ALL_TIME_SLOTS);
+        setAvailableSlots([]);
       }
     } catch {
-      setAvailableSlots(ALL_TIME_SLOTS);
+      setAvailableSlots([]);
     }
     setLoadingSlots(false);
   }, []);
@@ -161,6 +171,9 @@ function ScheduleTourPage() {
     }
     setSubmitting(false);
   };
+
+  /* group available slots for display */
+  const groupedSlots = groupSlotsByHour(availableSlots);
 
   /* ── success state ── */
   if (submitted) {
@@ -218,7 +231,7 @@ function ScheduleTourPage() {
           <span className="text-blue-600">
             <IconClock />
           </span>
-          10 min appointments
+          10 min appointments · Real-time availability
         </p>
       </header>
 
@@ -411,37 +424,66 @@ function ScheduleTourPage() {
                   )}
                 </div>
 
-                {/* time slots */}
+                {/* time slots — grouped by hour */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-3">Select a Time</label>
-                  {loadingSlots ? (
-                    <p className="text-gray-400 text-sm py-4">Loading available slots...</p>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm text-gray-500">Select a Time</label>
+                    {!loadingSlots && selectedDate && (
+                      <span className="text-xs text-gray-400">
+                        {availableSlots.length} slot{availableSlots.length !== 1 ? "s" : ""} available
+                      </span>
+                    )}
+                  </div>
+
+                  {!selectedDate ? (
+                    <p className="text-gray-400 text-sm py-4">Select a date first to see available times.</p>
+                  ) : loadingSlots ? (
+                    <div className="py-8 text-center">
+                      <div className="inline-flex items-center gap-2 text-gray-400 text-sm">
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Checking Google Calendar for available slots...
+                      </div>
+                    </div>
                   ) : availableSlots.length === 0 ? (
-                    <p className="text-amber-600 text-sm py-4">No available slots for this date. Please pick another day.</p>
+                    <div className="py-6 text-center">
+                      <p className="text-amber-600 text-sm font-medium mb-1">No available slots for this date.</p>
+                      <p className="text-gray-400 text-xs">Please pick another day or call us directly.</p>
+                    </div>
                   ) : (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                      {ALL_TIME_SLOTS.map((slot) => {
-                        const isAvailable = availableSlots.includes(slot);
-                        return (
-                          <button
-                            key={slot}
-                            disabled={!isAvailable}
-                            onClick={() => setSelectedTime(slot)}
-                            className={`py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                              !isAvailable
-                                ? "opacity-30 cursor-not-allowed text-gray-400 line-through"
-                                : selectedTime === slot
-                                ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-100"
-                                : "glass-subtle text-gray-500 hover:text-gray-900 hover:border-blue-200"
-                            }`}
-                          >
-                            {slot}
-                          </button>
-                        );
-                      })}
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
+                      {groupedSlots.map((group) => (
+                        <div key={group.hour}>
+                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                            {group.hour.replace(/^(\d+)/, (_, h) => {
+                              const num = parseInt(h);
+                              if (num === 12) return "12";
+                              return h;
+                            })}
+                            {parseInt(group.hour) < 12 || group.hour.includes("AM") ? " — Morning" : " — Afternoon"}
+                          </p>
+                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                            {group.slots.map((slot) => (
+                              <button
+                                key={slot}
+                                onClick={() => setSelectedTime(slot)}
+                                className={`py-2.5 px-2 rounded-lg text-xs font-medium transition-all ${
+                                  selectedTime === slot
+                                    ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-100"
+                                    : "glass-subtle text-gray-600 hover:text-gray-900 hover:border-blue-200"
+                                }`}
+                              >
+                                {slot}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  {attempted && !selectedTime && (
+                  {attempted && !selectedTime && selectedDate && (
                     <p className="text-red-600 text-xs mt-2">Please select a time</p>
                   )}
                 </div>
@@ -459,6 +501,7 @@ function ScheduleTourPage() {
                         {days.find((d) => d.date === selectedDate)?.label}
                       </span>{" "}
                       at <span className="text-gray-900 font-semibold">{selectedTime}</span>
+                      <span className="text-gray-400 ml-1">(10 min)</span>
                     </span>
                   </div>
                 )}

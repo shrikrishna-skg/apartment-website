@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { sendStaffNotification } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,33 @@ export async function POST(request: NextRequest) {
         { error: error.message },
         { status: 400 }
       );
+    }
+
+    // Send staff notification (best-effort)
+    try {
+      const typeLabels: Record<string, string> = {
+        general: "General Inquiry",
+        lease: "Lease Inquiry",
+        maintenance: "Maintenance",
+        pricing: "Pricing Question",
+        other: "Other",
+      };
+
+      const details = [
+        `Type: ${typeLabels[body.inquiry_type] || body.inquiry_type}`,
+        body.phone ? `Phone: ${body.phone}` : null,
+        body.property_slug ? `Property: ${body.property_slug}` : null,
+        `\nMessage:\n${body.message}`,
+      ].filter(Boolean).join("\n");
+
+      await sendStaffNotification({
+        type: "inquiry",
+        name: body.name,
+        email: body.email,
+        details,
+      });
+    } catch {
+      // Email is best-effort
     }
 
     return NextResponse.json(data, { status: 201 });
