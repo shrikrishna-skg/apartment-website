@@ -14,5 +14,35 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.collegeplace.us" },
+      { "@type": "ListItem", position: 2, name: "Move-In Guide", item: "https://www.collegeplace.us/move-in-guide" },
+    ],
+  };
+
+  const howToJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: "How to Move Into College Place Apartments Near MTSU",
+    description: "Step-by-step guide for new residents moving into College Place Apartments in Murfreesboro, TN.",
+    step: [
+      { "@type": "HowToStep", name: "Apply & Sign Lease", text: "Complete your rental application and sign your lease agreement." },
+      { "@type": "HowToStep", name: "Pay Deposits", text: "Pay your security deposit and first month's rent." },
+      { "@type": "HowToStep", name: "Set Up Utilities", text: "Arrange utility transfers for electric and gas. Internet is included." },
+      { "@type": "HowToStep", name: "Schedule Move-In", text: "Confirm your move-in date and time with the leasing office." },
+      { "@type": "HowToStep", name: "Pick Up Keys", text: "Visit the office on move-in day to collect keys and access cards." },
+      { "@type": "HowToStep", name: "Complete Inspection", text: "Walk through your unit, document condition, and submit your move-in inspection form." },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(howToJsonLd) }} />
+      {children}
+    </>
+  );
 }

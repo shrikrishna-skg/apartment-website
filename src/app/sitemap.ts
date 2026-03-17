@@ -4,117 +4,144 @@ import { PROPERTIES, BLOG_POSTS } from "@/data/site-data";
 const SITE_URL = "https://www.collegeplace.us";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
-
-  // Static public pages
-  const staticPages: MetadataRoute.Sitemap = [
+  // ─── High-Priority Pages (conversion-focused) ───
+  const highPriority: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
-      lastModified: now,
+      lastModified: new Date("2025-03-15"),
       changeFrequency: "weekly",
       priority: 1.0,
     },
     {
       url: `${SITE_URL}/properties`,
-      lastModified: now,
+      lastModified: new Date("2025-03-15"),
       changeFrequency: "weekly",
       priority: 0.95,
     },
     {
       url: `${SITE_URL}/schedule-tour`,
-      lastModified: now,
+      lastModified: new Date("2025-03-10"),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
+      url: `${SITE_URL}/apply`,
+      lastModified: new Date("2025-03-10"),
+      changeFrequency: "monthly",
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/apply/student`,
+      lastModified: new Date("2025-03-10"),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${SITE_URL}/apply/general`,
+      lastModified: new Date("2025-03-10"),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
       url: `${SITE_URL}/virtual-tour`,
-      lastModified: now,
+      lastModified: new Date("2025-03-12"),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${SITE_URL}/lease-inquiry`,
+      lastModified: new Date("2025-03-10"),
       changeFrequency: "monthly",
       priority: 0.85,
     },
     {
       url: `${SITE_URL}/contact`,
-      lastModified: now,
+      lastModified: new Date("2025-03-10"),
       changeFrequency: "monthly",
       priority: 0.8,
     },
-    {
-      url: `${SITE_URL}/apply`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.85,
-    },
-    {
-      url: `${SITE_URL}/apply/student`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/apply/general`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.7,
-    },
-    {
-      url: `${SITE_URL}/lease-inquiry`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
+  ];
+
+  // ─── Content & Informational Pages ───
+  const contentPages: MetadataRoute.Sitemap = [
     {
       url: `${SITE_URL}/blog`,
-      lastModified: now,
+      lastModified: new Date("2025-03-10"),
       changeFrequency: "weekly",
       priority: 0.8,
     },
     {
       url: `${SITE_URL}/faq`,
-      lastModified: now,
+      lastModified: new Date("2025-03-01"),
       changeFrequency: "monthly",
-      priority: 0.7,
+      priority: 0.75,
     },
     {
       url: `${SITE_URL}/testimonials`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.6,
-    },
-    {
-      url: `${SITE_URL}/location-guide`,
-      lastModified: now,
+      lastModified: new Date("2025-03-01"),
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
-      url: `${SITE_URL}/move-in-guide`,
-      lastModified: now,
+      url: `${SITE_URL}/location-guide`,
+      lastModified: new Date("2025-03-01"),
       changeFrequency: "monthly",
-      priority: 0.6,
+      priority: 0.75,
+    },
+    {
+      url: `${SITE_URL}/move-in-guide`,
+      lastModified: new Date("2025-02-15"),
+      changeFrequency: "monthly",
+      priority: 0.65,
     },
     {
       url: `${SITE_URL}/referral`,
-      lastModified: now,
+      lastModified: new Date("2025-02-15"),
       changeFrequency: "monthly",
-      priority: 0.5,
+      priority: 0.55,
     },
   ];
 
-  // Dynamic property pages
+  // ─── Dynamic Property Pages ───
   const propertyPages: MetadataRoute.Sitemap = PROPERTIES.map((property) => ({
     url: `${SITE_URL}/properties/${property.slug}`,
-    lastModified: now,
+    lastModified: new Date("2025-03-15"),
     changeFrequency: "weekly" as const,
     priority: 0.9,
   }));
 
-  // Dynamic blog post pages
-  const blogPages: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => ({
-    url: `${SITE_URL}/blog/${post.slug}`,
-    lastModified: now,
-    changeFrequency: "monthly" as const,
-    priority: 0.7,
-  }));
+  // ─── Dynamic Blog Post Pages ───
+  const blogPages: MetadataRoute.Sitemap = BLOG_POSTS.map((post) => {
+    const postDate = new Date(post.date);
+    return {
+      url: `${SITE_URL}/blog/${post.slug}`,
+      lastModified: isNaN(postDate.getTime()) ? new Date("2025-02-01") : postDate,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    };
+  });
 
-  return [...staticPages, ...propertyPages, ...blogPages];
+  // ─── Legal Pages (low priority) ───
+  const legalPages: MetadataRoute.Sitemap = [
+    {
+      url: `${SITE_URL}/privacy-policy`,
+      lastModified: new Date("2025-01-01"),
+      changeFrequency: "yearly",
+      priority: 0.2,
+    },
+    {
+      url: `${SITE_URL}/terms`,
+      lastModified: new Date("2025-01-01"),
+      changeFrequency: "yearly",
+      priority: 0.2,
+    },
+  ];
+
+  return [
+    ...highPriority,
+    ...propertyPages,
+    ...contentPages,
+    ...blogPages,
+    ...legalPages,
+  ];
 }

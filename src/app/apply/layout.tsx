@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Apply Now | Rent an Apartment Near MTSU in Murfreesboro",
   description:
-    "Apply online for student apartments near MTSU. Fast approval, individual leasing, and flexible lease terms from 6–18 months. Studios from $600/mo, 4-bedrooms from $500/mo in Murfreesboro, TN.",
+    "Apply online for student apartments near MTSU. Fast approval, individual leasing, and flexible lease terms from 6-18 months. Studios from $600/mo, 4-bedrooms from $500/mo in Murfreesboro, TN.",
   alternates: { canonical: "/apply" },
   openGraph: {
     title: "Apply Now | Rent an Apartment Near MTSU",
@@ -14,5 +14,19 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.collegeplace.us" },
+      { "@type": "ListItem", position: 2, name: "Apply Now", item: "https://www.collegeplace.us/apply" },
+    ],
+  };
+
+  return (
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      {children}
+    </>
+  );
 }

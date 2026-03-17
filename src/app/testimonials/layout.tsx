@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TESTIMONIALS, SITE } from "@/data/site-data";
 
 export const metadata: Metadata = {
   title: "Resident Reviews | What MTSU Students Say About College Place",
@@ -14,5 +15,74 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children;
+  const avgRating =
+    TESTIMONIALS.reduce((sum, t) => sum + t.rating, 0) / TESTIMONIALS.length;
+
+  const reviewJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ApartmentComplex",
+    name: "College Place Apartments",
+    url: "https://www.collegeplace.us",
+    image: SITE.logo,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: SITE.address.street,
+      addressLocality: SITE.address.city,
+      addressRegion: SITE.address.state,
+      postalCode: SITE.address.zip,
+      addressCountry: "US",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: avgRating.toFixed(1),
+      bestRating: "5",
+      worstRating: "1",
+      ratingCount: TESTIMONIALS.length,
+      reviewCount: TESTIMONIALS.length,
+    },
+    review: TESTIMONIALS.map((t) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: t.name },
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: t.rating,
+        bestRating: "5",
+      },
+      reviewBody: t.text,
+      publisher: { "@type": "Organization", name: t.source },
+    })),
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.collegeplace.us",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Resident Reviews",
+        item: "https://www.collegeplace.us/testimonials",
+      },
+    ],
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }

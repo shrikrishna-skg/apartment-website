@@ -40,6 +40,11 @@ export const metadata: Metadata = {
     "apartments near Middle Tennessee State University",
     "cheap apartments Murfreesboro TN",
     "off-campus student living MTSU",
+    "1 bedroom apartments Murfreesboro",
+    "2 bedroom apartments near MTSU",
+    "4 bedroom student housing Murfreesboro TN",
+    "apartments with free parking Murfreesboro",
+    "college apartments Murfreesboro Tennessee",
   ],
   authors: [{ name: "College Place Apartments" }],
   creator: "College Place Apartments",
@@ -88,6 +93,12 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   category: "Real Estate",
+  other: {
+    "geo.region": "US-TN",
+    "geo.placename": "Murfreesboro",
+    "geo.position": "35.8553144;-86.3648509",
+    "ICBM": "35.8553144, -86.3648509",
+  },
 };
 
 export default async function RootLayout({
@@ -147,12 +158,68 @@ export default async function RootLayout({
     petsAllowed: true,
   };
 
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "College Place Apartments",
+    url: SITE_URL,
+    logo: SITE.logo,
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: SITE.phone,
+      contactType: "customer service",
+      email: SITE.email,
+      availableLanguage: ["English"],
+      areaServed: "Murfreesboro, TN",
+    },
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: SITE.address.street,
+      addressLocality: SITE.address.city,
+      addressRegion: SITE.address.state,
+      postalCode: SITE.address.zip,
+      addressCountry: "US",
+    },
+    sameAs: [SITE.social.instagram, SITE.social.facebook],
+  };
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "College Place Apartments",
+    url: SITE_URL,
+    publisher: {
+      "@type": "Organization",
+      name: "College Place Apartments",
+      logo: { "@type": "ImageObject", url: SITE.logo },
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/properties?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
+  };
+
   return (
     <html lang="en">
       <head>
+        <link rel="dns-prefetch" href="https://qtrypzzcjebvfcihiynt.supabase.co" />
+        <link rel="preconnect" href="https://qtrypzzcjebvfcihiynt.supabase.co" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
       </head>
       <body className={`${dmSans.variable} antialiased font-sans`}>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE } from "@/data/site-data";
 
 export const metadata: Metadata = {
   title: "Location Guide | How Close Are We to MTSU Campus?",
@@ -14,5 +15,57 @@ export const metadata: Metadata = {
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return children;
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://www.collegeplace.us",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Location Guide",
+        item: "https://www.collegeplace.us/location-guide",
+      },
+    ],
+  };
+
+  const placeJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Place",
+    name: "College Place Apartments",
+    description: "Student apartments located 0.4 miles from MTSU campus in Murfreesboro, TN.",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: SITE.address.street,
+      addressLocality: SITE.address.city,
+      addressRegion: SITE.address.state,
+      postalCode: SITE.address.zip,
+      addressCountry: "US",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 35.8553144,
+      longitude: -86.3648509,
+    },
+    hasMap: SITE.mapsUrl,
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(placeJsonLd) }}
+      />
+      {children}
+    </>
+  );
 }
