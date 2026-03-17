@@ -130,12 +130,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           >
             <MapPin
               size={14}
-              style={{ color: "#6b7280", flexShrink: 0 }}
+              style={{ color: "#4b5563", flexShrink: 0 }}
             />
             <span
               style={{
                 fontSize: 13,
-                color: "#6b7280",
+                color: "#4b5563",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",

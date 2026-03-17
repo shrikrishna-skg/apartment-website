@@ -273,7 +273,7 @@ export default function GeneralApplicationPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Application Submitted!
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-600 mb-6">
               Thank you for submitting your general application. Our team will
               review your information and contact you within 24-48 hours.
             </p>
@@ -307,7 +307,7 @@ export default function GeneralApplicationPage() {
             <h1 className="text-3xl sm:text-4xl font-bold mb-2">
               <span className="text-gradient">General Application</span>
             </h1>
-            <p className="text-gray-500">
+            <p className="text-gray-600">
               Complete all steps below to submit your application
             </p>
           </motion.div>
@@ -475,7 +475,7 @@ export default function GeneralApplicationPage() {
                     Review & Submit
                   </h2>
 
-                  <p className="text-gray-500 text-sm mb-6">
+                  <p className="text-gray-600 text-sm mb-6">
                     Please review your information below before submitting.
                   </p>
 
@@ -518,7 +518,7 @@ export default function GeneralApplicationPage() {
                       <Upload size={16} />
                       Upload Documents
                     </h3>
-                    <p className="text-xs text-gray-500 mb-4">
+                    <p className="text-xs text-gray-600 mb-4">
                       Upload supporting documents such as ID, proof of income, employment letter, or any other relevant documents.
                       Accepted formats: PDF, images (JPG, PNG), Word, Excel, text files. Max 10MB per file.
                     </p>
@@ -530,7 +530,7 @@ export default function GeneralApplicationPage() {
                             <FileText size={18} className="text-blue-500 shrink-0" />
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                              <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
                             </div>
                             <select
                               value={fileLabels[idx]}
@@ -648,7 +648,7 @@ export default function GeneralApplicationPage() {
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-baseline gap-0.5">
-      <span className="text-gray-400 min-w-[140px]">{label}:</span>
+      <span className="text-gray-500 min-w-[140px]">{label}:</span>
       <span className="text-gray-800">{value}</span>
     </div>
   );

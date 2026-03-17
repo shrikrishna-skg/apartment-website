@@ -113,7 +113,7 @@ export default function MoveInGuidePage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5">
               <span className="text-gradient">Move-In Guide & Checklist</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
               Everything you need for a smooth move into College Place Apartments.
               Track your progress with our interactive checklist below.
             </p>
@@ -121,7 +121,7 @@ export default function MoveInGuidePage() {
             {/* Progress Bar */}
             <div className="max-w-md mx-auto">
               <div className="flex items-center justify-between text-sm mb-2">
-                <span className="text-gray-500">Your Progress</span>
+                <span className="text-gray-600">Your Progress</span>
                 <span className="text-blue-600 font-semibold">
                   {progressPercent}% Complete
                 </span>
@@ -134,7 +134,7 @@ export default function MoveInGuidePage() {
                   transition={{ duration: 0.5, ease: "easeOut" as const }}
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 {checkedCount} of {totalItems} items completed
               </p>
             </div>
@@ -171,7 +171,7 @@ export default function MoveInGuidePage() {
                     <h3 className="text-sm font-bold text-gray-900 mb-1.5">
                       {tip.title}
                     </h3>
-                    <p className="text-gray-500 text-xs leading-relaxed">
+                    <p className="text-gray-600 text-xs leading-relaxed">
                       {tip.description}
                     </p>
                   </motion.div>
@@ -301,28 +301,28 @@ export default function MoveInGuidePage() {
                   <li className="flex items-center gap-3 text-sm">
                     <Wrench size={16} className="text-gray-400" />
                     <div>
-                      <span className="text-gray-500">Maintenance Emergency:</span>{" "}
+                      <span className="text-gray-600">Maintenance Emergency:</span>{" "}
                       <span className="text-gray-700">{SITE.phone}</span>
                     </div>
                   </li>
                   <li className="flex items-center gap-3 text-sm">
                     <Lightbulb size={16} className="text-gray-400" />
                     <div>
-                      <span className="text-gray-500">Electric (MTE):</span>{" "}
+                      <span className="text-gray-600">Electric (MTE):</span>{" "}
                       <span className="text-gray-700">(615) 893-5514</span>
                     </div>
                   </li>
                   <li className="flex items-center gap-3 text-sm">
                     <Droplets size={16} className="text-gray-400" />
                     <div>
-                      <span className="text-gray-500">Water (Consolidated Utility):</span>{" "}
+                      <span className="text-gray-600">Water (Consolidated Utility):</span>{" "}
                       <span className="text-gray-700">(615) 848-3209</span>
                     </div>
                   </li>
                   <li className="flex items-center gap-3 text-sm">
                     <Wifi size={16} className="text-gray-400" />
                     <div>
-                      <span className="text-gray-500">Internet:</span>{" "}
+                      <span className="text-gray-600">Internet:</span>{" "}
                       <span className="text-gray-700">
                         Included in utilities ($100/mo)
                       </span>
@@ -344,7 +344,7 @@ export default function MoveInGuidePage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Ready to Move In?
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto mb-8">
+            <p className="text-gray-600 max-w-xl mx-auto mb-8">
               Have questions about your move-in process? Our leasing team is here to
               help make your transition as smooth as possible.
             </p>

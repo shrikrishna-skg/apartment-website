@@ -386,8 +386,8 @@ export default function ChatWidget() {
               {loading && (
                 <div className="flex justify-start">
                   <div className="bg-[#f3f4f6] px-4 py-3 rounded-2xl rounded-bl-md flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin text-[#6b7280]" />
-                    <span className="text-[12px] text-[#6b7280]">Thinking...</span>
+                    <Loader2 size={14} className="animate-spin text-[#4b5563]" />
+                    <span className="text-[12px] text-[#4b5563]">Thinking...</span>
                   </div>
                 </div>
               )}
@@ -406,7 +406,7 @@ export default function ChatWidget() {
                   <div className="px-4 py-3 space-y-2.5">
                     {/* Issue */}
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Issue</p>
+                      <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Issue</p>
                       <p className="text-[12px] text-[#374151] m-0 mt-0.5 leading-relaxed">{pendingTicket.issue.slice(0, 150)}{pendingTicket.issue.length > 150 ? "..." : ""}</p>
                     </div>
                     {/* Urgency */}
@@ -415,7 +415,7 @@ export default function ChatWidget() {
                       const Icon = urg.icon;
                       return (
                         <div className="flex items-center gap-1.5">
-                          <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0 w-16">Urgency</p>
+                          <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0 w-16">Urgency</p>
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full ${urg.bg} ${urg.color} ${urg.border} border`}>
                             <Icon size={10} />
                             {urg.label}
@@ -426,15 +426,15 @@ export default function ChatWidget() {
                     {/* Unit */}
                     {pendingTicket.unitInfo && (
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0 w-16">Unit</p>
+                        <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0 w-16">Unit</p>
                         <p className="text-[12px] text-[#374151] m-0">{pendingTicket.unitInfo}</p>
                       </div>
                     )}
                     {/* Image analysis */}
                     {pendingTicket.imageDescription && (
                       <div>
-                        <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Photo Analysis</p>
-                        <p className="text-[11px] text-[#6b7280] m-0 mt-0.5 italic leading-relaxed">{pendingTicket.imageDescription.slice(0, 120)}...</p>
+                        <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Photo Analysis</p>
+                        <p className="text-[11px] text-[#4b5563] m-0 mt-0.5 italic leading-relaxed">{pendingTicket.imageDescription.slice(0, 120)}...</p>
                       </div>
                     )}
                   </div>
@@ -460,7 +460,7 @@ export default function ChatWidget() {
                     <button
                       onClick={declineTicket}
                       disabled={creatingTicket}
-                      className="px-4 py-2 text-[12px] text-[#6b7280] bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-60"
+                      className="px-4 py-2 text-[12px] text-[#4b5563] bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-60"
                     >
                       No thanks
                     </button>
@@ -481,17 +481,17 @@ export default function ChatWidget() {
                   </div>
                   <div className="px-4 py-3 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold">Ticket ID</span>
+                      <span className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold">Ticket ID</span>
                       <span className="text-[13px] font-bold text-[#1a73e8] font-mono">{createdTicket.ticketId}</span>
                     </div>
                     <div className="h-px bg-gray-100" />
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Status</p>
+                        <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Status</p>
                         <p className="text-[11px] text-emerald-700 font-semibold m-0 mt-0.5">Open</p>
                       </div>
                       <div>
-                        <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Urgency</p>
+                        <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Urgency</p>
                         {(() => {
                           const urg = getUrgencyConfig(createdTicket.urgency);
                           const Icon = urg.icon;
@@ -505,20 +505,20 @@ export default function ChatWidget() {
                       </div>
                       {createdTicket.unitInfo && (
                         <div>
-                          <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Unit</p>
+                          <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Unit</p>
                           <p className="text-[11px] text-[#374151] m-0 mt-0.5">{createdTicket.unitInfo}</p>
                         </div>
                       )}
                       {createdTicket.preferredTime && (
                         <div>
-                          <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Contact Time</p>
+                          <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Contact Time</p>
                           <p className="text-[11px] text-[#374151] m-0 mt-0.5">{createdTicket.preferredTime}</p>
                         </div>
                       )}
                     </div>
                     <div className="h-px bg-gray-100" />
                     <div>
-                      <p className="text-[10px] uppercase tracking-wide text-[#9ca3af] font-semibold m-0">Summary</p>
+                      <p className="text-[10px] uppercase tracking-wide text-[#6b7280] font-semibold m-0">Summary</p>
                       <p className="text-[11px] text-[#374151] m-0 mt-0.5 leading-relaxed">{createdTicket.summary.slice(0, 200)}</p>
                     </div>
                     <div className="bg-blue-50 rounded-lg px-3 py-2 flex items-start gap-2 mt-1">
@@ -557,7 +557,7 @@ export default function ChatWidget() {
                     className="w-full px-3 py-2 text-[12px] rounded-lg border border-blue-200 bg-white outline-none focus:border-[#1a73e8]"
                   />
                   <div className="relative">
-                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#6b7280]" />
+                    <Clock size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#4b5563]" />
                     <input
                       type="text"
                       placeholder="Best time to contact (e.g., after 3pm, mornings)"
@@ -581,7 +581,7 @@ export default function ChatWidget() {
                           { role: "assistant", content: "No worries! Our team will review the ticket and follow up. Anything else I can help with?" },
                         ]);
                       }}
-                      className="px-4 py-2 text-[12px] text-[#6b7280] bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="px-4 py-2 text-[12px] text-[#4b5563] bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
                     >
                       Skip
                     </button>
@@ -616,7 +616,7 @@ export default function ChatWidget() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading}
-                  className="p-2 rounded-lg text-[#6b7280] hover:bg-gray-100 hover:text-[#1a73e8] transition-colors bg-transparent border-none cursor-pointer disabled:opacity-40"
+                  className="p-2 rounded-lg text-[#4b5563] hover:bg-gray-100 hover:text-[#1a73e8] transition-colors bg-transparent border-none cursor-pointer disabled:opacity-40"
                   aria-label="Upload image"
                   title="Send a photo"
                 >

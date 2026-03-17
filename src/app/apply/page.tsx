@@ -109,7 +109,7 @@ export default function ApplyPage() {
                 Let&apos;s Get Started With Your Application
               </span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Select the applicant type that best describes you to begin your
               application process. Each path is tailored to gather the right
               information for a smooth experience.
@@ -157,7 +157,7 @@ export default function ApplyPage() {
                     <h2 className="text-xl font-bold text-gray-900 mb-2">
                       {type.title}
                     </h2>
-                    <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                    <p className="text-gray-600 text-sm mb-6 leading-relaxed">
                       {type.description}
                     </p>
 
@@ -199,7 +199,7 @@ export default function ApplyPage() {
                         {type.documents.map((doc, i) => (
                           <li
                             key={i}
-                            className="text-xs text-gray-400 flex items-start gap-2"
+                            className="text-xs text-gray-500 flex items-start gap-2"
                           >
                             <span className="w-1 h-1 rounded-full bg-[#1a73e8] mt-1.5 flex-shrink-0" />
                             {doc}
@@ -228,7 +228,7 @@ export default function ApplyPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Before You Begin
                 </h3>
-                <p className="text-gray-500 text-sm leading-relaxed mb-3">
+                <p className="text-gray-600 text-sm leading-relaxed mb-3">
                   Make sure you have all required documents ready before starting
                   your application. Having everything prepared will help you
                   complete the process quickly and avoid delays. The application

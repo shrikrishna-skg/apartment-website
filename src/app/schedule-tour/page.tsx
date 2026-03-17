@@ -185,7 +185,7 @@ function ScheduleTourPage() {
             <IconCheck />
           </div>
           <h1 className="text-3xl font-bold text-gradient mb-3">Tour Scheduled!</h1>
-          <p className="text-gray-500 mb-2">
+          <p className="text-gray-600 mb-2">
             Your appointment has been confirmed for{" "}
             <span className="text-gray-900 font-medium">
               {days.find((d) => d.date === selectedDate)?.label}
@@ -193,7 +193,7 @@ function ScheduleTourPage() {
             at{" "}
             <span className="text-gray-900 font-medium">{selectedTime}</span>.
           </p>
-          <p className="text-gray-400 text-sm mb-6">
+          <p className="text-gray-500 text-sm mb-6">
             We sent a confirmation to <span className="text-blue-600">{email}</span>.
           </p>
           <button
@@ -227,7 +227,7 @@ function ScheduleTourPage() {
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-3">
           Apartment Tour &amp; Leasing Visit
         </h1>
-        <p className="text-gray-500 text-lg flex items-center justify-center gap-2">
+        <p className="text-gray-600 text-lg flex items-center justify-center gap-2">
           <span className="text-blue-600">
             <IconClock />
           </span>
@@ -281,13 +281,13 @@ function ScheduleTourPage() {
               <div className="glass p-8 space-y-6">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 mb-1">Your Information</h2>
-                  <p className="text-sm text-gray-400">Fill in your details to get started.</p>
+                  <p className="text-sm text-gray-500">Fill in your details to get started.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* first name */}
                   <div>
-                    <label className="block text-sm text-gray-500 mb-1.5">
+                    <label className="block text-sm text-gray-600 mb-1.5">
                       First Name <span className="text-red-600">*</span>
                     </label>
                     <input
@@ -304,7 +304,7 @@ function ScheduleTourPage() {
 
                   {/* last name */}
                   <div>
-                    <label className="block text-sm text-gray-500 mb-1.5">
+                    <label className="block text-sm text-gray-600 mb-1.5">
                       Last Name <span className="text-red-600">*</span>
                     </label>
                     <input
@@ -322,7 +322,7 @@ function ScheduleTourPage() {
 
                 {/* email */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1.5">
+                  <label className="block text-sm text-gray-600 mb-1.5">
                     Email <span className="text-red-600">*</span>
                   </label>
                   <input
@@ -339,7 +339,7 @@ function ScheduleTourPage() {
 
                 {/* phone */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1.5">
+                  <label className="block text-sm text-gray-600 mb-1.5">
                     Phone <span className="text-red-600">*</span>
                   </label>
                   <input
@@ -356,7 +356,7 @@ function ScheduleTourPage() {
 
                 {/* property dropdown */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-1.5">
+                  <label className="block text-sm text-gray-600 mb-1.5">
                     Property <span className="text-gray-400">(optional)</span>
                   </label>
                   <select
@@ -385,7 +385,7 @@ function ScheduleTourPage() {
               <div className="glass p-8 space-y-8">
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 mb-1">Pick a Date &amp; Time</h2>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500">
                     Scheduling for{" "}
                     <span className="text-blue-600 font-medium">
                       {firstName} {lastName}
@@ -395,7 +395,7 @@ function ScheduleTourPage() {
 
                 {/* date picker */}
                 <div>
-                  <label className="block text-sm text-gray-500 mb-3">Select a Date</label>
+                  <label className="block text-sm text-gray-600 mb-3">Select a Date</label>
                   <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
                     {days.map((day) => {
                       const isSunday = new Date(day.date + "T12:00:00").getDay() === 0;
@@ -414,7 +414,7 @@ function ScheduleTourPage() {
                         >
                           <span className="text-xs font-medium">{day.dayName}</span>
                           <span className="font-bold mt-0.5">{day.label.split(" ")[1]}</span>
-                          <span className="text-[10px] mt-0.5 opacity-70">{day.label.split(" ")[0]}</span>
+                          <span className="text-[11px] mt-0.5">{day.label.split(" ")[0]}</span>
                         </button>
                       );
                     })}
@@ -427,16 +427,16 @@ function ScheduleTourPage() {
                 {/* time slots — grouped by hour */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm text-gray-500">Select a Time</label>
+                    <label className="block text-sm text-gray-600">Select a Time</label>
                     {!loadingSlots && selectedDate && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-500">
                         {availableSlots.length} slot{availableSlots.length !== 1 ? "s" : ""} available
                       </span>
                     )}
                   </div>
 
                   {!selectedDate ? (
-                    <p className="text-gray-400 text-sm py-4">Select a date first to see available times.</p>
+                    <p className="text-gray-500 text-sm py-4">Select a date first to see available times.</p>
                   ) : loadingSlots ? (
                     <div className="py-8 text-center">
                       <div className="inline-flex items-center gap-2 text-gray-400 text-sm">
@@ -450,13 +450,13 @@ function ScheduleTourPage() {
                   ) : availableSlots.length === 0 ? (
                     <div className="py-6 text-center">
                       <p className="text-amber-600 text-sm font-medium mb-1">No available slots for this date.</p>
-                      <p className="text-gray-400 text-xs">Please pick another day or call us directly.</p>
+                      <p className="text-gray-500 text-xs">Please pick another day or call us directly.</p>
                     </div>
                   ) : (
                     <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
                       {groupedSlots.map((group) => (
                         <div key={group.hour}>
-                          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
                             {group.hour.replace(/^(\d+)/, (_, h) => {
                               const num = parseInt(h);
                               if (num === 12) return "12";
@@ -588,7 +588,7 @@ function ScheduleTourPage() {
             {/* what to expect */}
             <div className="glass p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-4">What to Expect</h3>
-              <ul className="space-y-3 text-sm text-gray-500">
+              <ul className="space-y-3 text-sm text-gray-600">
                 <li className="flex items-start gap-2">
                   <span className="text-emerald-600 mt-0.5 shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

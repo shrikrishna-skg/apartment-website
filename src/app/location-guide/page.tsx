@@ -125,7 +125,7 @@ export default function LocationGuidePage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5">
               <span className="text-gradient">Location & Neighborhood Guide</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Discover everything around College Place Apartments in Murfreesboro, TN.
               From campus proximity to local hotspots, see why students love living here.
             </p>
@@ -160,7 +160,7 @@ export default function LocationGuidePage() {
                       <Icon size={28} className="text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900 mb-3">{item.title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">
+                    <p className="text-gray-600 text-sm leading-relaxed">
                       {item.description}
                     </p>
                   </motion.div>
@@ -198,7 +198,7 @@ export default function LocationGuidePage() {
                       <Icon size={24} className="text-white" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{option.title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">
+                    <p className="text-gray-600 text-sm leading-relaxed">
                       {option.description}
                     </p>
                   </motion.div>
@@ -248,9 +248,9 @@ export default function LocationGuidePage() {
                             <span className="w-1.5 h-1.5 rounded-full bg-[#1a73e8]" />
                             <span className="text-gray-700">{place.name}</span>
                           </div>
-                          <div className="flex items-center gap-3 text-gray-400 text-xs">
+                          <div className="flex items-center gap-3 text-gray-500 text-xs">
                             <span>{place.distance}</span>
-                            <span className="text-gray-400">|</span>
+                            <span className="text-gray-500">|</span>
                             <span>{place.time}</span>
                           </div>
                         </li>
@@ -294,7 +294,7 @@ export default function LocationGuidePage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Ready to Call This Home?
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto mb-8">
+            <p className="text-gray-600 max-w-xl mx-auto mb-8">
               Join hundreds of MTSU students who already love living at College Place.
               Tour our apartments and find your perfect floor plan today.
             </p>

@@ -390,7 +390,7 @@ function StudentApplicationPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Application Submitted!
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-600 mb-6">
               Thank you for submitting your{" "}
               {isInternational ? "international student" : "student"} application.
               Our team will review your information and contact you within 24-48
@@ -430,7 +430,7 @@ function StudentApplicationPage() {
                   : "Student Application"}
               </span>
             </h1>
-            <p className="text-gray-500">
+            <p className="text-gray-600">
               Complete all steps below to submit your application
             </p>
           </motion.div>

@@ -26,7 +26,7 @@ export default function Footer() {
               </span>
             </Link>
 
-            <p className="text-sm leading-relaxed text-[#6b7280] m-0">
+            <p className="text-sm leading-relaxed text-[#4b5563] m-0">
               {SITE.description}
             </p>
 
@@ -36,7 +36,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram"
-                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#e5e7eb]/60 text-[#6b7280] transition-colors duration-200 hover:bg-[#1a73e8]/10 hover:text-[#1a73e8]"
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#e5e7eb]/60 text-[#4b5563] transition-colors duration-200 hover:bg-[#1a73e8]/10 hover:text-[#1a73e8]"
               >
                 <Instagram size={18} />
               </a>
@@ -45,7 +45,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
-                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#e5e7eb]/60 text-[#6b7280] transition-colors duration-200 hover:bg-[#1a73e8]/10 hover:text-[#1a73e8]"
+                className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#e5e7eb]/60 text-[#4b5563] transition-colors duration-200 hover:bg-[#1a73e8]/10 hover:text-[#1a73e8]"
               >
                 <Facebook size={18} />
               </a>
@@ -62,7 +62,7 @@ export default function Footer() {
                 href={SITE.mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-3 text-sm text-[#6b7280] no-underline leading-snug transition-colors duration-200 hover:text-[#1a73e8]"
+                className="flex items-start gap-3 text-sm text-[#4b5563] no-underline leading-snug transition-colors duration-200 hover:text-[#1a73e8]"
               >
                 <MapPin
                   size={16}
@@ -72,19 +72,19 @@ export default function Footer() {
               </a>
               <a
                 href={`tel:${SITE.phone}`}
-                className="flex items-center gap-3 text-sm text-[#6b7280] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
+                className="flex items-center gap-3 text-sm text-[#4b5563] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
               >
                 <Phone size={16} className="text-[#1a73e8] shrink-0" />
                 <span>{SITE.phone}</span>
               </a>
               <a
                 href={`mailto:${SITE.email}`}
-                className="flex items-center gap-3 text-sm text-[#6b7280] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
+                className="flex items-center gap-3 text-sm text-[#4b5563] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
               >
                 <Mail size={16} className="text-[#1a73e8] shrink-0" />
                 <span>{SITE.email}</span>
               </a>
-              <div className="flex items-start gap-3 text-sm text-[#6b7280] leading-snug">
+              <div className="flex items-start gap-3 text-sm text-[#4b5563] leading-snug">
                 <Clock
                   size={16}
                   className="text-[#1a73e8] mt-0.5 shrink-0"
@@ -107,7 +107,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-[#6b7280] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
+                    className="text-sm text-[#4b5563] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
                   >
                     {link.label}
                   </Link>
@@ -128,7 +128,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-[#6b7280] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
+                      className="text-sm text-[#4b5563] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
                     >
                       {link.label}
                     </Link>
@@ -147,7 +147,7 @@ export default function Footer() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-[#6b7280] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
+                      className="text-sm text-[#4b5563] no-underline transition-colors duration-200 hover:text-[#1a73e8]"
                     >
                       {link.label}
                     </Link>
@@ -160,7 +160,7 @@ export default function Footer() {
 
         {/* Copyright Bar */}
         <div className="mt-14 pt-6 pb-6 border-t border-[#e5e7eb] text-center">
-          <p className="text-xs text-[#6b7280] m-0 opacity-70">
+          <p className="text-xs text-[#4b5563] m-0">
             &copy; {new Date().getFullYear()} {SITE.name} {SITE.tagline}. All
             rights reserved. | {SITE.address.city}, {SITE.address.state}{" "}
             {SITE.address.zip}

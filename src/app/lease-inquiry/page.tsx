@@ -201,7 +201,7 @@ export default function LeaseInquiryPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Inquiry Submitted!
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-600 mb-6">
               Thank you for your lease inquiry. Our team will review your
               preferences and get back to you within 24 hours.
             </p>
@@ -228,7 +228,7 @@ export default function LeaseInquiryPage() {
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               <span className="text-gradient">Lease Inquiry</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Interested in leasing with us? Fill out the form below and
               we&apos;ll help you find the perfect apartment.
             </p>
@@ -434,7 +434,7 @@ export default function LeaseInquiryPage() {
                       <p className="text-sm font-medium text-gray-700">
                         Address
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.address.full}
                       </p>
                     </div>
@@ -478,10 +478,10 @@ export default function LeaseInquiryPage() {
                       <p className="text-sm font-medium text-gray-700">
                         Office Hours
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.hours.weekday}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.hours.weekend}
                       </p>
                     </div>
@@ -499,7 +499,7 @@ export default function LeaseInquiryPage() {
                     Response Time
                   </h3>
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-600">
                   We typically respond to all lease inquiries within{" "}
                   <span className="text-green-600 font-medium">24 hours</span>.
                   For urgent requests, please call us directly.

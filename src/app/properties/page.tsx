@@ -163,7 +163,7 @@ export default function PropertiesPage() {
             MTSU Off-Campus Housing &{" "}
             <span className="text-gradient">Floor Plans</span>
           </h1>
-          <p className="mt-4 max-w-2xl text-gray-500">
+          <p className="mt-4 max-w-2xl text-gray-600">
             Browse our available apartments near Middle Tennessee State
             University. Filter by location, bedrooms, or price to find your
             perfect home.
@@ -318,7 +318,7 @@ export default function PropertiesPage() {
                 <h3 className="mb-2 text-lg font-semibold text-gray-800">
                   No properties found
                 </h3>
-                <p className="mb-6 text-sm text-gray-500">
+                <p className="mb-6 text-sm text-gray-600">
                   Try adjusting your search or filter criteria.
                 </p>
                 <button
@@ -368,12 +368,12 @@ export default function PropertiesPage() {
 
                     <div className="p-6">
                       <h3 className="mb-1 text-xl font-bold">{property.name}</h3>
-                      <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-500">
+                      <p className="mb-3 flex items-center gap-1.5 text-sm text-gray-600">
                         <MapPin className="h-3.5 w-3.5 shrink-0" />
                         {property.address}
                       </p>
 
-                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-gray-500">
+                      <p className="mb-4 line-clamp-2 text-sm leading-relaxed text-gray-600">
                         {property.description}
                       </p>
 
@@ -411,7 +411,7 @@ export default function PropertiesPage() {
                         <span className="text-2xl font-bold text-blue-600">
                           ${property.startingPrice}
                         </span>
-                        <span className="text-sm text-gray-500">/mo starting</span>
+                        <span className="text-sm text-gray-600">/mo starting</span>
                       </div>
 
                       {/* Actions */}
@@ -458,7 +458,7 @@ export default function PropertiesPage() {
                 <h3 className="mb-2 text-lg font-semibold text-gray-800">
                   No floor plans found
                 </h3>
-                <p className="mb-6 text-sm text-gray-500">
+                <p className="mb-6 text-sm text-gray-600">
                   Try adjusting your search or filter criteria.
                 </p>
                 <button
@@ -494,7 +494,7 @@ export default function PropertiesPage() {
                         </span>
                       )}
                     </div>
-                    <p className="mb-3 text-sm text-gray-500">
+                    <p className="mb-3 text-sm text-gray-600">
                       {fp.propertyName}
                     </p>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-700">
@@ -518,7 +518,7 @@ export default function PropertiesPage() {
                       <div className="text-2xl font-bold text-blue-600">
                         ${fp.price}
                       </div>
-                      <div className="text-xs text-gray-500">/mo</div>
+                      <div className="text-xs text-gray-600">/mo</div>
                     </div>
                     <div className="flex gap-3">
                       <Link href={`/schedule-tour?property=${fp.propertySlug}`} onClick={(e) => e.stopPropagation()} className="btn-outline">
@@ -548,7 +548,7 @@ export default function PropertiesPage() {
             Can&apos;t decide?{" "}
             <span className="text-gradient">Schedule a Tour</span>
           </h3>
-          <p className="mx-auto mb-6 max-w-lg text-gray-500">
+          <p className="mx-auto mb-6 max-w-lg text-gray-600">
             Visit our properties in person to find the perfect fit. Our team
             will walk you through every floor plan and answer all your questions.
           </p>

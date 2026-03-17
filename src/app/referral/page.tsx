@@ -177,7 +177,7 @@ export default function ReferralPage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5">
               <span className="text-gradient">Refer a Friend to College Place</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Love living at College Place? Share the experience with your friends and
               earn rewards when they sign a lease. It&apos;s simple, fast, and rewarding.
             </p>
@@ -217,7 +217,7 @@ export default function ReferralPage() {
                     <h3 className="text-lg font-bold text-gray-900 mb-2">
                       {step.title}
                     </h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">
+                    <p className="text-gray-600 text-sm leading-relaxed">
                       {step.description}
                     </p>
                   </motion.div>
@@ -452,7 +452,7 @@ export default function ReferralPage() {
                     placeholder="Anything else we should know about your friend's housing needs..."
                     className="input-glass resize-none"
                   />
-                  <p className="text-xs text-gray-400 mt-1 text-right">
+                  <p className="text-xs text-gray-500 mt-1 text-right">
                     {formData.notes.length}/500 characters
                   </p>
                 </div>
@@ -467,7 +467,7 @@ export default function ReferralPage() {
                     onChange={(e) => setConsentShare(e.target.checked)}
                     className="mt-1 w-4 h-4 rounded border-gray-200 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+                  <span className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
                     I give permission to share my contact information with the
                     College Place leasing team for the purpose of processing this
                     referral.
@@ -480,7 +480,7 @@ export default function ReferralPage() {
                     onChange={(e) => setConsentContact(e.target.checked)}
                     className="mt-1 w-4 h-4 rounded border-gray-200 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm text-gray-500 group-hover:text-gray-700 transition-colors">
+                  <span className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
                     My friend agrees to be contacted by the College Place leasing
                     team regarding available apartments and tour scheduling.
                   </span>
@@ -499,7 +499,7 @@ export default function ReferralPage() {
                     <CheckCircle size={28} className="text-white" />
                   </div>
                   <p className="text-xl font-bold text-gray-900 mb-2">Referral Submitted!</p>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-600 text-sm">
                     Thank you! Our team will reach out to your friend soon.
                     You&apos;ll receive a confirmation email shortly.
                   </p>
@@ -560,7 +560,7 @@ export default function ReferralPage() {
                     transition={{ duration: 0.3, ease: "easeInOut" as const }}
                     className="overflow-hidden"
                   >
-                    <p className="px-5 pb-5 text-sm text-gray-500 leading-relaxed">
+                    <p className="px-5 pb-5 text-sm text-gray-600 leading-relaxed">
                       {faq.a}
                     </p>
                   </motion.div>
@@ -582,8 +582,8 @@ export default function ReferralPage() {
             </h2>
             <ol className="space-y-3">
               {referralTerms.map((term, idx) => (
-                <li key={idx} className="flex items-start gap-3 text-sm text-gray-500 leading-relaxed">
-                  <span className="w-6 h-6 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-xs text-gray-400 flex-shrink-0 mt-0.5">
+                <li key={idx} className="flex items-start gap-3 text-sm text-gray-600 leading-relaxed">
+                  <span className="w-6 h-6 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center text-xs text-gray-500 flex-shrink-0 mt-0.5">
                     {idx + 1}
                   </span>
                   {term}

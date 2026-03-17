@@ -112,7 +112,7 @@ export default function ContactPage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-3">
               Message Sent!
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-600 mb-6">
               Thank you for reaching out. We&apos;ll get back to you as soon as
               possible, typically within 24 hours.
             </p>
@@ -139,7 +139,7 @@ export default function ContactPage() {
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               <span className="text-gradient">Get In Touch</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Have a question or need assistance? We&apos;re here to help. Send
               us a message and our team will respond promptly.
             </p>
@@ -293,10 +293,10 @@ export default function ContactPage() {
                       <p className="text-sm font-medium text-gray-700">
                         Office Hours
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.hours.weekday}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.hours.weekend}
                       </p>
                     </div>
@@ -344,10 +344,10 @@ export default function ContactPage() {
                       <p className="text-sm font-medium text-gray-700">
                         Address
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.address.street}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         {SITE.address.city}, {SITE.address.state}{" "}
                         {SITE.address.zip}
                       </p>

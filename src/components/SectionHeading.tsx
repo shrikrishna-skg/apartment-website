@@ -33,7 +33,7 @@ export default function SectionHeading({
           style={{
             background: "rgba(99,102,241,0.1)",
             border: "1px solid rgba(99,102,241,0.25)",
-            color: "#a5b4fc",
+            color: "#818cf8",
           }}
         >
           {badge}
@@ -50,7 +50,7 @@ export default function SectionHeading({
 
       {subtitle && (
         <p
-          className={`mt-4 text-base sm:text-lg text-gray-400 leading-relaxed ${
+          className={`mt-4 text-base sm:text-lg text-gray-600 leading-relaxed ${
             align === "center" ? "max-w-2xl mx-auto" : "max-w-2xl"
           }`}
         >

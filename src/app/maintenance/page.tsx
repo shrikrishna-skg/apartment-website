@@ -207,7 +207,7 @@ export default function MaintenancePage() {
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               <span className="text-gradient">Maintenance Request</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Submit a maintenance request using our AI chat assistant or the
               traditional form. We aim to respond within 24 hours.
             </p>
@@ -494,7 +494,7 @@ export default function MaintenancePage() {
                           size={32}
                           className="text-gray-400 mx-auto mb-3"
                         />
-                        <p className="text-sm text-gray-500 mb-1">
+                        <p className="text-sm text-gray-600 mb-1">
                           Drag & drop files here or click to browse
                         </p>
                         <p className="text-xs text-gray-400">
@@ -515,7 +515,7 @@ export default function MaintenancePage() {
                           <Send size={20} className="text-white" />
                         </div>
                         <p className="text-lg font-bold text-gray-900 mb-1">Request Submitted!</p>
-                        <p className="text-sm text-gray-500">Our maintenance team will contact you shortly.</p>
+                        <p className="text-sm text-gray-600">Our maintenance team will contact you shortly.</p>
                       </div>
                     ) : (
                       <button
@@ -548,21 +548,21 @@ export default function MaintenancePage() {
                   <div className="flex items-center gap-3 text-sm">
                     <Phone size={16} className="text-gray-400" />
                     <div>
-                      <p className="text-gray-500 text-xs">Maintenance Emergency</p>
+                      <p className="text-gray-600 text-xs">Maintenance Emergency</p>
                       <p className="text-gray-800 font-medium">{SITE.phone}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Phone size={16} className="text-gray-400" />
                     <div>
-                      <p className="text-gray-500 text-xs">Fire / Police / Medical</p>
+                      <p className="text-gray-600 text-xs">Fire / Police / Medical</p>
                       <p className="text-gray-800 font-medium">911</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
                     <Phone size={16} className="text-gray-400" />
                     <div>
-                      <p className="text-gray-500 text-xs">Leasing Office</p>
+                      <p className="text-gray-600 text-xs">Leasing Office</p>
                       <p className="text-gray-800 font-medium">{SITE.phone}</p>
                     </div>
                   </div>
@@ -592,7 +592,7 @@ export default function MaintenancePage() {
                   </div>
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                  <p className="text-xs text-gray-400 leading-relaxed">
+                  <p className="text-xs text-gray-500 leading-relaxed">
                     After-hours emergency maintenance is available 24/7. Non-urgent
                     requests submitted outside office hours will be addressed the
                     next business day.

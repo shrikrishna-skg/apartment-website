@@ -65,7 +65,7 @@ export default function Navbar() {
               <span className="text-base font-semibold tracking-tight text-[#1f2937]">
                 {SITE.name}
               </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-[#6b7280] -mt-px">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-[#4b5563] -mt-px">
                 {SITE.tagline}
               </span>
             </div>
@@ -96,7 +96,7 @@ export default function Navbar() {
                   className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors duration-200 ${
                     isActive
                       ? "text-[#1a73e8] bg-blue-50"
-                      : "text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-100"
+                      : "text-[#4b5563] hover:text-[#1f2937] hover:bg-gray-100"
                   }`}
                 >
                   {link.label}
@@ -111,7 +111,7 @@ export default function Navbar() {
               onMouseLeave={() => setTenantOpen(false)}
             >
               <button
-                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-100 transition-colors duration-200 bg-transparent border-none cursor-pointer"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium rounded-lg text-[#4b5563] hover:text-[#1f2937] hover:bg-gray-100 transition-colors duration-200 bg-transparent border-none cursor-pointer"
                 onClick={() => setTenantOpen(!tenantOpen)}
               >
                 Tenant
@@ -136,7 +136,7 @@ export default function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="block px-4 py-2.5 text-sm text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-50 transition-colors duration-200"
+                      className="block px-4 py-2.5 text-sm text-[#4b5563] hover:text-[#1f2937] hover:bg-gray-50 transition-colors duration-200"
                     >
                       {link.label}
                     </Link>
@@ -149,7 +149,7 @@ export default function Navbar() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 rounded-lg text-[#6b7280] hover:bg-gray-100 transition-colors duration-200 bg-transparent border-none cursor-pointer"
+            className="lg:hidden p-2 rounded-lg text-[#4b5563] hover:bg-gray-100 transition-colors duration-200 bg-transparent border-none cursor-pointer"
             aria-label="Toggle menu"
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -184,7 +184,7 @@ export default function Navbar() {
               <div className="flex justify-end px-4 pt-3 pb-1">
                 <button
                   onClick={() => setMobileOpen(false)}
-                  className="p-2 rounded-lg text-[#6b7280] hover:bg-gray-100 transition-colors duration-200 bg-transparent border-none cursor-pointer"
+                  className="p-2 rounded-lg text-[#4b5563] hover:bg-gray-100 transition-colors duration-200 bg-transparent border-none cursor-pointer"
                   aria-label="Close menu"
                 >
                   <X size={20} />
@@ -215,7 +215,7 @@ export default function Navbar() {
                       className={`block px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
                         isActive
                           ? "text-[#1a73e8] bg-blue-50"
-                          : "text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-50"
+                          : "text-[#4b5563] hover:text-[#1f2937] hover:bg-gray-50"
                       }`}
                     >
                       {link.label}
@@ -225,14 +225,14 @@ export default function Navbar() {
 
                 {/* Tenant Section */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <span className="block px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-[#6b7280]">
+                  <span className="block px-4 pb-2 text-[11px] font-semibold uppercase tracking-wider text-[#4b5563]">
                     Tenant Portal
                   </span>
                   {TENANT_LINKS.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="block px-4 py-3 text-sm text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-50 rounded-lg transition-colors duration-200"
+                      className="block px-4 py-3 text-sm text-[#4b5563] hover:text-[#1f2937] hover:bg-gray-50 rounded-lg transition-colors duration-200"
                     >
                       {link.label}
                     </Link>

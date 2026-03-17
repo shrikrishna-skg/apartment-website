@@ -118,12 +118,12 @@ export default function HomePage() {
               </h1>
 
               {/* Description */}
-              <p className="mt-6 text-gray-500 text-lg leading-relaxed" style={{ maxWidth: "28rem" }}>
+              <p className="mt-6 text-gray-600 text-lg leading-relaxed" style={{ maxWidth: "28rem" }}>
                 Modern apartments with top-notch facilities, prime location by campus, and individual leasing starting from $600/mo.
               </p>
 
               {/* Location */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm text-gray-500">
+              <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm text-gray-600">
                 <span className="flex items-center gap-1.5">
                   <MapPin size={15} className="text-[#1a73e8]" />
                   {SITE.address.full}
@@ -146,14 +146,14 @@ export default function HomePage() {
               </div>
 
               {/* Trust badges */}
-              <div className="mt-10 flex flex-wrap gap-6 text-sm text-gray-400">
+              <div className="mt-10 flex flex-wrap gap-6 text-sm text-gray-600">
                 {[
                   { icon: Shield, text: "Verified Properties" },
                   { icon: Star, text: "4.8★ Student Reviews" },
                   { icon: Clock, text: "Quick Application" },
                 ].map(({ icon: TIcon, text }) => (
                   <span key={text} className="flex items-center gap-1.5">
-                    <TIcon size={15} className="text-[#1a73e8]/60" />
+                    <TIcon size={15} className="text-[#1a73e8]" />
                     {text}
                   </span>
                 ))}
@@ -220,8 +220,8 @@ export default function HomePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.8, ease: EASE }}
               >
-                <p className="text-xs text-gray-400 font-medium">Starting from</p>
-                <p className="text-2xl font-bold text-gray-900">$600<span className="text-sm font-medium text-gray-400">/mo</span></p>
+                <p className="text-xs text-gray-500 font-medium">Starting from</p>
+                <p className="text-2xl font-bold text-gray-900">$600<span className="text-sm font-medium text-gray-500">/mo</span></p>
                 <p className="text-xs text-[#1a73e8] font-medium mt-1">Per bedroom</p>
               </motion.div>
             </motion.div>
@@ -261,7 +261,7 @@ export default function HomePage() {
               Our{" "}
               <span className="text-gradient">Communities</span>
             </h2>
-            <p className="text-gray-500 max-w-lg mx-auto">
+            <p className="text-gray-600 max-w-lg mx-auto">
               Four premium student housing communities, all within minutes of
               Middle Tennessee State University.
             </p>
@@ -310,9 +310,9 @@ export default function HomePage() {
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="text-white text-xs font-semibold">{pin.name}</span>
-                    <span className="text-white/60 text-xs">· {pin.distance}</span>
+                    <span className="text-white/80 text-xs">· {pin.distance}</span>
                   </div>
-                  <div className="text-white/70 text-[10px] mt-0.5">{pin.address}</div>
+                  <div className="text-white/90 text-[11px] mt-0.5">{pin.address}</div>
                   {/* Arrow */}
                   <div
                     className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
@@ -361,7 +361,7 @@ export default function HomePage() {
                 style={{ background: "#1f2937", boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}
               >
                 <span className="text-white text-xs font-semibold">MTSU Campus</span>
-                <span className="text-white/70 text-xs ml-1.5">· Middle Tennessee State University</span>
+                <span className="text-white/90 text-xs ml-1.5">· Middle Tennessee State University</span>
                 <div
                   className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
                   style={{ borderLeft: "5px solid transparent", borderRight: "5px solid transparent", borderTop: "5px solid #1f2937" }}
@@ -386,7 +386,7 @@ export default function HomePage() {
             <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-8">
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <p className="text-white/60 text-xs font-medium uppercase tracking-wider mb-1">Aerial Property Map</p>
+                  <p className="text-white/80 text-xs font-medium uppercase tracking-wider mb-1">Aerial Property Map</p>
                   <h3 className="text-white text-lg sm:text-xl font-bold">
                     All Properties Near MTSU
                   </h3>
@@ -477,7 +477,7 @@ export default function HomePage() {
                       />
                       <h4 className="text-white font-semibold text-sm">{property.name}</h4>
                     </div>
-                    <p className="text-white/70 text-xs">{property.address}</p>
+                    <p className="text-white/90 text-xs">{property.address}</p>
                     <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-xs">
                       <Navigation size={10} />
                       {property.distance} from MTSU

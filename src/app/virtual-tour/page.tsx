@@ -79,7 +79,7 @@ export default function VirtualTourPage() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5">
               <span className="text-gradient">3D Virtual Tour</span>
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Walk through our apartments virtually. Explore every room, check
               out the layout, and experience the space — all from your device.
             </p>
@@ -193,7 +193,7 @@ export default function VirtualTourPage() {
                   <h3 className="text-2xl font-bold text-gray-900 mb-3">
                     3D Tour Coming Soon
                   </h3>
-                  <p className="text-gray-500 max-w-md mx-auto mb-6">
+                  <p className="text-gray-600 max-w-md mx-auto mb-6">
                     A virtual 3D tour for {currentProperty.name} is not yet
                     available. Schedule an in-person tour to see this property!
                   </p>
@@ -229,7 +229,7 @@ export default function VirtualTourPage() {
               <h3 className="text-lg font-bold text-gray-900 mb-1">
                 {currentProperty.name}
               </h3>
-              <p className="text-sm text-gray-500 flex items-center gap-1.5">
+              <p className="text-sm text-gray-600 flex items-center gap-1.5">
                 <MapPin size={14} className="text-blue-600" />
                 {currentProperty.address}
               </p>
@@ -270,7 +270,7 @@ export default function VirtualTourPage() {
             </motion.h2>
             <motion.p
               variants={itemVariants}
-              className="text-center text-gray-500 text-sm mb-8"
+              className="text-center text-gray-600 text-sm mb-8"
             >
               Click a floor plan to view the property details
             </motion.p>
@@ -295,7 +295,7 @@ export default function VirtualTourPage() {
                   <h3 className="text-sm font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                     {plan.name}
                   </h3>
-                  <p className="text-xs text-gray-400 mb-3">
+                  <p className="text-xs text-gray-500 mb-3">
                     {plan.beds} Bed / {plan.baths} Bath | {plan.sqft} sq ft
                   </p>
                   <div className="flex flex-wrap items-center justify-between gap-1">
@@ -308,7 +308,7 @@ export default function VirtualTourPage() {
                           3D
                         </span>
                       )}
-                      <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                      <span className="text-[10px] text-gray-500 flex items-center gap-0.5">
                         <Camera size={10} />
                         {plan.photoCount}
                       </span>
@@ -372,11 +372,11 @@ export default function VirtualTourPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500 flex items-center gap-1 mb-2">
+                      <p className="text-sm text-gray-600 flex items-center gap-1 mb-2">
                         <MapPin size={12} />
                         {p.address}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 text-xs text-gray-600">
                         <span className="flex items-center gap-1">
                           <Bed size={12} className="text-blue-600" />
                           {p.beds} Beds
@@ -424,7 +424,7 @@ export default function VirtualTourPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               Prefer to See It In Person?
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto mb-8">
+            <p className="text-gray-600 max-w-xl mx-auto mb-8">
               Nothing beats walking through the space yourself. Schedule a
               private tour with our leasing team and experience our apartments
               firsthand.

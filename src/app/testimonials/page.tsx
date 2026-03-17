@@ -57,7 +57,7 @@ export default function TestimonialsPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-4 text-lg text-gray-500"
+            className="mt-4 text-lg text-gray-600"
           >
             Hear from real students about their experience living at College
             Place Apartments near MTSU.
@@ -98,7 +98,7 @@ export default function TestimonialsPage() {
                     <p className="font-semibold text-gray-900">
                       {testimonial.name}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {testimonial.source}
                     </p>
                   </div>
@@ -106,7 +106,7 @@ export default function TestimonialsPage() {
                     Moved in {testimonial.movedIn}
                   </span>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
+                <p className="mt-2 text-sm text-gray-600">
                   {testimonial.property}
                 </p>
               </div>
@@ -132,7 +132,7 @@ export default function TestimonialsPage() {
                   <p className="mt-3 text-2xl font-bold text-gradient md:text-3xl">
                     {stat.value}
                   </p>
-                  <p className="mt-1 text-sm text-gray-500">{stat.label}</p>
+                  <p className="mt-1 text-sm text-gray-600">{stat.label}</p>
                 </div>
               );
             })}
@@ -149,7 +149,7 @@ export default function TestimonialsPage() {
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
             Ready to Join Our Community?
           </h2>
-          <p className="mt-3 text-gray-500">
+          <p className="mt-3 text-gray-600">
             Experience the College Place difference for yourself.
           </p>
 

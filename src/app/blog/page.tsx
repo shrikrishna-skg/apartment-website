@@ -45,7 +45,7 @@ export default function BlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mt-4 text-lg text-gray-500 max-w-2xl mx-auto"
+            className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto"
           >
             Tips, guides, and local insights for MTSU students living off campus
             in Murfreesboro, TN
@@ -111,7 +111,7 @@ export default function BlogPage() {
                 <h2 className="mt-4 text-2xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 md:text-3xl">
                   {filteredPosts[0].title}
                 </h2>
-                <div className="mt-3 flex items-center gap-4 text-sm text-gray-400">
+                <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
                   <span className="flex items-center gap-1.5">
                     <Calendar className="h-4 w-4" />
                     {filteredPosts[0].date}
@@ -121,7 +121,7 @@ export default function BlogPage() {
                     {filteredPosts[0].readTime}
                   </span>
                 </div>
-                <p className="mt-4 text-gray-500 leading-relaxed">
+                <p className="mt-4 text-gray-600 leading-relaxed">
                   {filteredPosts[0].excerpt}
                 </p>
                 <Link
@@ -140,7 +140,7 @@ export default function BlogPage() {
         {/* Blog Grid */}
         {filteredPosts.length === 0 ? (
           <div className="glass py-16 text-center">
-            <p className="text-lg text-gray-500">
+            <p className="text-lg text-gray-600">
               No articles found. Try adjusting your search or category filter.
             </p>
           </div>
@@ -189,14 +189,14 @@ export default function BlogPage() {
                   </h2>
 
                   {/* Date & Read Time */}
-                  <div className="mt-2 flex items-center gap-3 text-sm text-gray-400">
+                  <div className="mt-2 flex items-center gap-3 text-sm text-gray-500">
                     <span>{post.date}</span>
                     <span className="h-1 w-1 rounded-full bg-gray-400" />
                     <span>{post.readTime}</span>
                   </div>
 
                   {/* Excerpt */}
-                  <p className="mt-3 text-sm leading-relaxed text-gray-500 line-clamp-3">
+                  <p className="mt-3 text-sm leading-relaxed text-gray-600 line-clamp-3">
                     {post.excerpt}
                   </p>
 
@@ -220,7 +220,7 @@ export default function BlogPage() {
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
             <span className="text-gradient">Stay Updated</span>
           </h2>
-          <p className="mt-3 text-gray-500">
+          <p className="mt-3 text-gray-600">
             Get the latest tips, guides, and updates about student living
             delivered to your inbox.
           </p>

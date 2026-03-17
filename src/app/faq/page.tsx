@@ -64,7 +64,7 @@ export default function FAQPage() {
           <h1 className="text-4xl font-bold md:text-5xl">
             <span className="text-gradient">Frequently Asked Questions</span>
           </h1>
-          <p className="mt-4 text-lg text-gray-500">
+          <p className="mt-4 text-lg text-gray-600">
             Everything you need to know about living at College Place near MTSU.
             Can&apos;t find your answer? Reach out to us directly.
           </p>
@@ -105,7 +105,7 @@ export default function FAQPage() {
         {/* FAQ Sections */}
         {filteredFAQs.length === 0 && (
           <div className="glass py-16 text-center">
-            <p className="text-lg text-gray-500">
+            <p className="text-lg text-gray-600">
               No questions found matching &quot;{searchTerm}&quot;. Try a
               different search term.
             </p>
@@ -149,7 +149,7 @@ export default function FAQPage() {
                           transition={{ duration: 0.3, ease: "easeInOut" as const }}
                         >
                           <div className="border-t border-gray-100 px-6 pb-5 pt-4">
-                            <p className="leading-relaxed text-gray-500">
+                            <p className="leading-relaxed text-gray-600">
                               {item.a}
                             </p>
                           </div>
@@ -168,7 +168,7 @@ export default function FAQPage() {
           <h2 className="text-2xl font-bold text-gray-900 md:text-3xl">
             Still have questions?
           </h2>
-          <p className="mt-3 text-gray-500">
+          <p className="mt-3 text-gray-600">
             Our team is here to help you find the perfect apartment near MTSU.
           </p>
 
