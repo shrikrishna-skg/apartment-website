@@ -10,6 +10,9 @@ import {
   User,
   Briefcase,
   ClipboardCheck,
+  Upload,
+  FileText,
+  X,
 } from "lucide-react";
 
 const STEPS = [
@@ -112,6 +115,32 @@ export default function GeneralApplicationPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [fileLabels, setFileLabels] = useState<string[]>([]);
+
+  const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setUploadedFiles((prev) => [...prev, ...newFiles]);
+    setFileLabels((prev) => [...prev, ...newFiles.map(() => "Supporting Document")]);
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    setFileLabels((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const updateFileLabel = (index: number, label: string) => {
+    setFileLabels((prev) => prev.map((l, i) => (i === index ? label : l)));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const handleSubmit = async () => {
     if (!validateStep()) return;
@@ -143,6 +172,19 @@ export default function GeneralApplicationPage() {
         const data = await res.json();
         throw new Error(data.error || "Failed to submit application");
       }
+      const appData = await res.json();
+
+      // Upload documents if any
+      if (uploadedFiles.length > 0 && appData.id) {
+        for (let i = 0; i < uploadedFiles.length; i++) {
+          const fileForm = new FormData();
+          fileForm.append("file", uploadedFiles[i]);
+          fileForm.append("application_id", appData.id);
+          fileForm.append("document_label", fileLabels[i] || "Supporting Document");
+          await fetch("/api/documents/upload", { method: "POST", body: fileForm });
+        }
+      }
+
       setSubmitted(true);
     } catch (err: unknown) {
       setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -219,7 +261,7 @@ export default function GeneralApplicationPage() {
     return (
       <>
         <div className="bg-ambient" />
-        <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -247,7 +289,7 @@ export default function GeneralApplicationPage() {
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
           {/* Header */}
           <motion.div
@@ -468,6 +510,66 @@ export default function GeneralApplicationPage() {
                       <SummaryRow label="State" value={formData.previousState || "Not provided"} />
                       <SummaryRow label="Zip" value={formData.previousZip || "Not provided"} />
                     </div>
+                  </div>
+
+                  {/* Document Upload Section */}
+                  <div className="glass-subtle p-5 mb-6">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
+                      <Upload size={16} />
+                      Upload Documents
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-4">
+                      Upload supporting documents such as ID, proof of income, employment letter, or any other relevant documents.
+                      Accepted formats: PDF, images (JPG, PNG), Word, Excel, text files. Max 10MB per file.
+                    </p>
+
+                    {uploadedFiles.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                        {uploadedFiles.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3">
+                            <FileText size={18} className="text-blue-500 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                              <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                            </div>
+                            <select
+                              value={fileLabels[idx]}
+                              onChange={(e) => updateFileLabel(idx, e.target.value)}
+                              className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none"
+                            >
+                              <option value="Supporting Document">Supporting Document</option>
+                              <option value="Photo ID">Photo ID</option>
+                              <option value="Proof of Income">Proof of Income</option>
+                              <option value="Employment Letter">Employment Letter</option>
+                              <option value="Bank Statement">Bank Statement</option>
+                              <option value="Pay Stubs">Pay Stubs</option>
+                              <option value="Other">Other</option>
+                            </select>
+                            <button
+                              type="button"
+                              onClick={() => removeFile(idx)}
+                              className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
+                      <Upload size={18} className="text-gray-400 group-hover:text-blue-500" />
+                      <span className="text-sm text-gray-500 group-hover:text-blue-600">
+                        {uploadedFiles.length > 0 ? "Add more files" : "Choose files to upload"}
+                      </span>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt"
+                        onChange={handleFileAdd}
+                        className="sr-only"
+                      />
+                    </label>
                   </div>
 
                   {/* Consent */}

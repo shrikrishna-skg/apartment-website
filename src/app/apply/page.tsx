@@ -95,7 +95,7 @@ export default function ApplyPage() {
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <motion.div

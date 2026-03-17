@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { createTourEvent } from "@/lib/google-calendar";
+import { sendTourConfirmation, sendStaffNotification } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +16,26 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+    }
+
+    // Check availability before booking
+    const { data: existing, error: checkError } = await supabase
+      .from("tour_bookings")
+      .select("id")
+      .eq("tour_date", body.tour_date)
+      .eq("tour_time", body.tour_time)
+      .neq("status", "cancelled")
+      .is("deleted_at", null);
+
+    if (checkError) {
+      return NextResponse.json({ error: checkError.message }, { status: 400 });
+    }
+
+    if (existing && existing.length > 0) {
+      return NextResponse.json(
+        { error: `The ${body.tour_time} slot on ${body.tour_date} is no longer available. Please choose a different time.` },
+        { status: 409 }
+      );
     }
 
     // Try to create Google Calendar event (graceful fallback if not configured)
@@ -55,6 +76,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    // Send confirmation email to the visitor (non-blocking)
+    const propertyName = body.property_slug
+      ? body.property_slug.replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())
+      : undefined;
+
+    sendTourConfirmation({
+      to: body.email,
+      firstName: body.first_name,
+      lastName: body.last_name,
+      tourDate: body.tour_date,
+      tourTime: body.tour_time,
+      propertyName,
+    }).catch((err) => console.error("Tour confirmation email failed:", err));
+
+    // Notify staff (non-blocking)
+    sendStaffNotification({
+      type: "tour",
+      name: `${body.first_name} ${body.last_name}`,
+      email: body.email,
+      details: `Date: ${body.tour_date}\nTime: ${body.tour_time}\nPhone: ${body.phone}${propertyName ? `\nProperty: ${propertyName}` : ""}`,
+    }).catch((err) => console.error("Staff notification email failed:", err));
+
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to book tour" }, { status: 500 });
@@ -66,6 +109,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("tour_bookings")
       .select("*")
+      .is("deleted_at", null)
       .order("tour_date", { ascending: true });
 
     if (error) {

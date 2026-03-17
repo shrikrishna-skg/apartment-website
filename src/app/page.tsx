@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -28,7 +29,7 @@ import {
 } from "lucide-react";
 import { SITE, PROPERTIES, type Property } from "@/data/site-data";
 import PropertyCard from "@/components/PropertyCard";
-import PropertyMap from "@/components/PropertyMap";
+const PropertyMap = dynamic(() => import("@/components/PropertyMap"), { ssr: false });
 
 /* ──────────────────────────── animation helpers ──────────────────────────── */
 
@@ -69,6 +70,7 @@ export default function HomePage() {
 
   return (
     <main
+      className="-mt-16"
       style={{
         minHeight: "100vh",
         background: "var(--surface)",
@@ -77,141 +79,171 @@ export default function HomePage() {
       }}
     >
       {/* ━━━━━━━━━━━ HERO ━━━━━━━━━━━ */}
-      <section
-        className="relative flex items-center justify-center overflow-hidden"
-        style={{ minHeight: "auto", background: "#fff" }}
-      >
-        {/* Subtle background pattern */}
-        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.4 }}>
-          <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage: `radial-gradient(circle at 1px 1px, #e5e7eb 1px, transparent 0)`,
-              backgroundSize: "40px 40px",
-            }}
-          />
+      <section className="relative overflow-hidden bg-[#f8fafe]" style={{ minHeight: "100vh" }}>
+        {/* Subtle gradient background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-[#1a73e8]/5 to-transparent" />
+          <div className="absolute bottom-0 left-0 w-[40%] h-[60%] bg-gradient-to-tr from-[#1a73e8]/3 to-transparent" />
         </div>
 
-        {/* Soft gradient blobs */}
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            top: "-10%",
-            right: "-5%",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(26,115,232,0.08), transparent 70%)",
-            filter: "blur(80px)",
-          }}
-        />
-        <div
-          className="absolute pointer-events-none"
-          style={{
-            bottom: "-10%",
-            left: "-5%",
-            width: 500,
-            height: 500,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(26,115,232,0.06), transparent 70%)",
-            filter: "blur(80px)",
-          }}
-        />
-
-        {/* Hero content */}
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center pt-10 pb-16">
-          {/* Leasing badge */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
-          >
-            <span className="inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium bg-blue-50 text-[#1a73e8] border border-blue-100">
-              <span className="w-2 h-2 rounded-full bg-[#1a73e8] animate-pulse" />
-              Now Leasing for 2025–2026
-            </span>
-          </motion.div>
-
-          {/* Main heading */}
-          <motion.h1
-            className="mt-8 text-gray-900"
-            style={{
-              fontSize: "clamp(2.75rem, 7vw, 5rem)",
-              fontWeight: 800,
-              lineHeight: 1.05,
-              letterSpacing: "-0.03em",
-            }}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15, ease: EASE }}
-          >
-            Student Housing{" "}
-            <span className="text-gradient">Near MTSU</span>
-          </motion.h1>
-
-          {/* Description */}
-          <motion.p
-            className="mt-7 mx-auto text-gray-500"
-            style={{ maxWidth: "38rem", fontSize: "1.175rem", lineHeight: 1.75 }}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.25, ease: EASE }}
-          >
-            {SITE.description}
-          </motion.p>
-
-          {/* Location & contact info */}
-          <motion.div
-            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-sm text-gray-500"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.35, ease: EASE }}
-          >
-            <span className="flex items-center gap-1.5">
-              <MapPin size={15} className="text-[#1a73e8]" />
-              {SITE.address.full}
-            </span>
-            <span className="hidden sm:block w-1 h-1 rounded-full bg-gray-300" />
-            <span className="flex items-center gap-1.5">
-              <Phone size={15} className="text-[#1a73e8]" />
-              {SITE.phone}
-            </span>
-          </motion.div>
-
-          {/* CTA buttons */}
-          <motion.div
-            className="mt-12 flex flex-wrap justify-center gap-4"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.45, ease: EASE }}
-          >
-            <Link href="/properties" className="btn-glow" style={{ padding: "1rem 2.5rem", fontSize: "1rem" }}>
-              View Floor Plans
-              <ArrowRight size={18} />
-            </Link>
-            <Link href="/apply" className="btn-outline" style={{ padding: "1rem 2.5rem", fontSize: "1rem" }}>
-              Student Application
-            </Link>
-          </motion.div>
-
-          {/* Trust badges */}
-          <motion.div
-            className="mt-10 flex flex-wrap justify-center gap-8 text-xs text-gray-400"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.55, ease: EASE }}
-          >
-            {[
-              { icon: Shield, text: "Verified Properties" },
-              { icon: Star, text: "4.8★ Student Reviews" },
-              { icon: Clock, text: "Quick Application" },
-            ].map(({ icon: TIcon, text }) => (
-              <span key={text} className="flex items-center gap-1.5">
-                <TIcon size={14} className="text-gray-400" />
-                {text}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 pt-28 sm:pt-32 pb-16 lg:pb-0">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center" style={{ minHeight: "calc(100vh - 8rem)" }}>
+            {/* Left: Text Content */}
+            <motion.div
+              className="max-w-xl"
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: EASE }}
+            >
+              {/* Leasing badge */}
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-[#1a73e8]/10 text-[#1a73e8] border border-[#1a73e8]/20">
+                <span className="w-2 h-2 rounded-full bg-[#1a73e8] animate-pulse" />
+                Now Leasing for 2025–2026
               </span>
-            ))}
-          </motion.div>
+
+              {/* Main heading */}
+              <h1
+                className="mt-6 text-gray-900"
+                style={{
+                  fontSize: "clamp(2.5rem, 5vw, 3.75rem)",
+                  fontWeight: 800,
+                  lineHeight: 1.08,
+                  letterSpacing: "-0.03em",
+                }}
+              >
+                Premium Student
+                <br />
+                Housing{" "}
+                <span className="text-gradient">Near MTSU</span>
+              </h1>
+
+              {/* Description */}
+              <p className="mt-6 text-gray-500 text-lg leading-relaxed" style={{ maxWidth: "28rem" }}>
+                Modern apartments with top-notch facilities, prime location by campus, and individual leasing starting from $600/mo.
+              </p>
+
+              {/* Location */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm text-gray-500">
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={15} className="text-[#1a73e8]" />
+                  {SITE.address.full}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Phone size={15} className="text-[#1a73e8]" />
+                  {SITE.phone}
+                </span>
+              </div>
+
+              {/* CTA buttons */}
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Link href="/properties" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold bg-[#1a73e8] text-white hover:bg-[#1557b0] transition-all duration-300 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/35 hover:-translate-y-0.5">
+                  View Floor Plans
+                  <ArrowRight size={18} />
+                </Link>
+                <Link href="/schedule-tour" className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full text-[15px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-300 hover:-translate-y-0.5">
+                  Schedule a Tour
+                </Link>
+              </div>
+
+              {/* Trust badges */}
+              <div className="mt-10 flex flex-wrap gap-6 text-sm text-gray-400">
+                {[
+                  { icon: Shield, text: "Verified Properties" },
+                  { icon: Star, text: "4.8★ Student Reviews" },
+                  { icon: Clock, text: "Quick Application" },
+                ].map(({ icon: TIcon, text }) => (
+                  <span key={text} className="flex items-center gap-1.5">
+                    <TIcon size={15} className="text-[#1a73e8]/60" />
+                    {text}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Right: Photo Mosaic */}
+            <motion.div
+              className="relative hidden lg:block"
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: EASE }}
+            >
+              <div className="grid grid-cols-2 gap-3" style={{ height: "min(75vh, 600px)" }}>
+                {/* Left column — 2 images stacked */}
+                <div className="flex flex-col gap-3">
+                  <div className="relative flex-[1.2] rounded-2xl overflow-hidden shadow-xl">
+                    <Image
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/89df05664_CollegePlaceLeftSideroadsideview.png"
+                      alt="College Place building exterior"
+                      fill
+                      priority
+                      className="object-cover hover:scale-105 transition-transform duration-700"
+                      sizes="30vw"
+                    />
+                  </div>
+                  <div className="relative flex-1 rounded-2xl overflow-hidden shadow-xl">
+                    <Image
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/637de6143_CollegePlaceKitchenwithroomview.png"
+                      alt="Modern kitchen interior"
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-700"
+                      sizes="30vw"
+                    />
+                  </div>
+                </div>
+                {/* Right column — 2 images stacked, offset */}
+                <div className="flex flex-col gap-3 pt-8">
+                  <div className="relative flex-1 rounded-2xl overflow-hidden shadow-xl">
+                    <Image
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/ffac9bbeb_CollegePlaceBedroomwithcloset.png"
+                      alt="Spacious bedroom with closet"
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-700"
+                      sizes="30vw"
+                    />
+                  </div>
+                  <div className="relative flex-[1.2] rounded-2xl overflow-hidden shadow-xl">
+                    <Image
+                      src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a542d9281_CollegePlaceBirdeyeview1.png"
+                      alt="Aerial view of College Place community"
+                      fill
+                      className="object-cover hover:scale-105 transition-transform duration-700"
+                      sizes="30vw"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating price badge */}
+              <motion.div
+                className="absolute -left-6 top-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl border border-gray-100 px-5 py-4 z-10"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.8, ease: EASE }}
+              >
+                <p className="text-xs text-gray-400 font-medium">Starting from</p>
+                <p className="text-2xl font-bold text-gray-900">$600<span className="text-sm font-medium text-gray-400">/mo</span></p>
+                <p className="text-xs text-[#1a73e8] font-medium mt-1">Per bedroom</p>
+              </motion.div>
+            </motion.div>
+
+            {/* Mobile: Single hero image */}
+            <motion.div
+              className="lg:hidden relative rounded-2xl overflow-hidden shadow-xl"
+              style={{ height: 300 }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3, ease: EASE }}
+            >
+              <Image
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/89df05664_CollegePlaceLeftSideroadsideview.png"
+                alt="College Place Apartments"
+                fill
+                priority
+                className="object-cover"
+                sizes="100vw"
+              />
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -248,7 +280,6 @@ export default function HomePage() {
               src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/c5954ec6f_CollegePlaceeagleeyeview.png"
               alt="Aerial view of College Place properties near MTSU campus"
               fill
-              unoptimized
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1152px"
               style={{ objectFit: "cover" }}
             />
@@ -427,13 +458,12 @@ export default function HomePage() {
                     }
                   }}
                   className="relative rounded-xl overflow-hidden group cursor-pointer flex-shrink-0 snap-start"
-                  style={{ aspectRatio: "4 / 3", width: "calc(33.333% - 0.67rem)", minWidth: "280px" }}
+                  style={{ aspectRatio: "4 / 3", width: "calc(33.333% - 0.67rem)", minWidth: "240px" }}
                 >
                   <Image
                     src={property.image}
                     alt={`${property.name} apartments`}
                     fill
-                    unoptimized
                     sizes="(max-width: 640px) 100vw, 33vw"
                     style={{ objectFit: "cover" }}
                     className="transition-transform duration-500 group-hover:scale-110"
@@ -493,7 +523,7 @@ export default function HomePage() {
           <motion.div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "1.5rem",
             }}
             variants={stagger}
@@ -579,8 +609,8 @@ export default function HomePage() {
             style={{
               display: "grid",
               padding: "0.5rem 0",
-              gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-              gap: "2rem",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
+              gap: "1.5rem",
             }}
             variants={stagger}
             initial="hidden"
@@ -650,7 +680,7 @@ export default function HomePage() {
               style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}
             >
               {/* Distance stat cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 100px), 1fr))", gap: "0.75rem" }}>
                 {[
                   { value: "0.4", unit: "miles", label: "To MTSU" },
                   { value: "2", unit: "min", label: "Drive" },
@@ -786,7 +816,7 @@ export default function HomePage() {
           <motion.div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
               gap: "1.5rem",
             }}
             variants={stagger}
@@ -883,7 +913,7 @@ export default function HomePage() {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
                 gap: "1rem",
               }}
             >
@@ -984,9 +1014,24 @@ export default function HomePage() {
               guides, and special offers near MTSU.
             </p>
             <form
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                setEmail("");
+                try {
+                  const res = await fetch("/api/email-subscribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email }),
+                  });
+                  if (res.ok) {
+                    setEmail("");
+                    alert("Subscribed successfully!");
+                  } else {
+                    const data = await res.json();
+                    alert(data.error || "Failed to subscribe");
+                  }
+                } catch {
+                  alert("Failed to subscribe. Please try again.");
+                }
               }}
               style={{
                 maxWidth: "28rem",

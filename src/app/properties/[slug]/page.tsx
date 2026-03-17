@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import { PROPERTIES, SITE } from "@/data/site-data";
-import PropertyMap from "@/components/PropertyMap";
+const PropertyMap = dynamic(() => import("@/components/PropertyMap"), { ssr: false });
 import type { FloorPlan, Property } from "@/data/site-data";
 import { motion } from "framer-motion";
 import {
@@ -161,12 +162,12 @@ export default function PropertyDetailPage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-6"
       >
         {/* Main Image */}
-        <div className="relative w-full rounded-2xl overflow-hidden" style={{ height: "60vh", minHeight: 320, background: "var(--surface-container-low)" }}>
+        <div className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden" style={{ height: "clamp(240px, 50vh, 560px)", background: "var(--surface-container-low)" }}>
           <Image
             src={currentPhotos[selectedPhoto]}
             alt={`${property.name} - ${activeFloorPlan?.name || ''} Photo ${selectedPhoto + 1}`}
             fill
-            unoptimized
+            sizes="100vw"
             style={{ objectFit: "cover" }}
             priority
           />
@@ -231,7 +232,7 @@ export default function PropertyDetailPage() {
                 src={photo}
                 alt={`Thumbnail ${i + 1}`}
                 fill
-                unoptimized
+                sizes="80px"
                 style={{ objectFit: "cover" }}
               />
             </button>
@@ -249,7 +250,7 @@ export default function PropertyDetailPage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 pb-6"
       >
         {/* Property name */}
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-1">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient mb-1">
           {property.name}
         </h1>
         <p className="text-base font-medium text-gray-500 mb-2">
@@ -312,9 +313,9 @@ export default function PropertyDetailPage() {
               viewport={{ once: true, margin: "-50px" }}
               variants={fadeUp}
               custom={0}
-              className="glass p-8"
+              className="glass p-5 sm:p-8"
             >
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Property</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">About This Property</h2>
               <p className="leading-relaxed" style={{ color: "var(--on-surface-variant)" }}>
                 {property.description}
               </p>
@@ -342,7 +343,7 @@ export default function PropertyDetailPage() {
                     viewport={{ once: true }}
                     variants={fadeUp}
                     custom={idx}
-                    className={`glass p-6 cursor-pointer transition-all ${selectedFloorPlan === idx ? "!border-[#1a73e8] ring-1 ring-[#1a73e8]" : ""}`}
+                    className={`glass p-4 sm:p-6 cursor-pointer transition-all ${selectedFloorPlan === idx ? "!border-[#1a73e8] ring-1 ring-[#1a73e8]" : ""}`}
                     onClick={() => handleFloorPlanSelect(idx)}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -405,8 +406,8 @@ export default function PropertyDetailPage() {
               custom={2}
             >
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Amenities</h2>
-              <div className="glass p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="glass p-5 sm:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {property.amenities.map((amenity) => (
                     <div
                       key={amenity}
@@ -433,8 +434,8 @@ export default function PropertyDetailPage() {
                 <PawPrint className="w-6 h-6 text-purple-600" />
                 Pet Policy
               </h2>
-              <div className="glass p-8 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="glass p-5 sm:p-8 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="glass-subtle p-4">
                     <p className="text-xs uppercase tracking-wider mb-1" style={{ color: "var(--on-surface-variant)" }}>
                       Pet Deposit
@@ -481,8 +482,8 @@ export default function PropertyDetailPage() {
                 <Zap className="w-5 h-5 text-amber-400" />
                 Utilities Included
               </h2>
-              <div className="glass p-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div className="glass p-5 sm:p-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
                   {property.utilities.map((util) => (
                     <div
                       key={util}
@@ -513,8 +514,8 @@ export default function PropertyDetailPage() {
                 <CalendarDays className="w-5 h-5 text-blue-600" />
                 Lease Information
               </h2>
-              <div className="glass p-8 space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="glass p-5 sm:p-8 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="glass-subtle p-4">
                     <p className="text-xs uppercase tracking-wider mb-1" style={{ color: "var(--on-surface-variant)" }}>
                       Minimum Lease
@@ -695,7 +696,7 @@ export default function PropertyDetailPage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 pb-32"
       >
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Other Properties</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {otherProperties.map((op: Property, idx: number) => (
             <motion.div
               key={op.id}
@@ -715,7 +716,7 @@ export default function PropertyDetailPage() {
                     src={op.photos[0] || op.image}
                     alt={op.name}
                     fill
-                    unoptimized
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     style={{ objectFit: "cover" }}
                     className="transition-transform duration-500 group-hover:scale-105"
                   />

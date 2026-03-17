@@ -18,8 +18,9 @@ import {
   DollarSign,
   Star,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { NEARBY_PLACES, SITE, PROPERTIES } from "@/data/site-data";
-import PropertyMap from "@/components/PropertyMap";
+const PropertyMap = dynamic(() => import("@/components/PropertyMap"), { ssr: false });
 
 const iconMap: Record<string, React.ElementType> = {
   GraduationCap,
@@ -94,7 +95,7 @@ export default function LocationGuidePage() {
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Breadcrumb */}
           <motion.nav

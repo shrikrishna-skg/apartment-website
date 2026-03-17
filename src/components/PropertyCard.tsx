@@ -54,7 +54,6 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           src={property.image}
           alt={property.name}
           fill
-          unoptimized
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           style={{
             objectFit: "cover",

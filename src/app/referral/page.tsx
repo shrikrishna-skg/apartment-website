@@ -104,6 +104,9 @@ export default function ReferralPage() {
   const [consentShare, setConsentShare] = useState(false);
   const [consentContact, setConsentContact] = useState(false);
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -111,23 +114,54 @@ export default function ReferralPage() {
     >
   ) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setSubmitError("");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!consentShare || !consentContact) {
-      alert("Please agree to both consent checkboxes before submitting.");
+      setSubmitError("Please agree to both consent checkboxes before submitting.");
       return;
     }
-    alert(
-      "Thank you! Your referral has been submitted. Our team will reach out to your friend soon."
-    );
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/referrals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          referrer_name: formData.yourName,
+          referrer_email: formData.yourEmail,
+          referrer_phone: formData.yourPhone,
+          referrer_unit: formData.yourUnit,
+          preferred_contact: formData.preferredContact,
+          relationship: formData.relationship,
+          friend_name: formData.friendName,
+          friend_email: formData.friendEmail || null,
+          friend_phone: formData.friendPhone || null,
+          move_in_timeline: formData.moveInTimeline || null,
+          budget_range: formData.budgetRange || null,
+          occupants: formData.occupants || null,
+          notes: formData.notes || null,
+          consent_share: consentShare,
+          consent_contact: consentContact,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to submit referral");
+      }
+      setSubmitted(true);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    }
+    setSubmitting(false);
   };
 
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
           <motion.div
@@ -453,14 +487,33 @@ export default function ReferralPage() {
                 </label>
               </div>
 
+              {/* Error */}
+              {submitError && (
+                <p className="text-red-600 text-sm">{submitError}</p>
+              )}
+
               {/* Submit */}
-              <button
-                type="submit"
-                className="btn-glow w-full text-center flex items-center justify-center gap-2"
-              >
-                Submit Referral
-                <ArrowRight size={18} />
-              </button>
+              {submitted ? (
+                <div className="text-center py-6">
+                  <div className="w-14 h-14 rounded-full bg-green-600 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle size={28} className="text-white" />
+                  </div>
+                  <p className="text-xl font-bold text-gray-900 mb-2">Referral Submitted!</p>
+                  <p className="text-gray-500 text-sm">
+                    Thank you! Our team will reach out to your friend soon.
+                    You&apos;ll receive a confirmation email shortly.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  className="btn-glow w-full text-center flex items-center justify-center gap-2"
+                  disabled={submitting}
+                >
+                  {submitting ? "Submitting..." : "Submit Referral"}
+                  {!submitting && <ArrowRight size={18} />}
+                </button>
+              )}
             </form>
           </motion.section>
 

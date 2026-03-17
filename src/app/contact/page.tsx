@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import {
   Send,
@@ -11,7 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { SITE, PROPERTIES } from "@/data/site-data";
-import PropertyMap from "@/components/PropertyMap";
+const PropertyMap = dynamic(() => import("@/components/PropertyMap"), { ssr: false });
 
 const subjectOptions = [
   "General Inquiry",
@@ -98,7 +99,7 @@ export default function ContactPage() {
     return (
       <>
         <div className="bg-ambient" />
-        <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -126,7 +127,7 @@ export default function ContactPage() {
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <motion.div

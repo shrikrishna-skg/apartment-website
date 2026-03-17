@@ -2,19 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, Calendar, Clock } from "lucide-react";
 import { BLOG_POSTS } from "@/data/site-data";
-
-const POST_COLORS = [
-  "from-blue-500 to-blue-600",
-  "from-purple-500 to-pink-500",
-  "from-cyan-600 to-blue-600",
-  "from-emerald-600 to-teal-600",
-  "from-orange-600 to-rose-600",
-  "from-pink-600 to-purple-600",
-];
 
 export default function BlogPage() {
   const router = useRouter();
@@ -53,9 +45,10 @@ export default function BlogPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="mt-4 text-lg text-gray-500"
+            className="mt-4 text-lg text-gray-500 max-w-2xl mx-auto"
           >
-            Your guide to student living at College Place
+            Tips, guides, and local insights for MTSU students living off campus
+            in Murfreesboro, TN
           </motion.p>
         </div>
 
@@ -84,6 +77,66 @@ export default function BlogPage() {
           </select>
         </div>
 
+        {/* Featured Post (first one) */}
+        {filteredPosts.length > 0 && selectedCategory === "All Categories" && !searchTerm && (
+          <motion.article
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            role="link"
+            tabIndex={0}
+            onClick={() => router.push(`/blog/${filteredPosts[0].slug}`)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                router.push(`/blog/${filteredPosts[0].slug}`);
+              }
+            }}
+            className="glass group overflow-hidden transition-all hover:border-blue-200 cursor-pointer mb-10"
+          >
+            <div className="grid md:grid-cols-2">
+              <div className="relative h-64 md:h-auto min-h-[280px]">
+                <Image
+                  src={filteredPosts[0].image}
+                  alt={filteredPosts[0].title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-700"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+              <div className="p-8 flex flex-col justify-center">
+                <span className="inline-block w-fit rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
+                  {filteredPosts[0].category}
+                </span>
+                <h2 className="mt-4 text-2xl font-bold text-gray-900 transition-colors group-hover:text-blue-600 md:text-3xl">
+                  {filteredPosts[0].title}
+                </h2>
+                <div className="mt-3 flex items-center gap-4 text-sm text-gray-400">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    {filteredPosts[0].date}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="h-4 w-4" />
+                    {filteredPosts[0].readTime}
+                  </span>
+                </div>
+                <p className="mt-4 text-gray-500 leading-relaxed">
+                  {filteredPosts[0].excerpt}
+                </p>
+                <Link
+                  href={`/blog/${filteredPosts[0].slug}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-6 inline-flex items-center gap-1 text-sm font-semibold text-blue-600 transition-colors hover:text-blue-500"
+                >
+                  Read Full Article
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+              </div>
+            </div>
+          </motion.article>
+        )}
+
         {/* Blog Grid */}
         {filteredPosts.length === 0 ? (
           <div className="glass py-16 text-center">
@@ -92,13 +145,16 @@ export default function BlogPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2">
-            {filteredPosts.map((post, idx) => (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {(selectedCategory === "All Categories" && !searchTerm
+              ? filteredPosts.slice(1)
+              : filteredPosts
+            ).map((post, idx) => (
               <motion.article
                 key={post.slug}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: idx * 0.1 }}
+                transition={{ duration: 0.4, delay: idx * 0.08 }}
                 role="link"
                 tabIndex={0}
                 onClick={() => router.push(`/blog/${post.slug}`)}
@@ -110,24 +166,26 @@ export default function BlogPage() {
                 }}
                 className="glass group overflow-hidden transition-all hover:border-blue-200 cursor-pointer"
               >
-                {/* Gradient Image Placeholder */}
-                <div
-                  className={`h-48 bg-gradient-to-br ${POST_COLORS[idx % POST_COLORS.length]} flex items-center justify-center`}
-                >
-                  <span className="text-5xl font-bold text-gray-900/20">
-                    {post.title.charAt(0)}
-                  </span>
+                {/* Image */}
+                <div className="relative h-48 overflow-hidden">
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  />
                 </div>
 
-                <div className="p-6">
+                <div className="p-5">
                   {/* Category Badge */}
-                  <span className="inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-500">
+                  <span className="inline-block rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-600">
                     {post.category}
                   </span>
 
                   {/* Title */}
-                  <h2 className="mt-3 text-xl font-semibold text-gray-900 transition-colors group-hover:text-blue-500">
-                    <Link href={`/blog/${post.slug}`} onClick={(e) => e.stopPropagation()}>{post.title}</Link>
+                  <h2 className="mt-3 text-lg font-semibold text-gray-900 transition-colors group-hover:text-blue-600 line-clamp-2">
+                    {post.title}
                   </h2>
 
                   {/* Date & Read Time */}
@@ -167,7 +225,27 @@ export default function BlogPage() {
             delivered to your inbox.
           </p>
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const emailInput = e.currentTarget.querySelector("input[type='email']") as HTMLInputElement;
+              if (!emailInput?.value) return;
+              try {
+                const res = await fetch("/api/email-subscribe", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ email: emailInput.value, source: "blog" }),
+                });
+                if (res.ok) {
+                  emailInput.value = "";
+                  alert("Subscribed successfully!");
+                } else {
+                  const data = await res.json();
+                  alert(data.error || "Failed to subscribe");
+                }
+              } catch {
+                alert("Failed to subscribe. Please try again.");
+              }
+            }}
             className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row"
           >
             <input

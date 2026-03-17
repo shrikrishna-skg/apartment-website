@@ -53,7 +53,7 @@ export default function VirtualTourPage() {
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Breadcrumb */}
           <motion.nav
@@ -90,13 +90,13 @@ export default function VirtualTourPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="flex flex-wrap items-center justify-center gap-3 mb-10"
+            className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-8 sm:mb-10"
           >
             {PROPERTIES.map((p, idx) => (
               <button
                 key={p.id}
                 onClick={() => handlePropertySelect(idx)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300 ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 ${
                   selectedProperty === idx
                     ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200"
                     : "glass text-gray-500 hover:text-gray-900 hover:border-blue-200"
@@ -132,13 +132,13 @@ export default function VirtualTourPage() {
               <div>
                 {/* Tour tab selector (when multiple tours) */}
                 {tours.length > 1 && (
-                  <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                    <span className="text-xs font-medium text-gray-500 mr-1">Floor Plan:</span>
+                  <div className="flex flex-wrap items-center gap-2 px-3 sm:px-4 py-3 border-b border-gray-100 bg-gray-50/50 overflow-x-auto scrollbar-hide">
+                    <span className="text-xs font-medium text-gray-500 mr-1 shrink-0">Floor Plan:</span>
                     {tours.map((tour, idx) => (
                       <button
                         key={tour.id}
                         onClick={() => setSelectedTour(idx)}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                        className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap shrink-0 ${
                           selectedTour === idx
                             ? "bg-[#1a73e8] text-white shadow-md"
                             : "bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600"
@@ -149,7 +149,7 @@ export default function VirtualTourPage() {
                     ))}
                   </div>
                 )}
-                <div className="relative w-full" style={{ height: "min(70vh, 600px)" }}>
+                <div className="relative w-full" style={{ height: "clamp(300px, 60vh, 600px)" }}>
                   <iframe
                     key={activeTourId}
                     src={`https://my.matterport.com/show/?m=${activeTourId}&play=1&qs=1`}
@@ -158,6 +158,7 @@ export default function VirtualTourPage() {
                     frameBorder="0"
                     allow="fullscreen; xr-spatial-tracking"
                     allowFullScreen
+                    loading="lazy"
                     style={{ border: 0 }}
                     title={`${currentProperty.name} 3D Tour${tours.length > 1 ? ` - ${tours[selectedTour]?.label}` : ""}`}
                   />
@@ -273,7 +274,7 @@ export default function VirtualTourPage() {
             >
               Click a floor plan to view the property details
             </motion.p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {currentProperty.floorPlans.map((plan) => (
                 <motion.div
                   key={plan.name}
@@ -297,18 +298,18 @@ export default function VirtualTourPage() {
                   <p className="text-xs text-gray-400 mb-3">
                     {plan.beds} Bed / {plan.baths} Bath | {plan.sqft} sq ft
                   </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-blue-600 font-bold">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <span className="text-blue-600 font-bold text-sm">
                       ${plan.price}/mo
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       {plan.has3DTour && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-teal-50 text-teal-600 border border-cyan-500/20">
-                          3D Tour
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-600 border border-cyan-500/20">
+                          3D
                         </span>
                       )}
-                      <span className="text-xs text-gray-400 flex items-center gap-1">
-                        <Camera size={11} />
+                      <span className="text-[10px] text-gray-400 flex items-center gap-0.5">
+                        <Camera size={10} />
                         {plan.photoCount}
                       </span>
                     </div>

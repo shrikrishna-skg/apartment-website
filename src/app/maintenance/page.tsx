@@ -82,6 +82,13 @@ export default function MaintenancePage() {
     description: "",
   });
 
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formError, setFormError] = useState("");
+
+  // Chat state for collecting maintenance info
+  const [chatData, setChatData] = useState({ apartment: "", description: "", urgency: "" });
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -91,6 +98,14 @@ export default function MaintenancePage() {
 
     const userMessage: Message = { role: "user", text: inputValue.trim() };
     setMessages((prev) => [...prev, userMessage]);
+
+    // Collect data from chat responses
+    const updatedChatData = { ...chatData };
+    if (botResponseIndex === 0) updatedChatData.apartment = inputValue.trim();
+    if (botResponseIndex === 1) updatedChatData.description = inputValue.trim();
+    if (botResponseIndex === 2) updatedChatData.urgency = inputValue.trim().toLowerCase();
+    setChatData(updatedChatData);
+
     setInputValue("");
 
     if (botResponseIndex < botResponses.length) {
@@ -98,6 +113,26 @@ export default function MaintenancePage() {
       setTimeout(() => {
         setMessages((prev) => [...prev, { role: "bot", text: responseText }]);
       }, 1000);
+
+      // On the last bot response (urgency collected), submit to API
+      if (botResponseIndex === 2) {
+        const urgencyMap: Record<string, string> = {
+          low: "low", medium: "medium", high: "high", emergency: "emergency",
+        };
+        const urgencyValue = urgencyMap[updatedChatData.urgency] || "medium";
+        fetch("/api/maintenance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            apartment: updatedChatData.apartment,
+            full_name: "Chat User",
+            email: "chat@collegeplace.us",
+            description: updatedChatData.description,
+            urgency: urgencyValue,
+          }),
+        }).catch(() => {});
+      }
+
       setBotResponseIndex((prev) => prev + 1);
     } else {
       setTimeout(() => {
@@ -125,17 +160,42 @@ export default function MaintenancePage() {
     >
   ) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormError("");
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Maintenance request submitted! Our team will contact you shortly.");
+    setFormSubmitting(true);
+    setFormError("");
+    try {
+      const res = await fetch("/api/maintenance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          apartment: formData.apartment,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone || null,
+          category: formData.category || null,
+          urgency: formData.urgency || "medium",
+          description: formData.description,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to submit request");
+      }
+      setFormSubmitted(true);
+    } catch (err: unknown) {
+      setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    }
+    setFormSubmitting(false);
   };
 
   return (
     <>
       <div className="bg-ambient" />
-      <main className="min-h-screen pt-28 pb-20 px-4 sm:px-6 lg:px-8">
+      <main className="min-h-screen pt-6 sm:pt-10 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Hero */}
           <motion.div
@@ -443,10 +503,29 @@ export default function MaintenancePage() {
                       </div>
                     </div>
 
+                    {/* Error */}
+                    {formError && (
+                      <p className="text-red-600 text-sm">{formError}</p>
+                    )}
+
                     {/* Submit */}
-                    <button type="submit" className="btn-glow w-full text-center">
-                      Submit Request
-                    </button>
+                    {formSubmitted ? (
+                      <div className="text-center py-4">
+                        <div className="w-12 h-12 rounded-full bg-green-600 flex items-center justify-center mx-auto mb-3">
+                          <Send size={20} className="text-white" />
+                        </div>
+                        <p className="text-lg font-bold text-gray-900 mb-1">Request Submitted!</p>
+                        <p className="text-sm text-gray-500">Our maintenance team will contact you shortly.</p>
+                      </div>
+                    ) : (
+                      <button
+                        type="submit"
+                        className="btn-glow w-full text-center"
+                        disabled={formSubmitting}
+                      >
+                        {formSubmitting ? "Submitting..." : "Submit Request"}
+                      </button>
+                    )}
                   </form>
                 </motion.div>
               )}

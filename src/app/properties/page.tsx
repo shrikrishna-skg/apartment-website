@@ -134,7 +134,7 @@ export default function PropertiesPage() {
     <main className="min-h-screen">
       <div className="bg-ambient" />
 
-      <div className="mx-auto max-w-6xl px-4 py-12">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
         {/* ━━━━━━━━━━━ BREADCRUMB ━━━━━━━━━━━ */}
         <motion.nav
           className="mb-8 flex items-center gap-2 text-sm text-gray-500"
@@ -159,7 +159,7 @@ export default function PropertiesPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+          <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
             MTSU Off-Campus Housing &{" "}
             <span className="text-gradient">Floor Plans</span>
           </h1>
@@ -352,7 +352,7 @@ export default function PropertiesPage() {
                         src={property.image}
                         alt={property.name}
                         fill
-                        unoptimized
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover"
                       />
                       {property.featured && (
@@ -537,7 +537,7 @@ export default function PropertiesPage() {
 
         {/* ━━━━━━━━━━━ CTA BOTTOM ━━━━━━━━━━━ */}
         <motion.div
-          className="mt-16 glass p-10 text-center"
+          className="mt-12 sm:mt-16 glass p-6 sm:p-10 text-center"
           variants={fadeUp}
           initial="hidden"
           whileInView="visible"

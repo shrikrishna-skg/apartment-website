@@ -19,7 +19,6 @@ export default function Footer() {
                 alt={`${SITE.name} logo`}
                 width={36}
                 height={36}
-                unoptimized
                 className="rounded-sm h-9 w-auto"
               />
               <span className="text-base font-semibold text-[#1f2937] tracking-tight">

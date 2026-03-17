@@ -12,6 +12,15 @@ export default function Navbar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tenantOpen, setTenantOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  // Track scroll position
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -31,7 +40,13 @@ export default function Navbar() {
   }, [mobileOpen]);
 
   return (
-    <header className="sticky top-0 z-50 h-16 bg-white border-b border-gray-200">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-300 ${
+        scrolled
+          ? "bg-white/80 backdrop-blur-xl border-b border-gray-200/80 shadow-sm"
+          : "bg-transparent border-b border-transparent"
+      }`}
+    >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex items-center justify-between h-full">
           {/* Logo */}
@@ -41,7 +56,7 @@ export default function Navbar() {
               alt={`${SITE.name} logo`}
               width={32}
               height={32}
-              unoptimized
+              priority
               className="rounded-sm h-8 w-auto"
             />
             <div className="flex flex-col leading-tight">
@@ -65,7 +80,7 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="ml-2 px-5 py-2 text-sm font-semibold rounded-full bg-[#1a73e8] text-white hover:bg-[#1557b0] transition-colors duration-200 shadow-sm"
+                    className="ml-3 px-6 py-2 text-sm font-semibold rounded-full bg-[#1a73e8] text-white hover:bg-[#1557b0] transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     {link.label}
                   </Link>
@@ -106,23 +121,25 @@ export default function Navbar() {
                 />
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Dropdown Menu — outer wrapper includes pt-1 so hover gap is bridged */}
               <div
-                className={`absolute top-full right-0 mt-1 w-56 py-1 bg-white border border-gray-200 rounded-xl shadow-lg transition-all duration-200 origin-top-right ${
+                className={`absolute top-full right-0 pt-1 w-56 transition-all duration-200 origin-top-right ${
                   tenantOpen
                     ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
                     : "opacity-0 scale-95 -translate-y-1 pointer-events-none"
                 }`}
               >
-                {TENANT_LINKS.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="block px-4 py-2.5 text-sm text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                <div className="py-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+                  {TENANT_LINKS.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className="block px-4 py-2.5 text-sm text-[#6b7280] hover:text-[#1f2937] hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

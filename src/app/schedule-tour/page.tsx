@@ -210,7 +210,7 @@ function ScheduleTourPage() {
       <div className="bg-ambient" />
 
       {/* ── header ── */}
-      <header className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 pb-8 text-center">
+      <header className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-10 pb-6 sm:pb-8 text-center">
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gradient mb-3">
           Apartment Tour &amp; Leasing Visit
         </h1>
