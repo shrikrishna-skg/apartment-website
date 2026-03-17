@@ -1,81 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { chatWithGroq, shouldCreateTicket, extractTicketDetails } from "@/lib/ai";
-import { sendTicketEmail } from "@/lib/email";
-import { supabase } from "@/lib/supabase";
+import { chatWithGroq, extractTicketDetails } from "@/lib/ai";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, userInfo } = await req.json();
+    const { messages } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "Messages required" }, { status: 400 });
     }
 
-    const lastUserMsg = messages.filter((m: { role: string }) => m.role === "user").pop();
     const reply = await chatWithGroq(messages);
 
-    // Auto-ticket for maintenance/issues
-    if (lastUserMsg && shouldCreateTicket(lastUserMsg.content)) {
-      const ticketId = `TKT-${Date.now().toString(36).toUpperCase()}`;
+    // Check if AI suggests creating a ticket (contains [SUGGEST_TICKET] marker)
+    const suggestTicket = reply.includes("[SUGGEST_TICKET]");
+    const cleanReply = reply.replace(/\n?\[SUGGEST_TICKET\]\n?/g, "").trim();
+
+    if (suggestTicket) {
+      // Extract ticket details from conversation for the preview card
       const details = extractTicketDetails(messages);
-      const conversationSummary = messages
-        .slice(-8)
-        .map((m: { role: string; content: string }) => `${m.role}: ${m.content}`)
-        .join("\n");
-
-      // Save to Supabase
-      try {
-        await supabase.from("chat_tickets").insert({
-          ticket_id: ticketId,
-          user_name: details.userName || userInfo?.name || "Website Visitor",
-          user_email: userInfo?.email || "N/A",
-          category: "chat-auto",
+      return NextResponse.json({
+        reply: cleanReply,
+        suggestTicket: true,
+        ticketPreview: {
+          issue: details.issue,
           urgency: details.urgency,
-          unit_info: details.unitInfo,
-          preferred_time: details.preferredTime,
-          availability: details.availability,
-          summary: lastUserMsg.content.slice(0, 300),
-          conversation: conversationSummary,
-          ai_response: reply,
-          status: "open",
-        });
-      } catch {
-        // DB insert is best-effort
-      }
-
-      // Send professional ticket email
-      try {
-        await sendTicketEmail({
-          ticketId,
-          urgency: details.urgency,
-          category: "chat-auto",
-          userName: details.userName || userInfo?.name || "Website Visitor",
-          userEmail: userInfo?.email || "N/A",
           unitInfo: details.unitInfo,
           preferredTime: details.preferredTime,
           availability: details.availability,
-          summary: lastUserMsg.content.slice(0, 300),
-          conversation: conversationSummary,
-          aiResponse: reply,
-        });
-      } catch {
-        // Email is best-effort
-      }
-
-      const urgencyNote = details.urgency === "emergency"
-        ? "\n🚨 This has been flagged as **EMERGENCY** — our team will prioritize this."
-        : details.urgency === "high"
-        ? "\n⚡ Marked as **high priority** — we'll get on this quickly."
-        : "";
-
-      return NextResponse.json({
-        reply: `${reply}\n\n📋 Ticket **${ticketId}** created and our office team has been notified.${urgencyNote}`,
-        ticketId,
-        urgency: details.urgency,
+          userName: details.userName,
+        },
       });
     }
 
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply: cleanReply });
   } catch (error) {
     console.error("Chat API error:", error);
     return NextResponse.json(

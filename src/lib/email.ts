@@ -178,7 +178,7 @@ export async function sendStaffNotification(params: {
 export async function sendTicketEmail(params: {
   ticketId: string;
   urgency: "emergency" | "high" | "normal";
-  category: "chat-auto" | "image-report";
+  category: "chat-auto" | "chat-confirmed" | "image-report";
   userName: string;
   userEmail: string;
   unitInfo?: string | null;
@@ -346,7 +346,7 @@ export async function sendTicketEmail(params: {
 </html>`;
 
   const subjectPrefix = params.urgency === "emergency" ? "🚨 EMERGENCY" : params.urgency === "high" ? "⚡ HIGH" : "📋";
-  const categoryLabel = params.category === "image-report" ? "Photo Report" : "Support Ticket";
+  const categoryLabel = params.category === "image-report" ? "Photo Report" : params.category === "chat-confirmed" ? "Confirmed Ticket" : "Support Ticket";
 
   const info = await transporter.sendMail({
     from: `"College Place AI Assistant" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
