@@ -524,7 +524,7 @@ export default function ChatWidget() {
                     <div className="bg-blue-50 rounded-lg px-3 py-2 flex items-start gap-2 mt-1">
                       <ChevronRight size={12} className="text-[#1a73e8] mt-0.5 shrink-0" />
                       <p className="text-[11px] text-[#1a73e8] m-0 leading-relaxed">
-                        Email notification sent to our office team. They'll review and respond promptly.
+                        Email notification sent to our office team. They&apos;ll review and respond promptly.
                       </p>
                     </div>
                   </div>

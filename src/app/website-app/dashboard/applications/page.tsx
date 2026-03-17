@@ -403,7 +403,7 @@ export default function ApplicationsPage() {
 
   /* ── Filtering & sorting ── */
   const filtered = useMemo(() => {
-    let result = applications.filter((a) => {
+    const result = applications.filter((a) => {
       if (filter !== "all" && a.applicant_type !== filter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (search) {

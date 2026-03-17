@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Send,
@@ -204,9 +205,9 @@ export default function LeaseInquiryPage() {
               Thank you for your lease inquiry. Our team will review your
               preferences and get back to you within 24 hours.
             </p>
-            <a href="/" className="btn-glow inline-block">
+            <Link href="/" className="btn-glow inline-block">
               Return Home
-            </a>
+            </Link>
           </motion.div>
         </main>
       </>

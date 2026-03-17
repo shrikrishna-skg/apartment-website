@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Send,
@@ -115,9 +116,9 @@ export default function ContactPage() {
               Thank you for reaching out. We&apos;ll get back to you as soon as
               possible, typically within 24 hours.
             </p>
-            <a href="/" className="btn-glow inline-block">
+            <Link href="/" className="btn-glow inline-block">
               Return Home
-            </a>
+            </Link>
           </motion.div>
         </main>
       </>
