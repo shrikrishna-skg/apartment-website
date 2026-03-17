@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { sendStaffNotification } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +17,35 @@ export async function POST(request: NextRequest) {
         { error: error.message },
         { status: 400 }
       );
+    }
+
+    // Send email notification to office (best-effort)
+    try {
+      const typeLabel =
+        body.applicant_type === "student" ? "Student" :
+        body.applicant_type === "international" ? "International Student" :
+        "Working Professional";
+
+      const details = [
+        `Type: ${typeLabel}`,
+        body.mobile_number ? `Phone: ${body.mobile_number}` : null,
+        body.university_name ? `University: ${body.university_name}` : null,
+        body.employer_name ? `Employer: ${body.employer_name}` : null,
+        body.housing_requirement ? `Housing: ${body.housing_requirement}` : null,
+        body.preferred_move_in ? `Move-in: ${body.preferred_move_in}` : null,
+        body.lease_duration ? `Lease: ${body.lease_duration}` : null,
+        body.monthly_income ? `Monthly Income: ${body.monthly_income}` : null,
+        body.has_cosigner ? `Co-signer: ${body.cosigner_name || "Yes"}` : null,
+      ].filter(Boolean).join("\n");
+
+      await sendStaffNotification({
+        type: "application",
+        name: body.full_name || "Unknown",
+        email: body.email || "N/A",
+        details,
+      });
+    } catch {
+      // Email is best-effort
     }
 
     return NextResponse.json(data, { status: 201 });
