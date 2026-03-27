@@ -22,6 +22,8 @@ const STEPS = [
   { label: "General Info", icon: ClipboardCheck },
   { label: "Vehicle", icon: ClipboardCheck },
   { label: "Background", icon: ClipboardCheck },
+  { label: "Documents", icon: Upload },
+  { label: "Authorization", icon: ClipboardCheck },
   { label: "Review", icon: ClipboardCheck },
 ];
 
@@ -79,7 +81,12 @@ interface FormData {
   evictedFromTenancy: string;
   convictedFelony: string;
   arrestedOrConvicted: string;
-  // Step 7
+  // Step 7 - Documents & References
+  references: string;
+  // Step 8 - Authorization & Signature
+  agreeTerms: string;
+  signatureName: string;
+  signatureDate: string;
   consent: boolean;
 }
 
@@ -131,6 +138,10 @@ const initialFormData: FormData = {
   evictedFromTenancy: "",
   convictedFelony: "",
   arrestedOrConvicted: "",
+  references: "",
+  agreeTerms: "",
+  signatureName: "",
+  signatureDate: "",
   consent: false,
 };
 
@@ -205,8 +216,14 @@ export default function GeneralApplicationPage() {
       if (!formData.arrestedOrConvicted) newErrors.push("Arrest/conviction question is required");
     }
 
-    if (currentStep === 7) {
-      if (!formData.consent) newErrors.push("You must agree to the certification");
+    if (currentStep === 8) {
+      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms and conditions");
+      if (!formData.signatureName.trim()) newErrors.push("Electronic Signature is required");
+      if (!formData.signatureDate) newErrors.push("Signature Date is required");
+    }
+
+    if (currentStep === 9) {
+      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms first (Step 8)");
     }
 
     setErrors(newErrors);
@@ -310,7 +327,11 @@ export default function GeneralApplicationPage() {
           evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
           convicted_felony: formData.convictedFelony === "Yes",
           arrested_or_convicted: formData.arrestedOrConvicted === "Yes",
-          consent: formData.consent,
+          references: formData.references || null,
+          agree_terms: formData.agreeTerms === "Yes, I agree",
+          signature_name: formData.signatureName || null,
+          signature_date: formData.signatureDate || null,
+          consent: true,
         }),
       });
       if (!res.ok) {
@@ -728,7 +749,7 @@ export default function GeneralApplicationPage() {
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
-                                      setFiles((prev) => [...prev, file]);
+                                      setUploadedFiles((prev) => [...prev, file]);
                                       setFileLabels((prev) => [...prev, "ESA Verification"]);
                                     }
                                   }}
@@ -820,30 +841,142 @@ export default function GeneralApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 7 - Review & Submit */}
+              {/* Step 7 - Required Documents */}
               {currentStep === 7 && (
                 <motion.div
-                  key="step7"
+                  key="step7docs"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <ClipboardCheck size={20} className="text-blue-600" />
-                    Review & Submit
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Required Documents
+                  </div>
+
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 text-sm text-gray-600">
+                    Please submit all the documents — the more documents provided, the stronger your application.
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Passport Photo */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">Passport Size Photo <span className="text-red-500">*</span></p>
+                      <p className="text-xs text-gray-500 mb-2">Upload 1 supported file. Max 10 MB.</p>
+                      <input type="file" accept="image/*,.pdf" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Passport Photo"]); } }} />
+                    </div>
+
+                    {/* State ID */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">State ID or Passport <span className="text-red-500">*</span></p>
+                      <p className="text-xs text-gray-500 mb-2">Upload 1 supported file. Max 10 MB.</p>
+                      <input type="file" accept="image/*,.pdf" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "State ID / Passport"]); } }} />
+                    </div>
+
+                    {/* Visa */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">Visa (If Applicable)</p>
+                      <p className="text-xs text-gray-500 mb-2">Upload 1 supported file. Max 10 MB.</p>
+                      <input type="file" accept="image/*,.pdf" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Visa"]); } }} />
+                    </div>
+
+                    {/* Bank Statement */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">Bank Statement <span className="text-red-500">*</span></p>
+                      <p className="text-xs text-gray-500 mb-2">Upload supported files. Max 10 MB each.</p>
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Past 3 months bank statement required.</p>
+                      <input type="file" accept="image/*,.pdf" multiple className="text-sm" onChange={(e) => { const fl = e.target.files; if (fl) { Array.from(fl).forEach(f => { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Bank Statement"]); }); } }} />
+                    </div>
+
+                    {/* Proof of Income */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">Proof of Income (Pay stubs, Employer Letter, or Offer Letter) <span className="text-red-500">*</span></p>
+                      <p className="text-xs text-gray-500 mb-2">Upload up to 5 supported files. Max 100 MB per file.</p>
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Providing pay stubs from the past 3 months will help expedite and strengthen your application. Employer or offer letters may be accepted if pay stubs are not available.</p>
+                      <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="text-sm" onChange={(e) => { const fl = e.target.files; if (fl) { Array.from(fl).forEach(f => { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Proof of Income"]); }); } }} />
+                    </div>
+
+                    {/* Additional Documents */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">Additional Supporting Documents</p>
+                      <p className="text-xs text-gray-500 mb-2">Upload up to 5 additional files that support your application.</p>
+                      <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="text-sm" onChange={(e) => { const fl = e.target.files; if (fl) { Array.from(fl).forEach(f => { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Additional Document"]); }); } }} />
+                    </div>
+
+                    {/* References */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm font-semibold text-gray-800">References (2–3 personal/professional)</p>
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Include full name, relationship, phone number, and email for each reference.</p>
+                      <textarea
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[100px]"
+                        placeholder={"e.g., Name: John Smith | Relationship: Former Manager | Phone: (###) ###-#### | Email: john@email.com"}
+                        value={formData.references}
+                        onChange={(e) => updateField("references", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 8 - Authorization & Signature */}
+              {currentStep === 8 && (
+                <motion.div
+                  key="step8auth"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                    Authorization & Signature
                   </h2>
 
+                  <div className="border border-gray-200 rounded-lg p-5 mb-6 bg-gray-50">
+                    <h3 className="font-semibold text-gray-900 mb-3">Terms and Conditions</h3>
+                    <div className="text-sm text-gray-600 space-y-3 leading-relaxed">
+                      <p>I certify that the information provided in this application is true and complete to the best of my knowledge. I understand that any false information or omission may disqualify me from further consideration for an apartment and may result in termination of my lease if discovered at a later date.</p>
+                      <p>I authorize College Place Apartments to verify the information provided and to obtain a credit report and criminal background check.</p>
+                      <p>I authorize College Place Apartments to contact me by phone, email, and SMS text messages regarding my application and leasing updates. Msg &amp; Data rates may apply. Reply STOP to opt out.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderRadioGroup("Do you agree to the terms and conditions?", "agreeTerms", [
+                      "Yes, I agree",
+                      "No",
+                    ])}
+
+                    {renderInput("Full Name (Electronic Signature)", "signatureName", "text", "Type your full name as signature", true)}
+                    {renderInput("Signature Date", "signatureDate", "date", "", true)}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 9 - Review & Submit */}
+              {currentStep === 9 && (
+                <motion.div
+                  key="step9review"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">
+                    Review & Submit
+                  </h2>
                   <p className="text-gray-600 text-sm mb-6">
-                    Please review your information below before submitting.
+                    Please review all information before submitting. Click Edit on any section to go back.
                   </p>
 
                   {/* Personal Info Summary */}
-                  <div className="glass-subtle p-5 mb-4">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Personal Information
-                    </h3>
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Personal Information</h3>
+                      <button onClick={() => setCurrentStep(1)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Name" value={formData.fullName} />
                       <SummaryRow label="SSN / Passport" value={formData.ssn || "Not provided"} />
@@ -863,10 +996,11 @@ export default function GeneralApplicationPage() {
                   </div>
 
                   {/* Residence Summary */}
-                  <div className="glass-subtle p-5 mb-6">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Residence Information
-                    </h3>
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Residence</h3>
+                      <button onClick={() => setCurrentStep(2)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Current Address" value={formData.currentAddress} />
                       <SummaryRow label="Housing Status" value={formData.housingStatus || "Not provided"} />
@@ -881,10 +1015,11 @@ export default function GeneralApplicationPage() {
                   </div>
 
                   {/* Employment Summary */}
-                  <div className="glass-subtle p-5 mb-4">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Employment
-                    </h3>
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Employment</h3>
+                      <button onClick={() => setCurrentStep(3)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Employer" value={formData.employerName} />
                       <SummaryRow label="Supervisor" value={formData.supervisor} />
@@ -897,10 +1032,11 @@ export default function GeneralApplicationPage() {
                   </div>
 
                   {/* General Info Summary */}
-                  <div className="glass-subtle p-5 mb-4">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      General Information
-                    </h3>
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">General Information</h3>
+                      <button onClick={() => setCurrentStep(4)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Residence History Complete" value={formData.completedResidenceHistory} />
                       <SummaryRow label="Has Pets" value={formData.hasPets} />
@@ -916,10 +1052,11 @@ export default function GeneralApplicationPage() {
                   </div>
 
                   {/* Vehicle Summary */}
-                  <div className="glass-subtle p-5 mb-4">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Vehicle Information
-                    </h3>
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Vehicle Information</h3>
+                      <button onClick={() => setCurrentStep(5)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Vehicle 1 Make" value={formData.vehicle1Make || "None"} />
                       <SummaryRow label="Year" value={formData.vehicle1Year || "N/A"} />
@@ -937,10 +1074,11 @@ export default function GeneralApplicationPage() {
                   </div>
 
                   {/* Background Check Summary */}
-                  <div className="glass-subtle p-5 mb-4">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Background Check
-                    </h3>
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Background Check</h3>
+                      <button onClick={() => setCurrentStep(6)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
                     <div className="grid grid-cols-1 gap-y-2 text-sm">
                       <SummaryRow label="Filed for Bankruptcy" value={formData.filedBankruptcy} />
                       <SummaryRow label="Evicted from Tenancy" value={formData.evictedFromTenancy} />
@@ -949,90 +1087,58 @@ export default function GeneralApplicationPage() {
                     </div>
                   </div>
 
-                  {/* Document Upload Section */}
-                  <div className="glass-subtle p-5 mb-6">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
-                      <Upload size={16} />
-                      Upload Documents
-                    </h3>
-                    <p className="text-xs text-gray-600 mb-4">
-                      Upload supporting documents such as ID, proof of income, employment letter, or any other relevant documents.
-                      Accepted formats: PDF, images (JPG, PNG), Word, Excel, text files. Max 10MB per file.
-                    </p>
-
-                    {uploadedFiles.length > 0 && (
-                      <div className="space-y-2 mb-4">
-                        {uploadedFiles.map((file, idx) => (
-                          <div key={idx} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3">
-                            <FileText size={18} className="text-blue-500 shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                              <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+                  {/* Documents Summary */}
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Documents</h3>
+                      <button onClick={() => setCurrentStep(7)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
+                    {uploadedFiles.length > 0 ? (
+                      <div className="space-y-1 text-sm">
+                        {fileLabels.filter((v, i, a) => a.indexOf(v) === i).map((label) => {
+                          const count = fileLabels.filter(l => l === label).length;
+                          return (
+                            <div key={label} className="flex items-center gap-2 text-gray-700">
+                              <Check size={14} className="text-green-600" />
+                              <span className="font-medium">{label}</span>
+                              <span className="text-gray-400">({count} file{count > 1 ? "s" : ""})</span>
                             </div>
-                            <select
-                              value={fileLabels[idx]}
-                              onChange={(e) => updateFileLabel(idx, e.target.value)}
-                              className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none"
-                            >
-                              <option value="Supporting Document">Supporting Document</option>
-                              <option value="Photo ID">Photo ID</option>
-                              <option value="Proof of Income">Proof of Income</option>
-                              <option value="Employment Letter">Employment Letter</option>
-                              <option value="Bank Statement">Bank Statement</option>
-                              <option value="Pay Stubs">Pay Stubs</option>
-                              <option value="Other">Other</option>
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(idx)}
-                              className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No documents uploaded</p>
                     )}
-
-                    <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
-                      <Upload size={18} className="text-gray-400 group-hover:text-blue-500" />
-                      <span className="text-sm text-gray-500 group-hover:text-blue-600">
-                        {uploadedFiles.length > 0 ? "Add more files" : "Choose files to upload"}
-                      </span>
-                      <input
-                        type="file"
-                        multiple
-                        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt"
-                        onChange={handleFileAdd}
-                        className="sr-only"
-                      />
-                    </label>
                   </div>
 
-                  {/* Consent */}
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-all flex-shrink-0 ${
-                        formData.consent
-                          ? "bg-[#1a73e8] border-[#1a73e8]"
-                          : "border-gray-300 group-hover:border-[#1a73e8]"
-                      }`}
-                      onClick={() => updateField("consent", !formData.consent)}
-                    >
-                      {formData.consent && (
-                        <Check size={14} className="text-white" />
-                      )}
+                  {/* References Summary */}
+                  {formData.references && (
+                    <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="font-semibold text-gray-900">References</h3>
+                        <button onClick={() => setCurrentStep(7)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{formData.references}</p>
                     </div>
-                    <span
-                      className="text-sm text-gray-700 leading-relaxed"
-                      onClick={() => updateField("consent", !formData.consent)}
-                    >
-                      I certify that all information provided in this application
-                      is true and accurate to the best of my knowledge. I
-                      understand that providing false information may result in
-                      denial of my application or termination of my lease.
-                    </span>
-                  </label>
+                  )}
+
+                  {/* Authorization Summary */}
+                  <div className="border border-gray-200 rounded-lg p-5 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-semibold text-gray-900">Authorization & Signature</h3>
+                      <button onClick={() => setCurrentStep(8)} className="text-blue-600 text-sm hover:underline">Edit</button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Agreed to Terms" value={formData.agreeTerms || "Not agreed"} />
+                      <SummaryRow label="Electronic Signature" value={formData.signatureName || "Not signed"} />
+                      <SummaryRow label="Signature Date" value={formData.signatureDate || "Not set"} />
+                    </div>
+                  </div>
+
+                  {/* Submit Notice */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                    By submitting this application, you confirm that all information provided is accurate and that you have agreed to the terms and conditions.
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1051,7 +1157,7 @@ export default function GeneralApplicationPage() {
                 <div />
               )}
 
-              {currentStep < 3 ? (
+              {currentStep < STEPS.length ? (
                 <button
                   onClick={handleNext}
                   className="btn-glow flex items-center gap-2 text-sm"
