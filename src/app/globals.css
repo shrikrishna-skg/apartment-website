@@ -316,20 +316,15 @@ body {
 /* ── Print Styles ── */
 @media print {
   body * { visibility: hidden; }
-  .animate-slide-in-right,
-  .animate-slide-in-right * { visibility: visible; }
-  .animate-slide-in-right {
+  .print-preview, .print-preview * { visibility: visible; }
+  .print-preview {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    max-width: 100%;
-    box-shadow: none;
     overflow: visible;
   }
-  .animate-slide-in-right .sticky { position: relative; }
-  .animate-slide-in-right button,
-  .animate-slide-in-right select { display: none !important; }
-  .animate-slide-in-right .bg-black\/30 { display: none; }
+  .print-preview .no-print { display: none !important; }
+  .print-preview .sticky { position: relative; }
   @page { margin: 1cm; size: A4; }
 }

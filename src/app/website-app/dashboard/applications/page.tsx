@@ -282,6 +282,7 @@ export default function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Application | null>(null);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
   const [documents, setDocuments] = useState<AppDocument[]>([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -708,7 +709,7 @@ export default function ApplicationsPage() {
               </div>
               <div className="flex items-center gap-2 shrink-0 ml-4">
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => setShowPrintPreview(true)}
                   className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
                   title="Print Application"
                 >
@@ -1164,6 +1165,229 @@ export default function ApplicationsPage() {
                   {deleting ? "Deleting..." : "Move to Recycle Bin"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Print Preview Overlay ── */}
+      {showPrintPreview && selected && (
+        <div className="fixed inset-0 z-[70] bg-white overflow-y-auto print-preview">
+          {/* Top bar (hidden in print) */}
+          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-8 py-4 flex items-center justify-between no-print">
+            <h2 className="text-lg font-bold text-gray-900">Application Preview</h2>
+            <div className="flex items-center gap-3">
+              <button onClick={() => window.print()} className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
+                Print
+              </button>
+              <button onClick={() => setShowPrintPreview(false)} className="px-5 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
+
+          {/* Print Content */}
+          <div className="max-w-3xl mx-auto px-8 py-10">
+            {/* Header */}
+            <div className="text-center mb-8 pb-6 border-b-2 border-gray-900">
+              <h1 className="text-2xl font-bold text-gray-900">College Place Apartments</h1>
+              <p className="text-sm text-gray-500 mt-1">1023 Old Lascassas Road | Murfreesboro, TN 37130 | (615) 200-0620</p>
+              <h2 className="text-lg font-semibold text-blue-700 mt-3">
+                {selected.applicant_type === "student" ? "Student" : selected.applicant_type === "international" ? "International Student" : "Working Professional / General"} Rental Application
+              </h2>
+              <p className="text-xs text-gray-400 mt-1">Submitted: {formatDate(selected.created_at)} | Status: {capitalize(selected.status)}</p>
+            </div>
+
+            {/* Section helper */}
+            {(() => {
+              const PrintSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-white bg-blue-600 px-4 py-2 rounded-t-lg uppercase tracking-wider">{title}</h3>
+                  <div className="border border-gray-200 border-t-0 rounded-b-lg p-4">{children}</div>
+                </div>
+              );
+              const Field = ({ label, value }: { label: string; value: string | boolean | null | undefined }) => (
+                <div className="py-1">
+                  <span className="text-xs text-gray-500">{label}</span>
+                  <p className="text-sm font-medium text-gray-900">{value === true ? "Yes" : value === false ? "No" : value || "—"}</p>
+                </div>
+              );
+
+              return (
+                <>
+                  <PrintSection title="Personal Information">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Full Name" value={selected.full_name} />
+                      <Field label="Email" value={selected.email} />
+                      <Field label="Phone" value={selected.mobile_number} />
+                      <Field label="Date of Birth" value={formatDate(selected.date_of_birth)} />
+                      <Field label="SSN / Passport" value={maskSSN(selected.ssn)} />
+                      <Field label="Driving License" value={selected.driving_license} />
+                      <Field label="Marital Status" value={selected.marital_status} />
+                      <Field label="Gender" value={selected.gender} />
+                      <Field label="Application Type" value={capitalize(selected.applicant_type)} />
+                    </div>
+                  </PrintSection>
+
+                  <PrintSection title="Address & Education">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-3"><Field label="Current Address" value={`${selected.current_address || ""}${selected.city ? `, ${selected.city}` : ""}${selected.state ? `, ${selected.state}` : ""} ${selected.zip_code || ""}`} /></div>
+                      <Field label="University" value={selected.university_name} />
+                      <Field label="Student ID" value={selected.student_id} />
+                      <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
+                      <Field label="Emergency Contact" value={selected.emergency_contact_name} />
+                      <Field label="Emergency Phone" value={selected.emergency_contact_phone} />
+                      <Field label="Relationship" value={selected.emergency_contact_relationship} />
+                    </div>
+                  </PrintSection>
+
+                  {(selected.housing_status || selected.residence_from) && (
+                    <PrintSection title="Residence Details">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Field label="Housing Status" value={selected.housing_status} />
+                        <Field label="From" value={formatDate(selected.residence_from)} />
+                        <Field label="To" value={formatDate(selected.residence_to)} />
+                        <Field label="Landlord Email" value={selected.landlord_email} />
+                        <Field label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : undefined} />
+                      </div>
+                    </PrintSection>
+                  )}
+
+                  <PrintSection title="Employment & Income">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Employment Status" value={selected.employment_status} />
+                      <Field label="Employer" value={selected.employer_name} />
+                      <Field label="Monthly Income" value={selected.monthly_income ? `$${selected.monthly_income}` : undefined} />
+                      {selected.supervisor && <Field label="Supervisor" value={selected.supervisor} />}
+                      {selected.position_held && <Field label="Position" value={selected.position_held} />}
+                      {selected.date_of_hire && <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
+                      <Field label="Income Source" value={selected.income_source} />
+                      {selected.has_cosigner && (
+                        <>
+                          <Field label="Co-signer Name" value={selected.cosigner_name} />
+                          <Field label="Co-signer Phone" value={selected.cosigner_phone} />
+                          <Field label="Co-signer Email" value={selected.cosigner_email} />
+                        </>
+                      )}
+                    </div>
+                  </PrintSection>
+
+                  <PrintSection title="References & Rental History">
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <Field label="Previous Landlord" value={selected.previous_landlord_name} />
+                      <Field label="Landlord Phone" value={selected.landlord_phone} />
+                      <Field label="Landlord Address" value={selected.landlord_address} />
+                      <Field label="Reason for Leaving" value={selected.reason_for_leaving} />
+                      <Field label="Length of Stay" value={selected.length_of_stay} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 border-t pt-3">
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Reference 1</p>
+                        <Field label="Name" value={selected.ref1_name} />
+                        <Field label="Phone" value={selected.ref1_phone} />
+                        <Field label="Relationship" value={selected.ref1_relationship} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Reference 2</p>
+                        <Field label="Name" value={selected.ref2_name} />
+                        <Field label="Phone" value={selected.ref2_phone} />
+                        <Field label="Relationship" value={selected.ref2_relationship} />
+                      </div>
+                    </div>
+                    {selected.references_info && (
+                      <div className="border-t pt-3 mt-3">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Additional References</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selected.references_info}</p>
+                      </div>
+                    )}
+                  </PrintSection>
+
+                  {(selected.has_pets !== undefined && selected.has_pets !== null) && (
+                    <PrintSection title="General Information">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Field label="Has Pets" value={selected.has_pets} />
+                        {selected.has_pets && (
+                          <>
+                            <Field label="Pet Type" value={selected.pet_type} />
+                            <Field label="Pet Weight" value={selected.pet_weight} />
+                            <Field label="Pet Age" value={selected.pet_age} />
+                            <Field label="ESA" value={selected.is_esa} />
+                          </>
+                        )}
+                      </div>
+                    </PrintSection>
+                  )}
+
+                  {selected.vehicle1_make && (
+                    <PrintSection title="Vehicle Information">
+                      <div className="grid grid-cols-4 gap-4">
+                        <Field label="Make" value={selected.vehicle1_make} />
+                        <Field label="Year" value={selected.vehicle1_year} />
+                        <Field label="Color" value={selected.vehicle1_color} />
+                        <Field label="Plate" value={selected.vehicle1_plate} />
+                      </div>
+                      {selected.has_second_vehicle && (
+                        <div className="grid grid-cols-4 gap-4 border-t pt-3 mt-3">
+                          <Field label="Vehicle 2 Make" value={selected.vehicle2_make} />
+                          <Field label="Year" value={selected.vehicle2_year} />
+                          <Field label="Color" value={selected.vehicle2_color} />
+                          <Field label="Plate" value={selected.vehicle2_plate} />
+                        </div>
+                      )}
+                    </PrintSection>
+                  )}
+
+                  {(selected.filed_bankruptcy !== undefined && selected.filed_bankruptcy !== null) && (
+                    <PrintSection title="Background Check">
+                      <div className="grid grid-cols-2 gap-4">
+                        <Field label="Filed for Bankruptcy" value={selected.filed_bankruptcy} />
+                        <Field label="Evicted from Tenancy" value={selected.evicted_from_tenancy} />
+                        <Field label="Convicted of Felony" value={selected.convicted_felony} />
+                        <Field label="Arrested/Convicted" value={selected.arrested_or_convicted} />
+                      </div>
+                    </PrintSection>
+                  )}
+
+                  <PrintSection title="Housing Preferences">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Housing Requirement" value={selected.housing_requirement} />
+                      <Field label="Preferred Move-In" value={formatDate(selected.preferred_move_in)} />
+                      <Field label="Lease Duration" value={selected.lease_duration} />
+                      <div className="col-span-3"><Field label="Special Requests" value={selected.specific_request} /></div>
+                    </div>
+                  </PrintSection>
+
+                  {selected.signature_name && (
+                    <PrintSection title="Authorization & Signature">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Field label="Agreed to Terms" value={selected.agree_terms} />
+                        <Field label="Electronic Signature" value={selected.signature_name} />
+                        <Field label="Signature Date" value={formatDate(selected.signature_date)} />
+                      </div>
+                    </PrintSection>
+                  )}
+
+                  {documents.length > 0 && (
+                    <PrintSection title={`Documents (${documents.length})`}>
+                      <div className="space-y-2">
+                        {documents.map((doc) => (
+                          <div key={doc.id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                            <span className="text-sm font-medium text-gray-900">{doc.document_label || doc.file_name}</span>
+                            <span className="text-xs text-gray-400">{doc.file_name} ({formatFileSize(doc.file_size)})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </PrintSection>
+                  )}
+                </>
+              );
+            })()}
+
+            {/* Footer */}
+            <div className="mt-8 pt-4 border-t-2 border-gray-900 text-center text-xs text-gray-400">
+              <p>College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130 &bull; (615) 200-0620</p>
+              <p className="mt-1">This document is confidential and intended for authorized personnel only.</p>
             </div>
           </div>
         </div>
