@@ -16,15 +16,20 @@ import {
   Upload,
   FileText,
   X,
+  ShieldCheck,
+  PenTool,
 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 
 const STEPS = [
   { label: "Personal Info", icon: User },
   { label: "Address & Education", icon: MapPin },
+  { label: "General Info", icon: FileText },
   { label: "Employment & Income", icon: Briefcase },
   { label: "References & History", icon: Users },
+  { label: "Background", icon: ShieldCheck },
   { label: "Documents", icon: Upload },
+  { label: "Authorization", icon: PenTool },
   { label: "Review & Submit", icon: ClipboardCheck },
 ];
 
@@ -164,7 +169,26 @@ interface FormData {
   ref2Name: string;
   ref2Phone: string;
   ref2Relationship: string;
-  // Step 5
+  // Step 5 - Background Check
+  filedBankruptcy: string;
+  evictedFromTenancy: string;
+  convictedFelony: string;
+  arrestedOrConvicted: string;
+  // General Info - Pets & Vehicle
+  hasPets: string;
+  petType: string;
+  petWeight: string;
+  petAge: string;
+  isESA: string;
+  hasVehicle: string;
+  vehicle1Make: string;
+  vehicle1Year: string;
+  vehicle1Color: string;
+  vehicle1Plate: string;
+  // Authorization
+  agreeTerms: string;
+  signatureName: string;
+  signatureDate: string;
   consent: boolean;
 }
 
@@ -216,6 +240,23 @@ const initialFormData: FormData = {
   ref2Name: "",
   ref2Phone: "",
   ref2Relationship: "",
+  filedBankruptcy: "",
+  evictedFromTenancy: "",
+  convictedFelony: "",
+  arrestedOrConvicted: "",
+  hasPets: "",
+  petType: "",
+  petWeight: "",
+  petAge: "",
+  isESA: "",
+  hasVehicle: "",
+  vehicle1Make: "",
+  vehicle1Year: "",
+  vehicle1Color: "",
+  vehicle1Plate: "",
+  agreeTerms: "",
+  signatureName: "",
+  signatureDate: "",
   consent: false,
 };
 
@@ -276,7 +317,12 @@ function StudentApplicationPage() {
       if (!formData.emergencyContactPhone.trim()) newErrors.push("Emergency Contact 1 Phone is required");
     }
 
-    if (currentStep === 4) {
+    if (currentStep === 3) {
+      if (!formData.hasPets) newErrors.push("Pet question is required");
+      if (!formData.hasVehicle) newErrors.push("Vehicle question is required");
+    }
+
+    if (currentStep === 5) {
       if (!formData.previousLandlordName.trim()) newErrors.push("Landlord Name is required");
       if (!formData.landlordPhone.trim()) newErrors.push("Landlord Phone is required");
       if (!formData.landlordAddress.trim()) newErrors.push("Landlord Address is required");
@@ -284,7 +330,14 @@ function StudentApplicationPage() {
       if (!formData.lengthOfStay.trim()) newErrors.push("Length of Stay is required");
     }
 
-    if (currentStep === 5) {
+    if (currentStep === 6) {
+      if (!formData.filedBankruptcy) newErrors.push("Bankruptcy question is required");
+      if (!formData.evictedFromTenancy) newErrors.push("Eviction question is required");
+      if (!formData.convictedFelony) newErrors.push("Felony conviction question is required");
+      if (!formData.arrestedOrConvicted) newErrors.push("Arrest/conviction question is required");
+    }
+
+    if (currentStep === 7) {
       // Validate required documents
       for (const doc of REQUIRED_DOCS_STUDENT) {
         const isReq = doc.required || (isInternational && (doc as Record<string, unknown>).internationalRequired);
@@ -294,8 +347,14 @@ function StudentApplicationPage() {
       }
     }
 
-    if (currentStep === 6) {
-      if (!formData.consent) newErrors.push("You must agree to the certification");
+    if (currentStep === 8) {
+      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms and conditions");
+      if (!formData.signatureName.trim()) newErrors.push("Electronic Signature is required");
+      if (!formData.signatureDate) newErrors.push("Signature Date is required");
+    }
+
+    if (currentStep === 9) {
+      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms first (Step 8)");
     }
 
     setErrors(newErrors);
@@ -305,7 +364,7 @@ function StudentApplicationPage() {
   const handleNext = () => {
     if (validateStep()) {
       setVisitedSteps((prev) => new Set(prev).add(currentStep));
-      setCurrentStep((prev) => Math.min(prev + 1, 6));
+      setCurrentStep((prev) => Math.min(prev + 1, 9));
     }
   };
 
@@ -393,8 +452,25 @@ function StudentApplicationPage() {
           ref2_name: formData.ref2Name || null,
           ref2_phone: formData.ref2Phone || null,
           ref2_relationship: formData.ref2Relationship || null,
-          consent: formData.consent,
-          consent_communications: formData.consent,
+          filed_bankruptcy: formData.filedBankruptcy === "Yes",
+          evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
+          convicted_felony: formData.convictedFelony === "Yes",
+          arrested_or_convicted: formData.arrestedOrConvicted === "Yes",
+          has_pets: formData.hasPets === "Yes",
+          has_vehicle: formData.hasVehicle === "Yes",
+          pet_type: formData.petType || null,
+          pet_weight: formData.petWeight || null,
+          pet_age: formData.petAge || null,
+          is_esa: formData.isESA === "Yes",
+          vehicle1_make: formData.vehicle1Make || null,
+          vehicle1_year: formData.vehicle1Year || null,
+          vehicle1_color: formData.vehicle1Color || null,
+          vehicle1_plate: formData.vehicle1Plate || null,
+          agree_terms: formData.agreeTerms === "Yes, I agree",
+          signature_name: formData.signatureName || null,
+          signature_date: formData.signatureDate || null,
+          consent: formData.agreeTerms === "Yes, I agree",
+          consent_communications: formData.agreeTerms === "Yes, I agree",
         }),
       });
       if (!res.ok) {
@@ -944,10 +1020,72 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 3 - Employment & Income */}
+              {/* Step 3 - General Info (Pets & Vehicle) */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    General Information
+                  </div>
+
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Pet Information</h3>
+                      <div className="mb-5">
+                        {renderRadioGroup("Do you have pets? *", "hasPets", ["Yes", "No"], true)}
+                      </div>
+
+                      {formData.hasPets === "Yes" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2"
+                        >
+                          <div className="pl-4 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {renderInput("Pet Type / Breed", "petType", "text", "e.g., Dog - Golden Retriever")}
+                            {renderInput("Pet Weight (lbs)", "petWeight", "text", "e.g., 25")}
+                            {renderInput("Pet Age", "petAge", "text", "e.g., 3 years")}
+                            {renderRadioGroup("Is this an Emotional Support Animal (ESA)?", "isESA", ["Yes", "No"])}
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Information</h3>
+                      <div className="mb-5">
+                        {renderRadioGroup("Do you have a vehicle? *", "hasVehicle", ["Yes", "No"], true)}
+                      </div>
+
+                      {formData.hasVehicle === "Yes" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2"
+                        >
+                          <div className="pl-4 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {renderInput("Vehicle Make / Model", "vehicle1Make", "text", "e.g., Toyota Camry")}
+                            {renderInput("Year", "vehicle1Year", "text", "e.g., 2022")}
+                            {renderInput("Color", "vehicle1Color", "text", "e.g., Silver")}
+                            {renderInput("License Plate", "vehicle1Plate", "text", "e.g., ABC-1234")}
+                          </div>
+                        </motion.div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 4 - Employment & Income */}
+              {currentStep === 4 && (
+                <motion.div
+                  key="step4"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -992,10 +1130,10 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 4 - References & History */}
-              {currentStep === 4 && (
+              {/* Step 5 - References & History */}
+              {currentStep === 5 && (
                 <motion.div
-                  key="step4"
+                  key="step5"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -1084,10 +1222,48 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 5 - Required Documents */}
-              {currentStep === 5 && (
+              {/* Step 6 - Background Check */}
+              {currentStep === 6 && (
                 <motion.div
-                  key="step5"
+                  key="step6bg"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Background Check Questions
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderRadioGroup("Has applicant, spouse or any proposed resident ever filed for Bankruptcy?", "filedBankruptcy", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Been Evicted from Tenancy?", "evictedFromTenancy", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Been convicted of a felony?", "convictedFelony", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Have you ever been arrested or convicted of a felony/misdemeanor?", "arrestedOrConvicted", [
+                      "Yes",
+                      "No",
+                    ])}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 7 - Required Documents */}
+              {currentStep === 7 && (
+                <motion.div
+                  key="step7docs"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -1194,10 +1370,55 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 6 - Review & Submit */}
-              {currentStep === 6 && (
+              {/* Step 8 - Authorization & Signature */}
+              {currentStep === 8 && (
                 <motion.div
-                  key="step5"
+                  key="step8auth"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                    Authorization & Signature
+                  </h2>
+
+                  <div className="border border-gray-200 rounded-lg p-5 mb-6 bg-gray-50">
+                    <h3 className="font-semibold text-gray-900 mb-3">Terms and Conditions</h3>
+                    <div className="text-sm text-gray-600 space-y-3 leading-relaxed">
+                      <p>I certify that the information provided in this application is true and complete to the best of my knowledge. I understand that any false information or omission may disqualify me from further consideration for an apartment and may result in termination of my lease if discovered at a later date.</p>
+                      <p>I authorize College Place Apartments to verify the information provided and to obtain a credit report and criminal background check.</p>
+                      <p>I authorize College Place Apartments to contact me by phone, email, and SMS text messages regarding my application and leasing updates. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a> and <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderRadioGroup("Do you agree to the terms and conditions?", "agreeTerms", [
+                      "Yes, I agree",
+                      "No",
+                    ])}
+
+                    {renderInput("Full Name (Electronic Signature)", "signatureName", "text", "Type your full name as signature", true)}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Signature Date<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.signatureDate}
+                        onChange={(val) => updateField("signatureDate", val)}
+                        required
+                        placeholder="Select signature date"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 9 - Review & Submit */}
+              {currentStep === 9 && (
+                <motion.div
+                  key="step8review"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -1291,7 +1512,7 @@ function StudentApplicationPage() {
                   </div>
 
                   {/* References Summary */}
-                  <div className="glass-subtle p-5 mb-6">
+                  <div className="glass-subtle p-5 mb-4">
                     <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
                       References & History
                     </h3>
@@ -1306,8 +1527,48 @@ function StudentApplicationPage() {
                     </div>
                   </div>
 
+                  {/* General Info Summary */}
+                  <div className="glass-subtle p-5 mb-4">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      General Information
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Has Pets" value={formData.hasPets || "Not answered"} />
+                      {formData.hasPets === "Yes" && (
+                        <>
+                          <SummaryRow label="Pet Type" value={formData.petType || "N/A"} />
+                          <SummaryRow label="Pet Weight" value={formData.petWeight || "N/A"} />
+                          <SummaryRow label="Pet Age" value={formData.petAge || "N/A"} />
+                          <SummaryRow label="ESA" value={formData.isESA || "N/A"} />
+                        </>
+                      )}
+                      <SummaryRow label="Has Vehicle" value={formData.hasVehicle || "Not answered"} />
+                      {formData.hasVehicle === "Yes" && (
+                        <>
+                          <SummaryRow label="Vehicle" value={formData.vehicle1Make || "N/A"} />
+                          <SummaryRow label="Vehicle Year" value={formData.vehicle1Year || "N/A"} />
+                          <SummaryRow label="Vehicle Color" value={formData.vehicle1Color || "N/A"} />
+                          <SummaryRow label="License Plate" value={formData.vehicle1Plate || "N/A"} />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Background Check Summary */}
+                  <div className="glass-subtle p-5 mb-4">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      Background Check
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Filed for Bankruptcy" value={formData.filedBankruptcy || "Not answered"} />
+                      <SummaryRow label="Evicted from Tenancy" value={formData.evictedFromTenancy || "Not answered"} />
+                      <SummaryRow label="Convicted of Felony" value={formData.convictedFelony || "Not answered"} />
+                      <SummaryRow label="Arrested/Convicted" value={formData.arrestedOrConvicted || "Not answered"} />
+                    </div>
+                  </div>
+
                   {/* Documents Summary */}
-                  <div className="glass-subtle p-5 mb-6">
+                  <div className="glass-subtle p-5 mb-4">
                     <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
                       <Upload size={16} />
                       Uploaded Documents
@@ -1332,21 +1593,17 @@ function StudentApplicationPage() {
                     )}
                   </div>
 
-                  {/* Consent */}
-                  <label className="flex items-start gap-3 cursor-pointer group bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <input
-                      type="checkbox"
-                      checked={formData.consent as boolean}
-                      onChange={(e) => updateField("consent", e.target.checked)}
-                      className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
-                    />
-                    <span className="text-xs text-gray-700 leading-relaxed">
-                      I certify that all information provided in this application is true and accurate to the best of my knowledge. I understand that providing false information may result in denial of my application or termination of my lease. I also consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. Message &amp; data rates may apply. I can opt out anytime by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
-                      <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Privacy Policy</a>
-                      {" "}and{" "}
-                      <a href="/terms" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Terms &amp; Conditions</a>.
-                    </span>
-                  </label>
+                  {/* Authorization Summary */}
+                  <div className="glass-subtle p-5 mb-6">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      Authorization & Signature
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Agreed to Terms" value={formData.agreeTerms || "Not agreed"} />
+                      <SummaryRow label="Electronic Signature" value={formData.signatureName || "Not signed"} />
+                      <SummaryRow label="Signature Date" value={formData.signatureDate || "Not set"} />
+                    </div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -1365,7 +1622,7 @@ function StudentApplicationPage() {
                 <div />
               )}
 
-              {currentStep < 6 ? (
+              {currentStep < 9 ? (
                 <button
                   onClick={handleNext}
                   className="btn-glow flex items-center gap-2 text-sm"
