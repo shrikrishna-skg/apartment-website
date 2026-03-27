@@ -47,6 +47,7 @@ REQUIRED INFORMATION (must have ALL before submitting):
    - Always collect email. Default preferred contact method is EMAIL.
    - If they also mention a phone number, note it but email is primary.
    - If they don't want to share → that's okay, note "preferred not to share"
+   - After collecting contact info, mention: "By providing your contact info, you consent to receive communications from College Place Apartments including texts and emails regarding your maintenance request. Reply STOP to opt out anytime. Message & data rates may apply."
 
 CONVERSATION STYLE:
 - Be warm and genuinely caring. These are people dealing with problems in their HOME.
@@ -156,6 +157,7 @@ export default function MaintenancePage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
+  const [formConsent, setFormConsent] = useState(false);
 
   const [chatFiles, setChatFiles] = useState<File[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -468,6 +470,10 @@ export default function MaintenancePage() {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formConsent) {
+      setFormError("You must consent to communications before submitting.");
+      return;
+    }
     setFormSubmitting(true);
     setFormError("");
     try {
@@ -482,6 +488,7 @@ export default function MaintenancePage() {
           category: formData.category || null,
           urgency: formData.urgency || "medium",
           description: formData.description,
+          consent_communications: formConsent,
         }),
       });
       if (!res.ok) {
@@ -887,6 +894,25 @@ export default function MaintenancePage() {
                           PNG, JPG, or PDF up to 10MB
                         </p>
                       </div>
+                    </div>
+
+                    {/* Consent & Communications */}
+                    <div className="space-y-3">
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={formConsent}
+                          onChange={(e) => setFormConsent(e.target.checked)}
+                          className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          required
+                        />
+                        <span className="text-xs text-gray-600 leading-relaxed">
+                          By submitting this form, I consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                          <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+                          {" "}and{" "}
+                          <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.
+                        </span>
+                      </label>
                     </div>
 
                     {/* Error */}

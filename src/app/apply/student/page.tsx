@@ -355,6 +355,7 @@ function StudentApplicationPage() {
           ref2_phone: formData.ref2Phone || null,
           ref2_relationship: formData.ref2Relationship || null,
           consent: formData.consent,
+          consent_communications: formData.consent,
         }),
       });
       if (!res.ok) {
@@ -1215,6 +1216,12 @@ function StudentApplicationPage() {
                       is true and accurate to the best of my knowledge. I
                       understand that providing false information may result in
                       denial of my application or termination of my lease.
+                      <span className="block mt-2 text-xs text-gray-600">
+                        By submitting this form, I also consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                        <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Privacy Policy</a>
+                        {" "}and{" "}
+                        <a href="/terms" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Terms & Conditions</a>.
+                      </span>
                     </span>
                   </label>
                 </motion.div>

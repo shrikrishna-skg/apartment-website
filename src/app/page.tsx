@@ -1059,7 +1059,10 @@ export default function HomePage() {
               </button>
             </form>
             <p style={{ marginTop: "1rem", fontSize: "0.75rem", color: "var(--outline)" }}>
-              We respect your privacy. Unsubscribe at any time. No spam, ever.
+              By subscribing, you consent to receive email communications from College Place Apartments. You can unsubscribe at any time. We respect your privacy. View our{" "}
+              <a href="/privacy-policy" style={{ color: "var(--primary)", textDecoration: "underline" }}>Privacy Policy</a>
+              {" "}and{" "}
+              <a href="/terms" style={{ color: "var(--primary)", textDecoration: "underline" }}>Terms & Conditions</a>.
             </p>
           </motion.div>
         </div>

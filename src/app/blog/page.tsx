@@ -257,6 +257,12 @@ export default function BlogPage() {
               Subscribe
             </button>
           </form>
+          <p className="mt-3 text-xs text-gray-500">
+            By subscribing, you consent to receive email communications from College Place Apartments. Unsubscribe at any time. View our{" "}
+            <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+            {" "}and{" "}
+            <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.
+          </p>
         </div>
       </div>
     </div>

@@ -43,6 +43,7 @@ export default function ContactPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -54,6 +55,7 @@ export default function ContactPage() {
     if (!formData.fullName.trim()) newErrors.push("Full Name is required");
     if (!formData.email.trim()) newErrors.push("Email is required");
     if (!formData.message.trim()) newErrors.push("Message is required");
+    if (!consent) newErrors.push("You must consent to communications");
     setErrors(newErrors);
     return newErrors.length === 0;
   };
@@ -83,6 +85,7 @@ export default function ContactPage() {
           phone: formData.phone || null,
           message: formData.message,
           inquiry_type: subjectToType[formData.subject] || "general",
+          consent_communications: consent,
         }),
       });
       if (!res.ok) {
@@ -256,6 +259,25 @@ export default function ContactPage() {
                     value={formData.message}
                     onChange={(e) => updateField("message", e.target.value)}
                   />
+                </div>
+
+                {/* Consent & Communications */}
+                <div className="mt-6 space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      required
+                    />
+                    <span className="text-xs text-gray-600 leading-relaxed">
+                      By submitting this form, I consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                      <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+                      {" "}and{" "}
+                      <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.
+                    </span>
+                  </label>
                 </div>
 
                 {submitError && (

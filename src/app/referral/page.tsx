@@ -145,6 +145,7 @@ export default function ReferralPage() {
           notes: formData.notes || null,
           consent_share: consentShare,
           consent_contact: consentContact,
+          consent_communications: consentShare,
         }),
       });
       if (!res.ok) {
@@ -467,10 +468,13 @@ export default function ReferralPage() {
                     onChange={(e) => setConsentShare(e.target.checked)}
                     className="mt-1 w-4 h-4 rounded border-gray-200 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+                  <span className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
                     I give permission to share my contact information with the
                     College Place leasing team for the purpose of processing this
-                    referral.
+                    referral. I consent to receive communications including emails, phone calls, and text messages at the number provided. Message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                    <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+                    {" "}and{" "}
+                    <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.
                   </span>
                 </label>
                 <label className="flex items-start gap-3 cursor-pointer group">
@@ -480,9 +484,9 @@ export default function ReferralPage() {
                     onChange={(e) => setConsentContact(e.target.checked)}
                     className="mt-1 w-4 h-4 rounded border-gray-200 bg-gray-50 text-blue-600 focus:ring-blue-500 focus:ring-offset-0"
                   />
-                  <span className="text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+                  <span className="text-xs text-gray-600 group-hover:text-gray-700 transition-colors leading-relaxed">
                     My friend agrees to be contacted by the College Place leasing
-                    team regarding available apartments and tour scheduling.
+                    team regarding available apartments and tour scheduling via emails, phone calls, and text messages. Message & data rates may apply. Reply STOP to opt out.
                   </span>
                 </label>
               </div>

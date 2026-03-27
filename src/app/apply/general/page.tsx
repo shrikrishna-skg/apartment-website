@@ -392,6 +392,7 @@ export default function GeneralApplicationPage() {
           signature_name: formData.signatureName || null,
           signature_date: formData.signatureDate || null,
           consent: true,
+          consent_communications: true,
         }),
       });
       if (!res.ok) {
@@ -1102,7 +1103,7 @@ export default function GeneralApplicationPage() {
                     <div className="text-sm text-gray-600 space-y-3 leading-relaxed">
                       <p>I certify that the information provided in this application is true and complete to the best of my knowledge. I understand that any false information or omission may disqualify me from further consideration for an apartment and may result in termination of my lease if discovered at a later date.</p>
                       <p>I authorize College Place Apartments to verify the information provided and to obtain a credit report and criminal background check.</p>
-                      <p>I authorize College Place Apartments to contact me by phone, email, and SMS text messages regarding my application and leasing updates. Msg &amp; Data rates may apply. Reply STOP to opt out.</p>
+                      <p>I authorize College Place Apartments to contact me by phone, email, and SMS text messages regarding my application and leasing updates. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a> and <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.</p>
                     </div>
                   </div>
 
@@ -1312,7 +1313,7 @@ export default function GeneralApplicationPage() {
 
                   {/* Submit Notice */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                    By submitting this application, you confirm that all information provided is accurate and that you have agreed to the terms and conditions.
+                    By submitting this application, you confirm that all information provided is accurate and that you have agreed to the terms and conditions. You also consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. Message & data rates may apply. Reply STOP to opt out. Consent is not a condition of purchase or tenancy.
                   </div>
                 </motion.div>
               )}

@@ -96,6 +96,7 @@ function ScheduleTourPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedProperty, setSelectedProperty] = useState(propertyParam);
+  const [consent, setConsent] = useState(false);
 
   /* schedule form state */
   const [selectedDate, setSelectedDate] = useState("");
@@ -136,7 +137,7 @@ function ScheduleTourPage() {
 
   const handleContactContinue = () => {
     setAttempted(true);
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) return;
+    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !consent) return;
     setAttempted(false);
     setMode("schedule");
   };
@@ -159,6 +160,7 @@ function ScheduleTourPage() {
           floor_plan: floorPlanParam || null,
           tour_date: selectedDate,
           tour_time: selectedTime,
+          consent_communications: consent,
         }),
       });
       if (!res.ok) {
@@ -371,6 +373,28 @@ function ScheduleTourPage() {
                       </option>
                     ))}
                   </select>
+                </div>
+
+                {/* Consent & Communications */}
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={consent}
+                      onChange={(e) => setConsent(e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      required
+                    />
+                    <span className="text-xs text-gray-600 leading-relaxed">
+                      By submitting this form, I consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                      <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+                      {" "}and{" "}
+                      <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.
+                    </span>
+                  </label>
+                  {attempted && !consent && (
+                    <p className="text-red-600 text-xs">You must consent to communications</p>
+                  )}
                 </div>
 
                 {/* continue button */}
