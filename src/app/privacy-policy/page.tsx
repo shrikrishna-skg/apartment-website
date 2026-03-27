@@ -8,51 +8,51 @@ const sections = [
   {
     title: "1. Information We Collect",
     content:
-      "We collect personal information that you voluntarily provide when applying for a lease, scheduling a tour, submitting a maintenance request, or contacting us. This may include your full name, email address, phone number, mailing address, date of birth, Social Security Number (for background and credit checks), employment details, rental history, and student enrollment information. We also automatically collect certain technical data when you visit our website, including IP address, browser type, operating system, referring URLs, and pages visited.",
+      "We collect personal information that you provide when interacting with our website or services. This may occur when you use features such as Schedule a Tour, Lease Inquiry, Maintenance Request, Refer a Friend, Apply Now (Rental Application), and Contact Us. The information collected may include your name, email address, phone number, and details related to your rental inquiry, application, tenant requests, or referrals. By checking the SMS consent checkbox on any of these forms, you expressly agree to receive SMS text messages from College Place Apartments at the phone number provided. Message frequency may vary. Msg & Data rates may apply. Reply STOP to opt out at any time. Reply HELP for help.",
   },
   {
     title: "2. How We Use Your Information",
     content:
-      "We use the information we collect to process lease applications, verify identity and background, communicate with you about your tenancy, respond to maintenance requests, process rent payments, send important property notices, improve our services and website experience, and comply with legal obligations. We may also use your contact information to send promotional offers about our properties, community events, and referral programs, which you can opt out of at any time.",
+      "We use your information to process rental applications, schedule property tours, respond to leasing inquiries, manage maintenance requests, communicate important property updates, and send service-related notifications such as rent reminders, maintenance updates, and leasing announcements. We may also use this information to improve our services and website experience and to comply with legal obligations.",
   },
   {
     title: "3. SMS Communication Policy",
     content:
-      "By providing your phone number and opting in, you consent to receive SMS messages from College Place Apartments regarding lease updates, maintenance notifications, payment reminders, community announcements, and promotional offers. Message frequency varies. Message and data rates may apply. You can opt out at any time by replying STOP to any message. Reply HELP for assistance. Your phone number will not be shared with third parties for their marketing purposes. SMS consent is not a condition of lease agreement or any purchase.",
+      "College Place Apartments may use SMS text messaging to communicate with tenants and prospective residents regarding rent reminders, maintenance notifications, leasing updates, and community announcements. By providing your mobile phone number through our website forms, rental applications, or communication with our leasing office, you consent to receive SMS messages related to your inquiry or tenancy. Message frequency may vary depending on property updates or tenant communication. Standard message and data rates may apply.\n\nYou may opt out of SMS messages at any time by replying STOP. For assistance, reply HELP or contact our leasing office.",
   },
   {
     title: "4. Cookies and Tracking",
     content:
-      "Our website uses cookies and similar tracking technologies to enhance your browsing experience, analyze site traffic, and understand user behavior. These include essential cookies required for site functionality, analytics cookies (such as Google Analytics) to measure site performance, and functional cookies to remember your preferences. You can manage cookie preferences through your browser settings. Disabling certain cookies may limit your ability to use some features of our website. We do not use cookies to collect personally identifiable information without your consent.",
+      "Our website may use cookies and similar technologies to improve user experience and analyze website traffic. Cookies help us understand how visitors use our website and allow us to enhance functionality. You can manage cookie settings through your web browser.",
   },
   {
     title: "5. Information Sharing",
     content:
-      "We do not sell, trade, or rent your personal information to third parties for marketing purposes. We may share your information with trusted service providers who assist in operating our business, such as background check services, payment processors, maintenance vendors, and utility providers. We may also disclose information when required by law, to protect our legal rights, or in connection with a merger, acquisition, or sale of assets. All third-party service providers are contractually obligated to protect your data and use it only for the purposes we specify.",
+      "We do not sell or rent your personal information. We may share information with trusted service providers only when necessary to operate our services, such as background screening providers or application processing services. Mobile phone numbers and SMS consent information will not be shared with third parties or affiliates for marketing or promotional purposes.",
   },
   {
     title: "6. Data Security",
     content:
-      "We implement industry-standard security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction. This includes encryption of sensitive data in transit and at rest, secure server infrastructure, regular security assessments, and restricted access to personal information on a need-to-know basis. While we strive to protect your data, no method of electronic transmission or storage is 100% secure. We encourage you to use strong passwords and to contact us immediately if you suspect any unauthorized access to your account.",
+      "We take reasonable administrative and technical measures to protect your personal information from unauthorized access, alteration, or disclosure.",
   },
   {
     title: "7. Your Privacy Choices",
     content:
-      "You have the right to access, correct, update, or delete your personal information at any time by contacting our leasing office. You may opt out of marketing emails by clicking the unsubscribe link in any promotional email. You may opt out of SMS communications by replying STOP. California residents may have additional rights under the CCPA, including the right to know what personal information is collected and the right to request its deletion. To exercise any of these rights, please contact us using the information provided below.",
+      "You have the right to review, update, or delete your personal information by contacting our leasing office. We will make reasonable efforts to respond to your request in accordance with applicable laws.",
   },
   {
     title: "8. Children's Privacy",
     content:
-      "Our services and website are not directed to individuals under the age of 18. We do not knowingly collect personal information from children under 18. If we become aware that we have inadvertently collected personal information from a child under 18, we will take steps to delete such information promptly. If you believe we have collected information from a minor, please contact us immediately so we can address the issue.",
+      "Our services are not intended for children under the age of 13. We do not knowingly collect personal information from children under 13 years of age.",
   },
   {
     title: "9. Policy Updates",
     content:
-      "We may update this Privacy Policy from time to time to reflect changes in our practices, technologies, or legal requirements. When we make material changes, we will notify you by posting the updated policy on our website with a revised \"Last Updated\" date. We encourage you to review this policy periodically to stay informed about how we protect your information. Your continued use of our services after any changes constitutes your acceptance of the updated policy.",
+      "We may update this Privacy Policy from time to time to reflect changes in our practices or legal requirements. Updates will be posted on this page, and continued use of our website indicates acceptance of the revised policy.",
   },
   {
     title: "10. Contact Us",
-    content: `If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact us at:\n\nCollege Place Apartments\n${SITE.address.full}\nPhone: ${SITE.phone}\nEmail: ${SITE.email}\n\nWe aim to respond to all privacy-related inquiries within 30 business days.`,
+    content: `For privacy-related inquiries, contact us at ${SITE.phone} or visit our office at ${SITE.address.full}.`,
   },
 ];
 
@@ -89,8 +89,7 @@ export default function PrivacyPolicyPage() {
               <span className="text-gradient">Privacy Policy</span>
             </h1>
             <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-              Your privacy is important to us. This policy explains how College Place
-              Apartments collects, uses, and protects your personal information.
+              Your privacy is important to us. Learn how we collect, use, and protect your information.
             </p>
             <p className="text-sm text-gray-400 mt-4">
               Last Updated: March 2026

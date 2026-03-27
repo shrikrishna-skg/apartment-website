@@ -39,7 +39,7 @@ const REQUIRED_DOCS_STUDENT = [
     label: "Passport Size Photo",
     description: "Upload a clear passport-size photograph",
     required: true,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -47,7 +47,7 @@ const REQUIRED_DOCS_STUDENT = [
     label: "Student ID",
     description: "Upload a clear photo or scan of your student ID card",
     required: true,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -55,7 +55,7 @@ const REQUIRED_DOCS_STUDENT = [
     label: "State ID or Passport",
     description: "Government-issued photo identification",
     required: true,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -64,7 +64,7 @@ const REQUIRED_DOCS_STUDENT = [
     description: "Required for international students on a student visa",
     required: false,
     internationalRequired: true,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -117,6 +117,7 @@ interface FormData {
   fullName: string;
   ssn: string;
   maritalStatus: string;
+  gender: string;
   drivingLicense: string;
   dateOfBirth: string;
   email: string;
@@ -127,24 +128,30 @@ interface FormData {
   leaseDuration: string;
   // Step 2
   currentAddress: string;
+  addressType: string;
   city: string;
   state: string;
   zipCode: string;
   universityName: string;
   studentId: string;
+  courseName: string;
+  courseStartDate: string;
   expectedGraduation: string;
+  advisorPhone: string;
+  advisorEmail: string;
   emergencyContactName: string;
   emergencyContactPhone: string;
+  emergencyContactEmail: string;
   emergencyRelationship: string;
+  emergencyContact2Name: string;
+  emergencyContact2Phone: string;
+  emergencyContact2Email: string;
+  emergencyRelationship2: string;
   // Step 3
   employmentStatus: string;
   employerName: string;
   monthlyIncome: string;
   incomeSource: string;
-  hasCosigner: string;
-  cosignerName: string;
-  cosignerPhone: string;
-  cosignerEmail: string;
   // Step 4
   previousLandlordName: string;
   landlordPhone: string;
@@ -165,6 +172,7 @@ const initialFormData: FormData = {
   fullName: "",
   ssn: "",
   maritalStatus: "Single",
+  gender: "",
   drivingLicense: "",
   dateOfBirth: "",
   email: "",
@@ -174,23 +182,29 @@ const initialFormData: FormData = {
   preferredMoveIn: "",
   leaseDuration: "",
   currentAddress: "",
+  addressType: "",
   city: "",
   state: "",
   zipCode: "",
   universityName: "Middle Tennessee State University",
   studentId: "",
+  courseName: "",
+  courseStartDate: "",
   expectedGraduation: "",
+  advisorPhone: "",
+  advisorEmail: "",
   emergencyContactName: "",
   emergencyContactPhone: "",
+  emergencyContactEmail: "",
   emergencyRelationship: "",
+  emergencyContact2Name: "",
+  emergencyContact2Phone: "",
+  emergencyContact2Email: "",
+  emergencyRelationship2: "",
   employmentStatus: "Student",
   employerName: "",
   monthlyIncome: "",
   incomeSource: "",
-  hasCosigner: "No",
-  cosignerName: "",
-  cosignerPhone: "",
-  cosignerEmail: "",
   previousLandlordName: "",
   landlordPhone: "",
   landlordAddress: "",
@@ -241,15 +255,33 @@ function StudentApplicationPage() {
       if (!formData.email.trim()) newErrors.push("Email is required");
       if (!formData.mobileNumber.trim()) newErrors.push("Mobile Number is required");
       if (!formData.dateOfBirth) newErrors.push("Date of Birth is required");
+      if (!formData.gender) newErrors.push("Gender is required");
+      if (!formData.housingRequirement) newErrors.push("Housing Requirement is required");
+      if (!formData.preferredMoveIn) newErrors.push("Preferred Move-In Date is required");
+      if (!formData.leaseDuration) newErrors.push("Lease Duration is required");
     }
 
     if (currentStep === 2) {
       if (!formData.currentAddress.trim()) newErrors.push("Current Address is required");
+      if (!formData.addressType) newErrors.push("Address Type is required");
       if (!formData.city.trim()) newErrors.push("City is required");
       if (!formData.state.trim()) newErrors.push("State is required");
       if (!formData.zipCode.trim()) newErrors.push("Zip Code is required");
-      if (!formData.emergencyContactName.trim()) newErrors.push("Emergency Contact Name is required");
-      if (!formData.emergencyContactPhone.trim()) newErrors.push("Emergency Contact Phone is required");
+      if (!formData.universityName.trim()) newErrors.push("University Name is required");
+      if (!formData.studentId.trim()) newErrors.push("Student ID is required");
+      if (!formData.courseName.trim()) newErrors.push("Course Name is required");
+      if (!formData.courseStartDate) newErrors.push("Course Start Date is required");
+      if (!formData.expectedGraduation) newErrors.push("Expected Graduation is required");
+      if (!formData.emergencyContactName.trim()) newErrors.push("Emergency Contact 1 Name is required");
+      if (!formData.emergencyContactPhone.trim()) newErrors.push("Emergency Contact 1 Phone is required");
+    }
+
+    if (currentStep === 4) {
+      if (!formData.previousLandlordName.trim()) newErrors.push("Landlord Name is required");
+      if (!formData.landlordPhone.trim()) newErrors.push("Landlord Phone is required");
+      if (!formData.landlordAddress.trim()) newErrors.push("Landlord Address is required");
+      if (!formData.reasonForLeaving.trim()) newErrors.push("Reason for Leaving is required");
+      if (!formData.lengthOfStay.trim()) newErrors.push("Length of Stay is required");
     }
 
     if (currentStep === 5) {
@@ -317,6 +349,7 @@ function StudentApplicationPage() {
           full_name: formData.fullName,
           ssn: formData.ssn || null,
           marital_status: formData.maritalStatus,
+          gender: formData.gender || null,
           driving_license: formData.drivingLicense || null,
           date_of_birth: formData.dateOfBirth || null,
           email: formData.email,
@@ -326,23 +359,29 @@ function StudentApplicationPage() {
           preferred_move_in: formData.preferredMoveIn || null,
           lease_duration: formData.leaseDuration || null,
           current_address: formData.currentAddress || null,
+          address_type: formData.addressType || null,
           city: formData.city || null,
           state: formData.state || null,
           zip_code: formData.zipCode || null,
           university_name: formData.universityName || null,
           student_id: formData.studentId || null,
+          course_name: formData.courseName || null,
+          course_start_date: formData.courseStartDate || null,
           expected_graduation: formData.expectedGraduation || null,
+          advisor_phone: formData.advisorPhone || null,
+          advisor_email: formData.advisorEmail || null,
           emergency_contact_name: formData.emergencyContactName || null,
           emergency_contact_phone: formData.emergencyContactPhone || null,
+          emergency_contact_email: formData.emergencyContactEmail || null,
           emergency_relationship: formData.emergencyRelationship || null,
+          emergency_contact2_name: formData.emergencyContact2Name || null,
+          emergency_contact2_phone: formData.emergencyContact2Phone || null,
+          emergency_contact2_email: formData.emergencyContact2Email || null,
+          emergency_relationship2: formData.emergencyRelationship2 || null,
           employment_status: formData.employmentStatus || null,
           employer_name: formData.employerName || null,
           monthly_income: formData.monthlyIncome || null,
           income_source: formData.incomeSource || null,
-          has_cosigner: formData.hasCosigner === "Yes",
-          cosigner_name: formData.cosignerName || null,
-          cosigner_phone: formData.cosignerPhone || null,
-          cosigner_email: formData.cosignerEmail || null,
           previous_landlord_name: formData.previousLandlordName || null,
           landlord_phone: formData.landlordPhone || null,
           landlord_address: formData.landlordAddress || null,
@@ -408,10 +447,14 @@ function StudentApplicationPage() {
   const renderRadioGroup = (
     label: string,
     field: keyof FormData,
-    options: string[]
+    options: string[],
+    required = false
   ) => (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label className="text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="text-red-600 ml-1">*</span>}
+      </label>
       <div className="flex flex-wrap gap-3">
         {options.map((option) => (
           <label
@@ -630,11 +673,34 @@ function StudentApplicationPage() {
                     {renderInput("Mobile Number", "mobileNumber", "tel", "(615) 000-0000", true)}
                   </div>
 
-                  <div className="mt-5">
-                    {renderRadioGroup("Marital Status", "maritalStatus", [
-                      "Single",
-                      "Married",
-                    ])}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
+                    <div>
+                      {renderRadioGroup("Marital Status", "maritalStatus", [
+                        "Single",
+                        "Married",
+                      ])}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1.5">
+                        Gender <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Female", "Male", "Other", "Prefer not to say"].map((g) => (
+                          <button
+                            key={g}
+                            type="button"
+                            onClick={() => updateField("gender", g)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                              formData.gender === g
+                                ? "bg-[#1a73e8] text-white border-[#1a73e8]"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                            }`}
+                          >
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-5">
@@ -655,14 +721,15 @@ function StudentApplicationPage() {
                     {renderRadioGroup(
                       "Housing Requirement",
                       "housingRequirement",
-                      housingOptions
+                      housingOptions,
+                      true
                     )}
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-medium text-gray-700">
-                        Preferred Move-In Date
+                        Preferred Move-In Date<span className="text-red-600 ml-1">*</span>
                       </label>
                       <DatePicker
                         value={formData.preferredMoveIn}
@@ -673,7 +740,7 @@ function StudentApplicationPage() {
                     </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-medium text-gray-700">
-                        Lease Duration
+                        Lease Duration<span className="text-red-600 ml-1">*</span>
                       </label>
                       <select
                         className="input-glass"
@@ -721,6 +788,27 @@ function StudentApplicationPage() {
                         true
                       )}
                     </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 block mb-1.5">
+                        Address Type <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {["Own", "Rental", "Living with Friends/Family", "Other"].map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => updateField("addressType", opt)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
+                              formData.addressType === opt
+                                ? "bg-[#1a73e8] text-white border-[#1a73e8]"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     {renderInput("City", "city", "text", "City", true)}
                     {renderInput("State", "state", "text", "State", true)}
                     {renderInput("Zip Code", "zipCode", "text", "Zip Code", true)}
@@ -735,17 +823,36 @@ function StudentApplicationPage() {
                         "University Name",
                         "universityName",
                         "text",
-                        "University name"
+                        "University name",
+                        true
                       )}
                       {renderInput(
                         "Student ID",
                         "studentId",
                         "text",
-                        "Student ID number"
+                        "Student ID number",
+                        true
+                      )}
+                      {renderInput(
+                        "Course Name",
+                        "courseName",
+                        "text",
+                        "e.g., Computer Science, Business Administration",
+                        true
                       )}
                       <div className="flex flex-col gap-1.5">
                         <label className="text-sm font-medium text-gray-700">
-                          Expected Graduation
+                          Course Start Date<span className="text-red-600 ml-1">*</span>
+                        </label>
+                        <DatePicker
+                          value={formData.courseStartDate}
+                          onChange={(val) => updateField("courseStartDate", val)}
+                          placeholder="Select course start date"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                          Expected Graduation<span className="text-red-600 ml-1">*</span>
                         </label>
                         <DatePicker
                           value={formData.expectedGraduation}
@@ -754,12 +861,24 @@ function StudentApplicationPage() {
                           placeholder="Select graduation date"
                         />
                       </div>
+                      {renderInput(
+                        "Advisor Phone",
+                        "advisorPhone",
+                        "tel",
+                        "(000) 000-0000"
+                      )}
+                      {renderInput(
+                        "Advisor Email",
+                        "advisorEmail",
+                        "email",
+                        "advisor@university.edu"
+                      )}
                     </div>
                   </div>
 
                   <div className="border-t border-gray-100 mt-8 pt-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Emergency Contact
+                      Emergency Contact 1
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       {renderInput(
@@ -777,8 +896,46 @@ function StudentApplicationPage() {
                         true
                       )}
                       {renderInput(
+                        "Contact Email",
+                        "emergencyContactEmail",
+                        "email",
+                        "contact@email.com"
+                      )}
+                      {renderInput(
                         "Relationship",
                         "emergencyRelationship",
+                        "text",
+                        "e.g., Parent, Sibling"
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-100 mt-8 pt-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Emergency Contact 2
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {renderInput(
+                        "Contact Name",
+                        "emergencyContact2Name",
+                        "text",
+                        "Full name"
+                      )}
+                      {renderInput(
+                        "Contact Phone",
+                        "emergencyContact2Phone",
+                        "tel",
+                        "(000) 000-0000"
+                      )}
+                      {renderInput(
+                        "Contact Email",
+                        "emergencyContact2Email",
+                        "email",
+                        "contact@email.com"
+                      )}
+                      {renderInput(
+                        "Relationship",
+                        "emergencyRelationship2",
                         "text",
                         "e.g., Parent, Sibling"
                       )}
@@ -832,44 +989,6 @@ function StudentApplicationPage() {
                     )}
                   </div>
 
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Co-Signer Information
-                    </h3>
-                    <div className="mb-5">
-                      {renderRadioGroup("Has Co-Signer?", "hasCosigner", [
-                        "Yes",
-                        "No",
-                      ])}
-                    </div>
-
-                    {formData.hasCosigner === "Yes" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="grid grid-cols-1 sm:grid-cols-2 gap-5"
-                      >
-                        {renderInput(
-                          "Co-Signer Name",
-                          "cosignerName",
-                          "text",
-                          "Full name"
-                        )}
-                        {renderInput(
-                          "Co-Signer Phone",
-                          "cosignerPhone",
-                          "tel",
-                          "(000) 000-0000"
-                        )}
-                        {renderInput(
-                          "Co-Signer Email",
-                          "cosignerEmail",
-                          "email",
-                          "cosigner@email.com"
-                        )}
-                      </motion.div>
-                    )}
-                  </div>
                 </motion.div>
               )}
 
@@ -889,40 +1008,45 @@ function StudentApplicationPage() {
                   </h2>
 
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Previous Landlord
+                    Previous Landlord <span className="text-red-500 text-sm">*</span>
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     {renderInput(
                       "Landlord Name",
                       "previousLandlordName",
                       "text",
-                      "Full name"
+                      "Full name",
+                      true
                     )}
                     {renderInput(
                       "Landlord Phone",
                       "landlordPhone",
                       "tel",
-                      "(000) 000-0000"
+                      "(000) 000-0000",
+                      true
                     )}
                     <div className="sm:col-span-2">
                       {renderInput(
                         "Landlord Address",
                         "landlordAddress",
                         "text",
-                        "Property address"
+                        "Property address",
+                        true
                       )}
                     </div>
                     {renderInput(
                       "Reason for Leaving",
                       "reasonForLeaving",
                       "text",
-                      "e.g., End of lease, relocation"
+                      "e.g., End of lease, relocation",
+                      true
                     )}
                     {renderInput(
                       "Length of Stay",
                       "lengthOfStay",
                       "text",
-                      "e.g., 12 months"
+                      "e.g., 12 months",
+                      true
                     )}
                   </div>
 
@@ -1098,6 +1222,7 @@ function StudentApplicationPage() {
                       <SummaryRow label="Full Name" value={formData.fullName} />
                       <SummaryRow label={isInternational ? "Passport" : "SSN"} value={formData.ssn || "Not provided"} />
                       <SummaryRow label="Marital Status" value={formData.maritalStatus} />
+                      <SummaryRow label="Gender" value={formData.gender || "Not provided"} />
                       <SummaryRow label="Driving License" value={formData.drivingLicense || "Not provided"} />
                       <SummaryRow label="Date of Birth" value={formData.dateOfBirth} />
                       <SummaryRow label="Email" value={formData.email} />
@@ -1120,15 +1245,35 @@ function StudentApplicationPage() {
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Address" value={formData.currentAddress} />
+                      <SummaryRow label="Address Type" value={formData.addressType || "Not selected"} />
                       <SummaryRow label="City" value={formData.city} />
                       <SummaryRow label="State" value={formData.state} />
                       <SummaryRow label="Zip Code" value={formData.zipCode} />
                       <SummaryRow label="University" value={formData.universityName} />
-                      <SummaryRow label="Student ID" value={formData.studentId || "Not provided"} />
+                      <SummaryRow label="Student ID" value={formData.studentId} />
+                      <SummaryRow label="Course Name" value={formData.courseName} />
+                      <SummaryRow label="Course Start Date" value={formData.courseStartDate || "Not set"} />
                       <SummaryRow label="Expected Graduation" value={formData.expectedGraduation || "Not set"} />
-                      <SummaryRow label="Emergency Contact" value={formData.emergencyContactName} />
-                      <SummaryRow label="Emergency Phone" value={formData.emergencyContactPhone} />
-                      <SummaryRow label="Relationship" value={formData.emergencyRelationship || "Not provided"} />
+                      <SummaryRow label="Advisor Phone" value={formData.advisorPhone || "Not provided"} />
+                      <SummaryRow label="Advisor Email" value={formData.advisorEmail || "Not provided"} />
+                    </div>
+                    <div className="border-t border-gray-100 mt-3 pt-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 1</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                        <SummaryRow label="Name" value={formData.emergencyContactName} />
+                        <SummaryRow label="Phone" value={formData.emergencyContactPhone} />
+                        <SummaryRow label="Email" value={formData.emergencyContactEmail || "Not provided"} />
+                        <SummaryRow label="Relationship" value={formData.emergencyRelationship || "Not provided"} />
+                      </div>
+                    </div>
+                    <div className="border-t border-gray-100 mt-3 pt-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 2</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                        <SummaryRow label="Name" value={formData.emergencyContact2Name} />
+                        <SummaryRow label="Phone" value={formData.emergencyContact2Phone} />
+                        <SummaryRow label="Email" value={formData.emergencyContact2Email || "Not provided"} />
+                        <SummaryRow label="Relationship" value={formData.emergencyRelationship2 || "Not provided"} />
+                      </div>
                     </div>
                   </div>
 
@@ -1142,14 +1287,6 @@ function StudentApplicationPage() {
                       <SummaryRow label="Employer" value={formData.employerName || "N/A"} />
                       <SummaryRow label="Monthly Income" value={formData.monthlyIncome || "Not provided"} />
                       <SummaryRow label="Income Source" value={formData.incomeSource || "Not provided"} />
-                      <SummaryRow label="Has Co-Signer" value={formData.hasCosigner} />
-                      {formData.hasCosigner === "Yes" && (
-                        <>
-                          <SummaryRow label="Co-Signer Name" value={formData.cosignerName || "Not provided"} />
-                          <SummaryRow label="Co-Signer Phone" value={formData.cosignerPhone || "Not provided"} />
-                          <SummaryRow label="Co-Signer Email" value={formData.cosignerEmail || "Not provided"} />
-                        </>
-                      )}
                     </div>
                   </div>
 
@@ -1159,10 +1296,11 @@ function StudentApplicationPage() {
                       References & History
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                      <SummaryRow label="Previous Landlord" value={formData.previousLandlordName || "N/A"} />
-                      <SummaryRow label="Landlord Phone" value={formData.landlordPhone || "N/A"} />
-                      <SummaryRow label="Reason for Leaving" value={formData.reasonForLeaving || "N/A"} />
-                      <SummaryRow label="Length of Stay" value={formData.lengthOfStay || "N/A"} />
+                      <SummaryRow label="Previous Landlord" value={formData.previousLandlordName} />
+                      <SummaryRow label="Landlord Phone" value={formData.landlordPhone} />
+                      <SummaryRow label="Landlord Address" value={formData.landlordAddress} />
+                      <SummaryRow label="Reason for Leaving" value={formData.reasonForLeaving} />
+                      <SummaryRow label="Length of Stay" value={formData.lengthOfStay} />
                       <SummaryRow label="Reference 1" value={formData.ref1Name ? `${formData.ref1Name} (${formData.ref1Relationship})` : "N/A"} />
                       <SummaryRow label="Reference 2" value={formData.ref2Name ? `${formData.ref2Name} (${formData.ref2Relationship})` : "N/A"} />
                     </div>

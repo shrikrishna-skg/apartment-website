@@ -27,7 +27,7 @@ const REQUIRED_DOCS_PROFESSIONAL = [
     label: "Passport Size Photo",
     description: "Upload a clear passport-size photograph",
     required: true,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -35,7 +35,7 @@ const REQUIRED_DOCS_PROFESSIONAL = [
     label: "State ID or Passport",
     description: "Government-issued photo identification",
     required: true,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -43,7 +43,7 @@ const REQUIRED_DOCS_PROFESSIONAL = [
     label: "Visa (If Applicable)",
     description: "Upload visa documentation if applicable",
     required: false,
-    multiple: false,
+    multiple: true,
     maxSize: 10,
   },
   {
@@ -733,7 +733,8 @@ export default function GeneralApplicationPage() {
                     {renderRadioGroup("Housing Status", "housingStatus", [
                       "Own",
                       "Rent",
-                      "Living with Family or Friends",
+                      "Living with Friends/Family",
+                      "Other",
                     ])}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
