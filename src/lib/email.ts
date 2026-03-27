@@ -453,6 +453,135 @@ export async function sendTicketEmail(params: {
   return info.messageId;
 }
 
+// Beautiful approval email sent to applicants
+export async function sendApprovalEmail(applicantName: string, applicantEmail: string): Promise<boolean> {
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Celebratory Header -->
+        <tr>
+          <td style="background:linear-gradient(135deg,#1a73e8 0%,#4a90d9 50%,#1a73e8 100%);padding:40px 40px 32px;text-align:center;">
+            <div style="font-size:48px;line-height:1;margin-bottom:12px;">&#127881; &#127881; &#127881;</div>
+            <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;">&#127881; Great News!</h1>
+            <p style="margin:10px 0 0;color:rgba(255,255,255,0.95);font-size:16px;font-weight:500;">Your Rental Application is Approved!</p>
+            <div style="margin-top:16px;">
+              <span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:13px;font-weight:700;padding:6px 20px;border-radius:20px;letter-spacing:0.5px;">&#10004; APPROVED</span>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Body Content -->
+        <tr>
+          <td style="padding:40px;">
+            <p style="margin:0 0 20px;color:#1a1a1a;font-size:16px;line-height:1.6;">Dear ${escapeHtml(applicantName)},</p>
+
+            <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
+              We are excited to inform you that your application for <strong>College Place Apartments</strong> has been approved! &#127968; &#10024;
+            </p>
+
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              The next step is to finalize your lease agreement. Please let us know a convenient date and time for an office visit to complete this process.
+            </p>
+
+            <!-- CTA Button -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding:8px 0 24px;">
+                  <a href="https://collegeplace.us/schedule-tour" style="display:inline-block;background:linear-gradient(135deg,#1a73e8,#4a90d9);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.3px;box-shadow:0 4px 14px rgba(26,115,232,0.35);">Schedule Your Appointment</a>
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 28px;color:#6b7280;font-size:14px;line-height:1.6;text-align:center;">
+              If you'd prefer a walk-in appointment, you're also welcome to visit us during our office hours.
+            </p>
+
+            <!-- Office Hours Box -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:28px;">
+              <tr>
+                <td style="padding:24px;text-align:center;">
+                  <p style="margin:0 0 12px;color:#1a1a1a;font-size:15px;font-weight:700;">&#128197; Office Hours</p>
+                  <p style="margin:0 0 4px;color:#374151;font-size:14px;line-height:1.8;">
+                    <strong>Monday &ndash; Saturday:</strong> 9:00 AM &ndash; 5:00 PM
+                  </p>
+                  <p style="margin:0;color:#374151;font-size:14px;">
+                    <strong>Sunday:</strong> Closed
+                  </p>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Contact Section -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;padding-top:20px;">
+              <tr>
+                <td style="padding-top:20px;text-align:center;">
+                  <p style="margin:0 0 12px;color:#1a1a1a;font-size:14px;font-weight:600;">Need help? Contact us:</p>
+                  <p style="margin:0 0 6px;color:#374151;font-size:14px;">
+                    &#9993; <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;font-weight:500;">office@collegeplace.us</a>
+                  </p>
+                  <p style="margin:0 0 16px;color:#374151;font-size:14px;">
+                    &#9742; <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 200-0620</a>
+                  </p>
+                  <!-- Social Links -->
+                  <p style="margin:0;">
+                    <a href="https://www.facebook.com/collegeplace" style="display:inline-block;margin:0 6px;text-decoration:none;">
+                      <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" width="28" height="28" style="border-radius:6px;" />
+                    </a>
+                    <a href="https://www.instagram.com/collegeplace" style="display:inline-block;margin:0 6px;text-decoration:none;">
+                      <img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" alt="Instagram" width="28" height="28" style="border-radius:6px;" />
+                    </a>
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:28px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 6px;color:#374151;font-size:13px;font-weight:600;">Thanks &amp; Regards,</p>
+            <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">Leasing Office</p>
+            <p style="margin:0 0 12px;color:#6b7280;font-size:12px;">1023 Old Lascassas Rd, Murfreesboro, TN 37130</p>
+            <p style="margin:0 0 12px;color:#9ca3af;font-size:11px;line-height:1.6;">
+              College Place Apartments | College Center Apartments<br/>
+              College Pointe Apartments | University Center Apartments
+            </p>
+            <p style="margin:0;color:#9ca3af;font-size:11px;">
+              &copy; 2026 College Place Apartments. All Rights Reserved.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await transporter.sendMail({
+      from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+      to: applicantEmail,
+      subject: "🎉 Great News! Your Rental Application is Approved — College Place Apartments",
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to send approval email:", err);
+    return false;
+  }
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")

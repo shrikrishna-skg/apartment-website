@@ -295,6 +295,9 @@ export default function ApplicationsPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteText, setNoteText] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
+  const [confirmApprove, setConfirmApprove] = useState<Application | null>(null);
+  const [approving, setApproving] = useState<string | null>(null);
+  const [approveSuccess, setApproveSuccess] = useState<string | null>(null);
 
   /* ── Data fetching ── */
   const fetchDocuments = useCallback(async (applicationId: string) => {
@@ -413,6 +416,31 @@ export default function ApplicationsPage() {
       /* noop */
     }
   }, [selected, noteText]);
+
+  const approveApplication = useCallback(async (app: Application) => {
+    setApproving(app.id);
+    try {
+      const res = await fetch(`/api/applications/${app.id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "approved" } : a)));
+        setSelected((prev) => (prev?.id === app.id ? { ...prev, status: "approved" } : prev));
+        setConfirmApprove(null);
+        setApproveSuccess(updated.emailSent ? `${app.full_name}'s application approved & email sent!` : `${app.full_name}'s application approved! (Email could not be sent)`);
+        setTimeout(() => setApproveSuccess(null), 5000);
+      } else {
+        const err = await res.json();
+        alert(`Failed to approve: ${err.error || "Unknown error"}`);
+      }
+    } catch {
+      alert("Failed to approve application. Please try again.");
+    } finally {
+      setApproving(null);
+    }
+  }, []);
 
   const exportCSV = useCallback(() => {
     const headers = [
@@ -660,6 +688,27 @@ export default function ApplicationsPage() {
                     </td>
                     <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
+                        {(app.status === "pending" || app.status === "reviewing") && (
+                          <button
+                            onClick={() => setConfirmApprove(app)}
+                            disabled={approving === app.id}
+                            title="Approve Application"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 shadow-sm"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            Approve
+                          </button>
+                        )}
+                        {app.status === "approved" && (
+                          <span className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                            Approved
+                          </span>
+                        )}
                         <select
                           value={app.status}
                           onChange={(e) => updateStatus(app.id, e.target.value)}
@@ -1093,6 +1142,23 @@ export default function ApplicationsPage() {
                   ))}
                 </div>
 
+                {/* Approve Button in Detail Panel */}
+                {(selected.status === "pending" || selected.status === "reviewing") && (
+                  <div className="mb-6">
+                    <button
+                      onClick={() => setConfirmApprove(selected)}
+                      disabled={approving === selected.id}
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 transition-all disabled:opacity-50 shadow-md hover:shadow-lg"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      Approve &amp; Send Email
+                    </button>
+                    <p className="text-xs text-gray-400 mt-2">This will approve the application and send a congratulatory email to the applicant.</p>
+                  </div>
+                )}
+
                 {/* Notes */}
                 <div className="mb-6">
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Internal Notes</label>
@@ -1166,6 +1232,67 @@ export default function ApplicationsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Approve Modal */}
+      {confirmApprove && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => setConfirmApprove(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-5 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Approve Application?</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                This will approve <strong>{confirmApprove.full_name}</strong>&apos;s application and send them a congratulatory email at <strong>{confirmApprove.email}</strong>.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setConfirmApprove(null)}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => approveApplication(confirmApprove)}
+                  disabled={approving === confirmApprove.id}
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {approving === confirmApprove.id ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      Approve &amp; Send Email
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success Toast */}
+      {approveSuccess && (
+        <div className="fixed bottom-6 right-6 z-[70] animate-slide-in-right">
+          <div className="flex items-center gap-3 px-5 py-4 bg-green-600 text-white rounded-xl shadow-2xl max-w-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm font-medium">{approveSuccess}</p>
+            <button onClick={() => setApproveSuccess(null)} className="ml-2 text-white/70 hover:text-white">
+              <CloseIcon />
+            </button>
           </div>
         </div>
       )}
