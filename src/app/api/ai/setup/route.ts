@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Supabase credentials not configured");
+  return createClient(url, key);
+}
 
 export async function POST(req: Request) {
+  const supabaseAdmin = getSupabaseAdmin();
   // Check for setup secret
   const { secret } = await req.json();
   if (secret !== "setup-ai-knowledge-2026") {
