@@ -1024,6 +1024,7 @@ export const NEARBY_PLACES = [
 ];
 
 export const NAV_LINKS = [
+  { label: "Home", href: "/" },
   { label: "Floor Plans", href: "/properties" },
   { label: "3D Tour", href: "/virtual-tour" },
   { label: "Schedule Tour", href: "/schedule-tour" },

@@ -18,6 +18,8 @@ import {
   X,
   ShieldCheck,
   PenTool,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 
@@ -171,15 +173,15 @@ interface FormData {
   ref2Relationship: string;
   // Step 5 - Background Check
   filedBankruptcy: string;
+  bankruptcyDetails: string;
   evictedFromTenancy: string;
+  evictionDetails: string;
   convictedFelony: string;
+  felonyDetails: string;
   arrestedOrConvicted: string;
+  arrestDetails: string;
   // General Info - Pets & Vehicle
   hasPets: string;
-  petType: string;
-  petWeight: string;
-  petAge: string;
-  isESA: string;
   hasVehicle: string;
   vehicle1Make: string;
   vehicle1Year: string;
@@ -241,14 +243,14 @@ const initialFormData: FormData = {
   ref2Phone: "",
   ref2Relationship: "",
   filedBankruptcy: "",
+  bankruptcyDetails: "",
   evictedFromTenancy: "",
+  evictionDetails: "",
   convictedFelony: "",
+  felonyDetails: "",
   arrestedOrConvicted: "",
+  arrestDetails: "",
   hasPets: "",
-  petType: "",
-  petWeight: "",
-  petAge: "",
-  isESA: "",
   hasVehicle: "",
   vehicle1Make: "",
   vehicle1Year: "",
@@ -282,6 +284,15 @@ function StudentApplicationPage() {
   const [errors, setErrors] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set());
+  const [pets, setPets] = useState<{ type: string; weight: string; age: string; category: string }[]>([
+    { type: "", weight: "", age: "", category: "" },
+  ]);
+
+  const addPet = () => setPets((prev) => [...prev, { type: "", weight: "", age: "", category: "" }]);
+  const removePet = (index: number) => setPets((prev) => prev.filter((_, i) => i !== index));
+  const updatePet = (index: number, field: string, value: string) => {
+    setPets((prev) => prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)));
+  };
 
   const updateField = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -453,16 +464,16 @@ function StudentApplicationPage() {
           ref2_phone: formData.ref2Phone || null,
           ref2_relationship: formData.ref2Relationship || null,
           filed_bankruptcy: formData.filedBankruptcy === "Yes",
+          bankruptcy_details: formData.bankruptcyDetails || null,
           evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
+          eviction_details: formData.evictionDetails || null,
           convicted_felony: formData.convictedFelony === "Yes",
+          felony_details: formData.felonyDetails || null,
           arrested_or_convicted: formData.arrestedOrConvicted === "Yes",
+          arrest_details: formData.arrestDetails || null,
           has_pets: formData.hasPets === "Yes",
+          pets: formData.hasPets === "Yes" ? pets : [],
           has_vehicle: formData.hasVehicle === "Yes",
-          pet_type: formData.petType || null,
-          pet_weight: formData.petWeight || null,
-          pet_age: formData.petAge || null,
-          pet_category: formData.isESA || null,
-          is_esa: formData.isESA === "Emotional Support Animal" || formData.isESA === "Service Animal",
           vehicle1_make: formData.vehicle1Make || null,
           vehicle1_year: formData.vehicle1Year || null,
           vehicle1_color: formData.vehicle1Color || null,
@@ -471,7 +482,6 @@ function StudentApplicationPage() {
           signature_name: formData.signatureName || null,
           signature_date: formData.signatureDate || null,
           consent: formData.agreeTerms === "Yes, I agree",
-          consent_communications: formData.agreeTerms === "Yes, I agree",
         }),
       });
       if (!res.ok) {
@@ -1047,53 +1057,76 @@ function StudentApplicationPage() {
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}
-                          className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2"
+                          className="space-y-4 pl-1 border-l-2 border-blue-200 ml-2"
                         >
-                          <div className="pl-4 space-y-5">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                              {renderInput("Pet Type / Breed", "petType", "text", "e.g., Dog - Golden Retriever")}
-                              {renderInput("Pet Weight (lbs)", "petWeight", "text", "e.g., 25")}
-                              {renderInput("Pet Age", "petAge", "text", "e.g., 3 years")}
-                            </div>
-                            {renderRadioGroup("Pet Category", "isESA", ["Regular", "Emotional Support Animal", "Service Animal"])}
-
-                            {(formData.isESA === "Emotional Support Animal" || formData.isESA === "Service Animal") && (
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <p className="text-sm font-medium text-gray-700 mb-1">
-                                  {formData.isESA} Verification Document
-                                </p>
-                                <p className="text-xs text-gray-500 mb-3">
-                                  Upload registration, doctor&apos;s note, certification, or any official proof.
-                                </p>
-                                {(documentFiles["esaDoc"] || []).length > 0 && (
-                                  <div className="mb-3 space-y-1.5">
-                                    {documentFiles["esaDoc"].map((doc, idx) => (
-                                      <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 bg-white rounded px-3 py-1.5">
-                                        <FileText size={14} className="text-blue-500" />
-                                        <span className="truncate flex-1">{doc.file.name}</span>
-                                        <button type="button" onClick={() => removeDocFile("esaDoc", idx)} className="text-red-400 hover:text-red-600">
-                                          <X size={14} />
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
+                          {pets.map((pet, idx) => (
+                            <div key={idx} className="pl-4 space-y-4 relative">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-gray-700">Pet {idx + 1}</span>
+                                {pets.length > 1 && (
+                                  <button type="button" onClick={() => removePet(idx)} className="text-red-400 hover:text-red-600 p-1">
+                                    <Trash2 size={16} />
+                                  </button>
                                 )}
-                                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-white">
-                                  <Upload size={20} className="text-gray-400 mb-1" />
-                                  <span className="text-sm text-gray-500">
-                                    {(documentFiles["esaDoc"] || []).length > 0 ? "Add more files" : "Upload document"}
-                                  </span>
-                                  <input
-                                    type="file"
-                                    className="hidden"
-                                    multiple
-                                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                    onChange={(e) => handleDocFileAdd("esaDoc", e, true)}
-                                  />
-                                </label>
                               </div>
-                            )}
-                          </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-sm font-medium text-gray-700">Pet Type / Breed</label>
+                                  <input type="text" className="input-glass" placeholder="e.g., Dog - Golden Retriever" value={pet.type} onChange={(e) => updatePet(idx, "type", e.target.value)} />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-sm font-medium text-gray-700">Weight (lbs)</label>
+                                  <input type="text" className="input-glass" placeholder="e.g., 25" value={pet.weight} onChange={(e) => updatePet(idx, "weight", e.target.value)} />
+                                </div>
+                                <div className="flex flex-col gap-1.5">
+                                  <label className="text-sm font-medium text-gray-700">Age</label>
+                                  <input type="text" className="input-glass" placeholder="e.g., 3 years" value={pet.age} onChange={(e) => updatePet(idx, "age", e.target.value)} />
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium text-gray-700">Pet Category</label>
+                                <div className="flex flex-wrap gap-3">
+                                  {["Regular", "Emotional Support Animal", "Service Animal"].map((opt) => (
+                                    <label key={opt} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl cursor-pointer text-sm transition-all duration-300 border ${pet.category === opt ? "bg-blue-50 border-blue-300 text-gray-900" : "bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                                      <input type="radio" name={`petCategory-${idx}`} value={opt} checked={pet.category === opt} onChange={() => updatePet(idx, "category", opt)} className="sr-only" />
+                                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${pet.category === opt ? "border-[#1a73e8]" : "border-gray-300"}`}>
+                                        {pet.category === opt && <div className="w-2 h-2 rounded-full bg-[#1a73e8]" />}
+                                      </div>
+                                      {opt}
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {(pet.category === "Emotional Support Animal" || pet.category === "Service Animal") && (
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                  <p className="text-sm font-medium text-gray-700 mb-1">{pet.category} Verification Document</p>
+                                  <p className="text-xs text-gray-500 mb-3">Upload registration, doctor&apos;s note, certification, or any official proof.</p>
+                                  {(documentFiles[`esaDoc-${idx}`] || []).length > 0 && (
+                                    <div className="mb-3 space-y-1.5">
+                                      {documentFiles[`esaDoc-${idx}`].map((doc, fIdx) => (
+                                        <div key={fIdx} className="flex items-center gap-2 text-sm text-gray-700 bg-white rounded px-3 py-1.5">
+                                          <FileText size={14} className="text-blue-500" />
+                                          <span className="truncate flex-1">{doc.file.name}</span>
+                                          <button type="button" onClick={() => removeDocFile(`esaDoc-${idx}`, fIdx)} className="text-red-400 hover:text-red-600"><X size={14} /></button>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-white">
+                                    <Upload size={18} className="text-gray-400 mb-1" />
+                                    <span className="text-xs text-gray-500">{(documentFiles[`esaDoc-${idx}`] || []).length > 0 ? "Add more files" : "Upload document"}</span>
+                                    <input type="file" className="hidden" multiple accept="*/*" onChange={(e) => handleDocFileAdd(`esaDoc-${idx}`, e, true)} />
+                                  </label>
+                                </div>
+                              )}
+
+                              {idx < pets.length - 1 && <div className="border-b border-gray-100" />}
+                            </div>
+                          ))}
+                          <button type="button" onClick={addPet} className="ml-4 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium py-2">
+                            <Plus size={16} /> Add Another Pet
+                          </button>
                         </motion.div>
                       )}
                     </div>
@@ -1283,21 +1316,41 @@ function StudentApplicationPage() {
                       "Yes",
                       "No",
                     ])}
+                    {formData.filedBankruptcy === "Yes" && (
+                      <div className="pl-4 border-l-2 border-blue-200 ml-2">
+                        {renderInput("Please provide details", "bankruptcyDetails", "text", "Explain the circumstances...")}
+                      </div>
+                    )}
 
                     {renderRadioGroup("Been Evicted from Tenancy?", "evictedFromTenancy", [
                       "Yes",
                       "No",
                     ])}
+                    {formData.evictedFromTenancy === "Yes" && (
+                      <div className="pl-4 border-l-2 border-blue-200 ml-2">
+                        {renderInput("Please provide details", "evictionDetails", "text", "Explain the circumstances...")}
+                      </div>
+                    )}
 
                     {renderRadioGroup("Been convicted of a felony?", "convictedFelony", [
                       "Yes",
                       "No",
                     ])}
+                    {formData.convictedFelony === "Yes" && (
+                      <div className="pl-4 border-l-2 border-blue-200 ml-2">
+                        {renderInput("Please provide details", "felonyDetails", "text", "Explain the circumstances...")}
+                      </div>
+                    )}
 
                     {renderRadioGroup("Have you ever been arrested or convicted of a felony/misdemeanor?", "arrestedOrConvicted", [
                       "Yes",
                       "No",
                     ])}
+                    {formData.arrestedOrConvicted === "Yes" && (
+                      <div className="pl-4 border-l-2 border-blue-200 ml-2">
+                        {renderInput("Please provide details", "arrestDetails", "text", "Explain the circumstances...")}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -1396,7 +1449,7 @@ function StudentApplicationPage() {
                             <input
                               type="file"
                               multiple={doc.multiple}
-                              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx"
+                              accept="*/*"
                               onChange={(e) => handleDocFileAdd(doc.key, e, doc.multiple)}
                               className="sr-only"
                             />
@@ -1576,14 +1629,15 @@ function StudentApplicationPage() {
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Has Pets" value={formData.hasPets || "Not answered"} />
-                      {formData.hasPets === "Yes" && (
-                        <>
-                          <SummaryRow label="Pet Type" value={formData.petType || "N/A"} />
-                          <SummaryRow label="Pet Weight" value={formData.petWeight || "N/A"} />
-                          <SummaryRow label="Pet Age" value={formData.petAge || "N/A"} />
-                          <SummaryRow label="Pet Category" value={formData.isESA || "N/A"} />
-                        </>
-                      )}
+                      {formData.hasPets === "Yes" && pets.map((pet, idx) => (
+                        <div key={idx} className="col-span-2 pl-2 border-l-2 border-blue-100 mb-1">
+                          <span className="text-xs font-semibold text-gray-500">Pet {idx + 1}</span>
+                          <SummaryRow label="Type" value={pet.type || "N/A"} />
+                          <SummaryRow label="Weight" value={pet.weight || "N/A"} />
+                          <SummaryRow label="Age" value={pet.age || "N/A"} />
+                          <SummaryRow label="Category" value={pet.category || "N/A"} />
+                        </div>
+                      ))}
                       <SummaryRow label="Has Vehicle" value={formData.hasVehicle || "Not answered"} />
                       {formData.hasVehicle === "Yes" && (
                         <>
@@ -1646,6 +1700,22 @@ function StudentApplicationPage() {
                       <SummaryRow label="Signature Date" value={formData.signatureDate || "Not set"} />
                     </div>
                   </div>
+
+                  {/* Consent Checkbox */}
+                  <label className="flex items-start gap-3 cursor-pointer group bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <input
+                      type="checkbox"
+                      checked={formData.consent}
+                      onChange={(e) => updateField("consent", e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-xs text-gray-700 leading-relaxed">
+                      By submitting this application, I confirm that all information provided is accurate. I consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. Message &amp; data rates may apply. I can opt out anytime by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                      <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+                      {" "}and{" "}
+                      <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms &amp; Conditions</a>.
+                    </span>
+                  </label>
                 </motion.div>
               )}
             </AnimatePresence>

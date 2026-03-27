@@ -25,17 +25,29 @@ CREATE TABLE IF NOT EXISTS applications (
   preferred_move_in DATE,
   lease_duration TEXT,
 
+  gender TEXT,
+
   -- Address & Education (Step 2)
   current_address TEXT,
+  address_type TEXT,
   city TEXT,
   state TEXT,
   zip_code TEXT,
   university_name TEXT,
   student_id TEXT,
+  course_name TEXT,
+  course_start_date DATE,
   expected_graduation DATE,
+  advisor_phone TEXT,
+  advisor_email TEXT,
   emergency_contact_name TEXT,
   emergency_contact_phone TEXT,
+  emergency_contact_email TEXT,
   emergency_relationship TEXT,
+  emergency_contact2_name TEXT,
+  emergency_contact2_phone TEXT,
+  emergency_contact2_email TEXT,
+  emergency_relationship2 TEXT,
 
   -- Employment & Income (Step 3)
   employment_status TEXT,
@@ -60,7 +72,31 @@ CREATE TABLE IF NOT EXISTS applications (
   ref2_phone TEXT,
   ref2_relationship TEXT,
 
-  consent BOOLEAN DEFAULT false
+  -- Pets & Vehicle
+  has_pets BOOLEAN DEFAULT false,
+  pets JSONB DEFAULT '[]'::jsonb,
+  has_vehicle BOOLEAN DEFAULT false,
+  vehicle1_make TEXT,
+  vehicle1_year TEXT,
+  vehicle1_color TEXT,
+  vehicle1_plate TEXT,
+
+  -- Background Check
+  filed_bankruptcy BOOLEAN DEFAULT false,
+  bankruptcy_details TEXT,
+  evicted_from_tenancy BOOLEAN DEFAULT false,
+  eviction_details TEXT,
+  convicted_felony BOOLEAN DEFAULT false,
+  felony_details TEXT,
+  arrested_or_convicted BOOLEAN DEFAULT false,
+  arrest_details TEXT,
+
+  -- Authorization & Signature
+  agree_terms BOOLEAN DEFAULT false,
+  signature_name TEXT,
+  signature_date DATE,
+  consent BOOLEAN DEFAULT false,
+  consent_communications BOOLEAN DEFAULT false
 );
 
 -- 2. Tour bookings table
