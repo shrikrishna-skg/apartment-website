@@ -73,7 +73,7 @@ If it's a general question or photo, just be helpful.
 IMPORTANT: If this is clearly a maintenance issue that needs staff attention, end your response with [SUGGEST_TICKET] on its own line. Only do this for real maintenance/damage issues, not general questions.`;
 
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
