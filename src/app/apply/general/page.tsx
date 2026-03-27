@@ -459,10 +459,14 @@ export default function GeneralApplicationPage() {
   const renderRadioGroup = (
     label: string,
     field: keyof FormData,
-    options: string[]
+    options: string[],
+    required = false
   ) => (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label className="text-sm font-medium text-gray-700">
+        {label}
+        {required && <span className="text-red-600 ml-1">*</span>}
+      </label>
       <div className="flex flex-wrap gap-3">
         {options.map((option) => (
           <label
