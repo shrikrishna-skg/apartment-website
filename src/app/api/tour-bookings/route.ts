@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { createTourEvent } from "@/lib/google-calendar";
 import { sendTourConfirmation, sendStaffNotification } from "@/lib/email";
+import { getSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -105,6 +106,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const { data, error } = await supabase
       .from("tour_bookings")

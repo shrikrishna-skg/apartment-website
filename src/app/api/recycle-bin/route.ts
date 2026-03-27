@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { getSession } from "@/lib/auth";
+
+async function requireAuth() {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return null;
+}
 
 const ALLOWED_TABLES = [
   "applications",
@@ -30,8 +39,11 @@ const TABLE_NAME_FIELD: Record<TableName, string> = {
   email_subscribers: "email",
 };
 
-// GET - List all soft-deleted items across all tables
+// GET - List all soft-deleted items across all tables (staff only)
 export async function GET() {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   try {
     const results: Array<{
       id: string;
@@ -88,8 +100,11 @@ export async function GET() {
   }
 }
 
-// POST - Restore an item (clear deleted_at)
+// POST - Restore an item (staff only)
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   try {
     const { table, id } = await request.json();
 
@@ -118,8 +133,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE - Permanently delete an item
+// DELETE - Permanently delete an item (staff only)
 export async function DELETE(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   try {
     const { table, id } = await request.json();
 
