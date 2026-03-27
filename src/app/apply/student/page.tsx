@@ -518,22 +518,19 @@ function StudentApplicationPage() {
                 <div key={step.label} className="flex items-center">
                   <button
                     type="button"
-                    className="flex flex-col items-center group"
+                    className="flex flex-col items-center group cursor-pointer"
                     onClick={() => {
-                      if (isCompleted || isActive) {
-                        setCurrentStep(stepNum);
-                        setErrors([]);
-                      }
+                      setCurrentStep(stepNum);
+                      setErrors([]);
                     }}
-                    disabled={!isCompleted && !isActive}
                   >
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 cursor-pointer ${
                         isCompleted
-                          ? "bg-green-600 text-white group-hover:bg-green-700 cursor-pointer"
+                          ? "bg-green-600 text-white group-hover:bg-green-700"
                           : isActive
-                          ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200 cursor-pointer"
-                          : "bg-gray-50 border border-gray-200 text-gray-400 cursor-default"
+                          ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200"
+                          : "bg-gray-50 border border-gray-200 text-gray-400 group-hover:border-blue-300 group-hover:text-blue-400"
                       }`}
                     >
                       {isCompleted ? (
