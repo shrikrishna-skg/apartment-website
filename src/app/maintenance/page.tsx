@@ -71,6 +71,7 @@ export default function MaintenancePage() {
   const [inputValue, setInputValue] = useState("");
   const [botResponseIndex, setBotResponseIndex] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
     apartment: "",
@@ -96,7 +97,9 @@ export default function MaintenancePage() {
 
   useEffect(() => {
     setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
     }, 50);
   }, [messages]);
 
@@ -339,7 +342,7 @@ export default function MaintenancePage() {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" style={{ minHeight: 0 }}>
+                  <div ref={messagesContainerRef} className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" style={{ minHeight: 0 }}>
                     {messages.map((msg, idx) => (
                       <div
                         key={idx}
