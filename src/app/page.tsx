@@ -98,7 +98,7 @@ export default function HomePage() {
               {/* Leasing badge */}
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium bg-[#1a73e8]/10 text-[#1a73e8] border border-[#1a73e8]/20">
                 <span className="w-2 h-2 rounded-full bg-[#1a73e8] animate-pulse" />
-                Now Leasing for 2025–2026
+                Now Leasing
               </span>
 
               {/* Main heading */}
