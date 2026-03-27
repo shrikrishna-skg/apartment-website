@@ -5,6 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
+import LeadCapturePopup from "@/components/LeadCapturePopup";
 import { SITE } from "@/data/site-data";
 
 const dmSans = DM_Sans({
@@ -232,6 +233,7 @@ export default async function RootLayout({
             <main className="min-h-screen pt-16">{children}</main>
             <Footer />
             <ChatWidget />
+            <LeadCapturePopup />
           </>
         )}
       </body>
