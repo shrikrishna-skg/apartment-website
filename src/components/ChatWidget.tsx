@@ -53,6 +53,7 @@ interface UserInfo {
 
 /* ── Component ── */
 export default function ChatWidget() {
+  const [sessionId] = useState(() => crypto.randomUUID());
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -116,6 +117,7 @@ export default function ChatWidget() {
           messages: newMessages
             .filter((m) => !m.image)
             .map(({ role, content }) => ({ role, content })),
+          sessionId,
         }),
       });
       const data = await res.json();
