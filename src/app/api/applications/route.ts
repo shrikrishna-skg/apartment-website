@@ -3,41 +3,57 @@ import { supabase } from "@/lib/supabase";
 import { sendStaffNotification } from "@/lib/email";
 import { getSession } from "@/lib/auth";
 
-// All valid columns in the applications table
+// Columns that exist in the live database
+// After running supabase/migration_add_missing_columns.sql, add new columns here
 const VALID_COLUMNS = new Set([
-  "applicant_type", "full_name", "ssn", "marital_status", "gender",
+  "applicant_type", "full_name", "ssn", "marital_status",
   "driving_license", "date_of_birth", "email", "mobile_number",
   "specific_request", "housing_requirement", "preferred_move_in", "lease_duration",
-  "current_address", "address_type", "city", "state", "zip_code",
-  "university_name", "student_id", "course_name", "course_start_date",
-  "expected_graduation", "advisor_phone", "advisor_email",
-  "emergency_contact_name", "emergency_contact_phone", "emergency_contact_email",
-  "emergency_relationship", "emergency_contact2_name", "emergency_contact2_phone",
-  "emergency_contact2_email", "emergency_relationship2",
+  "current_address", "city", "state", "zip_code",
+  "university_name", "student_id",
+  "expected_graduation",
+  "emergency_contact_name", "emergency_contact_phone",
+  "emergency_relationship",
   "employment_status", "employer_name", "monthly_income", "income_source",
   "has_cosigner", "cosigner_name", "cosigner_phone", "cosigner_email",
   "previous_landlord_name", "landlord_phone", "landlord_address",
   "reason_for_leaving", "length_of_stay",
   "ref1_name", "ref1_phone", "ref1_relationship",
   "ref2_name", "ref2_phone", "ref2_relationship",
+  "consent", "notes",
+]);
+
+// Extra data stored as JSON in the notes field until migration is run
+const EXTRA_FIELDS = [
+  "gender", "address_type", "course_name", "course_start_date",
+  "advisor_phone", "advisor_email",
+  "emergency_contact_email", "emergency_contact2_name", "emergency_contact2_phone",
+  "emergency_contact2_email", "emergency_relationship2",
   "has_pets", "pets", "has_vehicle",
   "vehicle1_make", "vehicle1_year", "vehicle1_color", "vehicle1_plate",
   "filed_bankruptcy", "bankruptcy_details", "evicted_from_tenancy", "eviction_details",
   "convicted_felony", "felony_details", "arrested_or_convicted", "arrest_details",
   "agree_terms", "signature_name", "signature_date",
-  "consent", "consent_communications", "notes",
-]);
+];
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Filter to only valid columns to prevent schema cache errors
+    // Filter to only valid DB columns; store extra fields as JSON in notes
     const filteredBody: Record<string, unknown> = {};
+    const extraData: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(body)) {
       if (VALID_COLUMNS.has(key)) {
         filteredBody[key] = value;
+      } else if (EXTRA_FIELDS.includes(key)) {
+        extraData[key] = value;
       }
+    }
+
+    // Store extra fields in notes as JSON so no data is lost
+    if (Object.keys(extraData).length > 0) {
+      filteredBody.notes = JSON.stringify(extraData);
     }
 
     const { data, error } = await supabase

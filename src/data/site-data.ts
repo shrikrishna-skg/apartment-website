@@ -379,7 +379,15 @@ export const FAQS: FAQ[] = [
       },
       {
         q: "What about Emotional Support Animals (ESA)?",
-        a: "Certified ESAs with valid documentation are welcome with no fees or deposit required, in accordance with fair housing laws.",
+        a: "Yes, we welcome Emotional Support Animals. Certified ESAs with valid documentation are allowed with no fees or deposit required, in accordance with fair housing laws. We do require proof of ESA status — please provide a valid ESA letter from a licensed healthcare provider.",
+      },
+      {
+        q: "Do you allow Service Animals?",
+        a: "Yes, service animals are always welcome at College Place Apartments. Under the ADA and Fair Housing Act, service animals are permitted with no pet fees, deposits, or breed restrictions. We do require proof of service animal status — please provide documentation or certification confirming the animal's role.",
+      },
+      {
+        q: "What documentation is needed for ESA or Service Animals?",
+        a: "For Emotional Support Animals, we require a valid ESA letter from a licensed mental health professional or healthcare provider. For Service Animals, please provide documentation or certification that confirms the animal is trained to perform specific tasks. You can upload these documents during the application process.",
       },
     ],
   },
@@ -469,7 +477,7 @@ export const BLOG_POSTS: BlogPost[] = [
     excerpt:
       "Everything you need to know about finding the perfect off-campus apartment near Middle Tennessee State University — from pricing and locations to lease tips and what to look for.",
     readTime: "8 min read",
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
+    image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/506200265_CollegePlaceRightsideview.png",
     content: `<p>Finding off-campus housing near MTSU doesn't have to be stressful. Whether you're a freshman moving off campus for the first time or a senior looking for a better deal, this guide covers everything you need to know about student apartments in Murfreesboro, TN.</p>
 
 <h2>Why Students Choose Off-Campus Housing</h2>
