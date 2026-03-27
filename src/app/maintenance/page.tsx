@@ -88,6 +88,9 @@ export default function MaintenancePage() {
 
   // Chat state for collecting maintenance info
   const [chatData, setChatData] = useState({ apartment: "", description: "", urgency: "" });
+  const [chatFiles, setChatFiles] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -127,10 +130,24 @@ export default function MaintenancePage() {
             apartment: updatedChatData.apartment,
             full_name: "Chat User",
             email: "chat@collegeplace.us",
-            description: updatedChatData.description,
+            description: updatedChatData.description +
+              (chatFiles.length > 0 ? `\n\n[${chatFiles.length} photo(s) attached]` : ""),
             urgency: urgencyValue,
           }),
-        }).catch(() => {});
+        })
+          .then((res) => res.json())
+          .then(async (data) => {
+            if (chatFiles.length > 0 && data.id) {
+              for (const file of chatFiles) {
+                const fileForm = new FormData();
+                fileForm.append("file", file);
+                fileForm.append("application_id", data.id);
+                fileForm.append("document_label", "Maintenance Photo");
+                await fetch("/api/documents/upload", { method: "POST", body: fileForm }).catch(() => {});
+              }
+            }
+          })
+          .catch(() => {});
       }
 
       setBotResponseIndex((prev) => prev + 1);
@@ -145,6 +162,27 @@ export default function MaintenancePage() {
         ]);
       }, 1000);
     }
+  };
+
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files);
+    setChatFiles((prev) => [...prev, ...newFiles]);
+    setMessages((prev) => [
+      ...prev,
+      ...newFiles.map((f) => ({
+        role: "user" as const,
+        text: `📎 Attached: ${f.name} (${(f.size / 1024).toFixed(0)} KB)`,
+      })),
+    ]);
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: `Got it! I've received ${newFiles.length} file${newFiles.length > 1 ? "s" : ""}. ${botResponseIndex === 0 ? "Now, what's your apartment number?" : "Please continue describing the issue."}` },
+      ]);
+    }, 500);
+    e.target.value = "";
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -315,11 +353,56 @@ export default function MaintenancePage() {
 
                   {/* Chat Input */}
                   <div className="p-4 border-t border-gray-100">
+                    {/* Attached files preview */}
+                    {chatFiles.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {chatFiles.map((file, idx) => (
+                          <div key={idx} className="flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs px-2.5 py-1.5 rounded-full">
+                            <Paperclip size={12} />
+                            <span className="max-w-[100px] truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setChatFiles((prev) => prev.filter((_, i) => i !== idx))}
+                              className="ml-0.5 text-blue-400 hover:text-red-500 font-bold"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
-                      <button className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-gray-50 transition-all duration-200">
+                      {/* Hidden file inputs */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,.pdf,.doc,.docx"
+                        multiple
+                        className="hidden"
+                        onChange={handleFileAttach}
+                      />
+                      <input
+                        ref={cameraInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        className="hidden"
+                        onChange={handleFileAttach}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-gray-50 transition-all duration-200"
+                        title="Attach a file"
+                      >
                         <Paperclip size={18} />
                       </button>
-                      <button className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-gray-50 transition-all duration-200">
+                      <button
+                        type="button"
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-gray-50 transition-all duration-200"
+                        title="Take a photo"
+                      >
                         <Camera size={18} />
                       </button>
                       <input
