@@ -17,13 +17,87 @@ import {
   FileText,
   X,
 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 const STEPS = [
   { label: "Personal Info", icon: User },
   { label: "Address & Education", icon: MapPin },
   { label: "Employment & Income", icon: Briefcase },
   { label: "References & History", icon: Users },
+  { label: "Documents", icon: Upload },
   { label: "Review & Submit", icon: ClipboardCheck },
+];
+
+interface DocumentFile {
+  file: File;
+  category: string;
+}
+
+const REQUIRED_DOCS = [
+  {
+    key: "studentId",
+    label: "Student ID",
+    description: "Upload a clear photo or scan of your student ID card",
+    required: true,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "stateId",
+    label: "State ID or Driver's License",
+    description: "Government-issued photo identification",
+    required: true,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "passport",
+    label: "Passport (If Applicable)",
+    description: "Required for international students",
+    required: false,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "visa",
+    label: "Visa / I-20 (If Applicable)",
+    description: "Required for international students on a student visa",
+    required: false,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "bankStatement",
+    label: "Bank Statement",
+    description: "Past 3 months bank statement required",
+    required: true,
+    multiple: true,
+    maxSize: 10,
+  },
+  {
+    key: "proofOfIncome",
+    label: "Proof of Income / Financial Aid",
+    description: "Pay stubs, financial aid letter, scholarship letter, or sponsor letter",
+    required: false,
+    multiple: true,
+    maxSize: 10,
+  },
+  {
+    key: "acceptanceLetter",
+    label: "University Acceptance / Enrollment Letter",
+    description: "Proof of enrollment or acceptance from your university",
+    required: true,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "additional",
+    label: "Additional Supporting Documents",
+    description: "Any other documents that support your application",
+    required: false,
+    multiple: true,
+    maxSize: 10,
+  },
 ];
 
 const housingOptions = [
@@ -185,6 +259,18 @@ function StudentApplicationPage() {
     }
 
     if (currentStep === 5) {
+      // Validate required documents
+      const requiredDocs = isInternational
+        ? REQUIRED_DOCS.filter((d) => d.required || d.key === "passport" || d.key === "visa")
+        : REQUIRED_DOCS.filter((d) => d.required);
+      for (const doc of requiredDocs) {
+        if (!documentFiles[doc.key] || documentFiles[doc.key].length === 0) {
+          newErrors.push(`${doc.label} is required`);
+        }
+      }
+    }
+
+    if (currentStep === 6) {
       if (!formData.consent) newErrors.push("You must agree to the certification");
     }
 
@@ -194,7 +280,7 @@ function StudentApplicationPage() {
 
   const handleNext = () => {
     if (validateStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 5));
+      setCurrentStep((prev) => Math.min(prev + 1, 6));
     }
   };
 
@@ -205,31 +291,24 @@ function StudentApplicationPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [fileLabels, setFileLabels] = useState<string[]>([]);
+  const [documentFiles, setDocumentFiles] = useState<Record<string, DocumentFile[]>>({});
 
-  const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocFileAdd = (category: string, e: React.ChangeEvent<HTMLInputElement>, multiple: boolean) => {
     const files = e.target.files;
     if (!files) return;
-    const newFiles = Array.from(files);
-    setUploadedFiles((prev) => [...prev, ...newFiles]);
-    setFileLabels((prev) => [...prev, ...newFiles.map(() => "Supporting Document")]);
+    const newFiles = Array.from(files).map((f) => ({ file: f, category }));
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [category]: multiple ? [...(prev[category] || []), ...newFiles] : newFiles,
+    }));
     e.target.value = "";
   };
 
-  const removeFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-    setFileLabels((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateFileLabel = (index: number, label: string) => {
-    setFileLabels((prev) => prev.map((l, i) => (i === index ? label : l)));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const removeDocFile = (category: string, index: number) => {
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [category]: (prev[category] || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -291,13 +370,14 @@ function StudentApplicationPage() {
       }
       const appData = await res.json();
 
-      // Upload documents if any
-      if (uploadedFiles.length > 0 && appData.id) {
-        for (let i = 0; i < uploadedFiles.length; i++) {
+      // Upload documents by category
+      if (appData.id) {
+        const allDocs = Object.values(documentFiles).flat();
+        for (const doc of allDocs) {
           const fileForm = new FormData();
-          fileForm.append("file", uploadedFiles[i]);
+          fileForm.append("file", doc.file);
           fileForm.append("application_id", appData.id);
-          fileForm.append("document_label", fileLabels[i] || "Supporting Document");
+          fileForm.append("document_label", doc.category);
           await fetch("/api/documents/upload", { method: "POST", body: fileForm });
         }
       }
@@ -533,7 +613,18 @@ function StudentApplicationPage() {
                       isInternational ? "Passport number" : "XXX-XX-XXXX"
                     )}
                     {renderInput("Driving License", "drivingLicense", "text", "License number")}
-                    {renderInput("Date of Birth", "dateOfBirth", "date", "", true)}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Date of Birth<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.dateOfBirth}
+                        onChange={(val) => updateField("dateOfBirth", val)}
+                        maxDate={new Date()}
+                        placeholder="Select date of birth"
+                        required
+                      />
+                    </div>
                     {renderInput("Email", "email", "email", "you@email.com", true)}
                     {renderInput("Mobile Number", "mobileNumber", "tel", "(615) 000-0000", true)}
                   </div>
@@ -568,11 +659,17 @@ function StudentApplicationPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mt-5">
-                    {renderInput(
-                      "Preferred Move-In Date",
-                      "preferredMoveIn",
-                      "date"
-                    )}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Preferred Move-In Date
+                      </label>
+                      <DatePicker
+                        value={formData.preferredMoveIn}
+                        onChange={(val) => updateField("preferredMoveIn", val)}
+                        minDate={new Date()}
+                        placeholder="Select move-in date"
+                      />
+                    </div>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-medium text-gray-700">
                         Lease Duration
@@ -645,11 +742,17 @@ function StudentApplicationPage() {
                         "text",
                         "Student ID number"
                       )}
-                      {renderInput(
-                        "Expected Graduation",
-                        "expectedGraduation",
-                        "date"
-                      )}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                          Expected Graduation
+                        </label>
+                        <DatePicker
+                          value={formData.expectedGraduation}
+                          onChange={(val) => updateField("expectedGraduation", val)}
+                          minDate={new Date()}
+                          placeholder="Select graduation date"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -856,8 +959,120 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 5 - Review & Submit */}
+              {/* Step 5 - Required Documents */}
               {currentStep === 5 && (
+                <motion.div
+                  key="step5"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <Upload size={20} className="text-blue-600" />
+                    Required Documents
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-6">
+                    Please upload all required documents. The more documents provided, the stronger your application.
+                  </p>
+
+                  <div className="space-y-4">
+                    {REQUIRED_DOCS.map((doc) => {
+                      const isRequiredForUser = isInternational
+                        ? doc.required || doc.key === "passport" || doc.key === "visa"
+                        : doc.required;
+                      const files = documentFiles[doc.key] || [];
+
+                      // Hide passport/visa for non-international unless they want to upload
+                      if (!isInternational && (doc.key === "visa")) return null;
+
+                      return (
+                        <div
+                          key={doc.key}
+                          className={`rounded-xl border-2 p-4 transition-all ${
+                            files.length > 0
+                              ? "border-green-200 bg-green-50/50"
+                              : isRequiredForUser
+                              ? "border-gray-200 bg-white"
+                              : "border-gray-100 bg-gray-50/50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                {doc.label}
+                                {isRequiredForUser && (
+                                  <span className="text-red-500 text-xs font-bold">*</span>
+                                )}
+                                {files.length > 0 && (
+                                  <Check size={16} className="text-green-600" />
+                                )}
+                              </h3>
+                              <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>
+                            </div>
+                          </div>
+
+                          {/* Uploaded files list */}
+                          {files.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {files.map((docFile, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 px-3 py-2"
+                                >
+                                  <FileText size={16} className="text-blue-500 shrink-0" />
+                                  <span className="text-sm text-gray-700 truncate flex-1">
+                                    {docFile.file.name}
+                                  </span>
+                                  <span className="text-xs text-gray-400">
+                                    {docFile.file.size < 1024 * 1024
+                                      ? `${(docFile.file.size / 1024).toFixed(1)} KB`
+                                      : `${(docFile.file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeDocFile(doc.key, idx)}
+                                    className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Upload button */}
+                          <label className="flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
+                            <Upload size={16} className="text-gray-400 group-hover:text-blue-500" />
+                            <span className="text-xs text-gray-500 group-hover:text-blue-600">
+                              {files.length > 0
+                                ? doc.multiple
+                                  ? "Add more files"
+                                  : "Replace file"
+                                : `Upload ${doc.label}`}
+                            </span>
+                            <input
+                              type="file"
+                              multiple={doc.multiple}
+                              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx"
+                              onChange={(e) => handleDocFileAdd(doc.key, e, doc.multiple)}
+                              className="sr-only"
+                            />
+                          </label>
+
+                          <p className="text-[10px] text-gray-400 mt-1.5">
+                            {doc.multiple ? "Upload multiple files." : "Upload 1 file."} Max {doc.maxSize} MB per file. PDF, images, or Word documents.
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 6 - Review & Submit */}
+              {currentStep === 6 && (
                 <motion.div
                   key="step5"
                   variants={stepVariants}
@@ -954,69 +1169,30 @@ function StudentApplicationPage() {
                     </div>
                   </div>
 
-                  {/* Document Upload Section */}
+                  {/* Documents Summary */}
                   <div className="glass-subtle p-5 mb-6">
                     <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3 flex items-center gap-2">
                       <Upload size={16} />
-                      Upload Documents
+                      Uploaded Documents
                     </h3>
-                    <p className="text-xs text-gray-500 mb-4">
-                      Upload supporting documents such as ID, proof of income, student ID, or any other relevant documents.
-                      Accepted formats: PDF, images (JPG, PNG), Word, Excel, text files. Max 10MB per file.
-                    </p>
-
-                    {/* File list */}
-                    {uploadedFiles.length > 0 && (
-                      <div className="space-y-2 mb-4">
-                        {uploadedFiles.map((file, idx) => (
-                          <div key={idx} className="flex items-center gap-3 bg-white rounded-xl border border-gray-200 p-3">
-                            <FileText size={18} className="text-blue-500 shrink-0" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-                              <p className="text-xs text-gray-400">{formatFileSize(file.size)}</p>
+                    {Object.keys(documentFiles).length > 0 ? (
+                      <div className="space-y-1.5 text-sm">
+                        {Object.entries(documentFiles).map(([category, files]) => {
+                          if (files.length === 0) return null;
+                          const docDef = REQUIRED_DOCS.find((d) => d.key === category);
+                          return (
+                            <div key={category} className="flex items-center gap-2">
+                              <Check size={14} className="text-green-600 shrink-0" />
+                              <span className="text-gray-700">
+                                {docDef?.label || category}: {files.length} file{files.length > 1 ? "s" : ""}
+                              </span>
                             </div>
-                            <select
-                              value={fileLabels[idx]}
-                              onChange={(e) => updateFileLabel(idx, e.target.value)}
-                              className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none"
-                            >
-                              <option value="Supporting Document">Supporting Document</option>
-                              <option value="Photo ID">Photo ID</option>
-                              <option value="Passport">Passport</option>
-                              <option value="Student ID">Student ID</option>
-                              <option value="Proof of Income">Proof of Income</option>
-                              <option value="Bank Statement">Bank Statement</option>
-                              <option value="Employment Letter">Employment Letter</option>
-                              <option value="Acceptance Letter">Acceptance Letter</option>
-                              <option value="Visa / I-20">Visa / I-20</option>
-                              <option value="Other">Other</option>
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => removeFile(idx)}
-                              className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                            >
-                              <X size={16} />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
+                    ) : (
+                      <p className="text-sm text-gray-400">No documents uploaded</p>
                     )}
-
-                    {/* Upload button */}
-                    <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
-                      <Upload size={18} className="text-gray-400 group-hover:text-blue-500" />
-                      <span className="text-sm text-gray-500 group-hover:text-blue-600">
-                        {uploadedFiles.length > 0 ? "Add more files" : "Choose files to upload"}
-                      </span>
-                      <input
-                        type="file"
-                        multiple
-                        accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt"
-                        onChange={handleFileAdd}
-                        className="sr-only"
-                      />
-                    </label>
                   </div>
 
                   {/* Consent */}
@@ -1061,7 +1237,7 @@ function StudentApplicationPage() {
                 <div />
               )}
 
-              {currentStep < 5 ? (
+              {currentStep < 6 ? (
                 <button
                   onClick={handleNext}
                   className="btn-glow flex items-center gap-2 text-sm"

@@ -14,6 +14,7 @@ import {
   FileText,
   X,
 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 const STEPS = [
   { label: "Personal Info", icon: User },
@@ -556,7 +557,18 @@ export default function GeneralApplicationPage() {
                     ])}
 
                     {renderInput("Driving License Number", "drivingLicense", "text", "License number (if applicable)")}
-                    {renderInput("Date of Birth", "dateOfBirth", "date", "", true)}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Date of Birth<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.dateOfBirth}
+                        onChange={(val) => updateField("dateOfBirth", val)}
+                        required
+                        maxDate={new Date()}
+                        placeholder="Select date of birth"
+                      />
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       {renderInput("Email", "email", "email", "name@domain.com", true)}
@@ -591,7 +603,18 @@ export default function GeneralApplicationPage() {
                       "Other",
                     ])}
 
-                    {renderInput("Date of Move In", "preferredMoveIn", "date", "", true)}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Date of Move In<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.preferredMoveIn}
+                        onChange={(val) => updateField("preferredMoveIn", val)}
+                        required
+                        minDate={new Date()}
+                        placeholder="Select move-in date"
+                      />
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -620,8 +643,29 @@ export default function GeneralApplicationPage() {
                     ])}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      {renderInput("From", "residenceFrom", "date", "", true)}
-                      {renderInput("To", "residenceTo", "date", "", true)}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                          From<span className="text-red-600 ml-1">*</span>
+                        </label>
+                        <DatePicker
+                          value={formData.residenceFrom}
+                          onChange={(val) => updateField("residenceFrom", val)}
+                          required
+                          maxDate={new Date()}
+                          placeholder="Select start date"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                          To<span className="text-red-600 ml-1">*</span>
+                        </label>
+                        <DatePicker
+                          value={formData.residenceTo}
+                          onChange={(val) => updateField("residenceTo", val)}
+                          required
+                          placeholder="Select end date"
+                        />
+                      </div>
                     </div>
 
                     {renderInput("Owner/Landlord Name", "landlordName", "text", "Full name", true)}
@@ -664,7 +708,18 @@ export default function GeneralApplicationPage() {
                     {renderInput("Employer's Address / Location", "employerAddress", "text", "Street address, City, State", true)}
                     {renderInput("Employer Phone", "employerPhone", "tel", "(###) ###-####", true)}
                     {renderInput("Position Held", "positionHeld", "text", "Your job title", true)}
-                    {renderInput("Date of Hire", "dateOfHire", "date", "", true)}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Date of Hire<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.dateOfHire}
+                        onChange={(val) => updateField("dateOfHire", val)}
+                        required
+                        maxDate={new Date()}
+                        placeholder="Select hire date"
+                      />
+                    </div>
                     {renderInput("Salary Per Month", "salaryPerMonth", "text", "Amount in dollars", true)}
                   </div>
                 </motion.div>
@@ -923,7 +978,17 @@ export default function GeneralApplicationPage() {
                     ])}
 
                     {renderInput("Full Name (Electronic Signature)", "signatureName", "text", "Type your full name as signature", true)}
-                    {renderInput("Signature Date", "signatureDate", "date", "", true)}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Signature Date<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.signatureDate}
+                        onChange={(val) => updateField("signatureDate", val)}
+                        required
+                        placeholder="Select signature date"
+                      />
+                    </div>
                   </div>
                 </motion.div>
               )}
