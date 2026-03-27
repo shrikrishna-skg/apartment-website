@@ -516,14 +516,24 @@ function StudentApplicationPage() {
 
               return (
                 <div key={step.label} className="flex items-center">
-                  <div className="flex flex-col items-center">
+                  <button
+                    type="button"
+                    className="flex flex-col items-center group"
+                    onClick={() => {
+                      if (isCompleted || isActive) {
+                        setCurrentStep(stepNum);
+                        setErrors([]);
+                      }
+                    }}
+                    disabled={!isCompleted && !isActive}
+                  >
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
                         isCompleted
-                          ? "bg-green-600 text-white"
+                          ? "bg-green-600 text-white group-hover:bg-green-700 cursor-pointer"
                           : isActive
-                          ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200"
-                          : "bg-gray-50 border border-gray-200 text-gray-400"
+                          ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200 cursor-pointer"
+                          : "bg-gray-50 border border-gray-200 text-gray-400 cursor-default"
                       }`}
                     >
                       {isCompleted ? (
@@ -543,7 +553,7 @@ function StudentApplicationPage() {
                     >
                       {step.label}
                     </span>
-                  </div>
+                  </button>
                   {index < STEPS.length - 1 && (
                     <div
                       className={`w-8 sm:w-14 h-0.5 mx-1 sm:mx-2 transition-colors duration-500 ${

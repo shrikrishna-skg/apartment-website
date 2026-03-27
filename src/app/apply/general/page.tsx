@@ -537,30 +537,66 @@ export default function GeneralApplicationPage() {
             </p>
           </motion.div>
 
-          {/* Step Indicator - Compact with progress bar */}
-          <div className="mb-8">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-sm font-bold">
-                {currentStep}
-              </div>
-              <div className="text-sm">
-                <span className="font-semibold text-gray-900">Step {currentStep}</span>
-                <span className="text-gray-400 mx-1">of</span>
-                <span className="text-gray-500">{STEPS.length}</span>
-                <span className="text-gray-400 mx-1.5">—</span>
-                <span className="font-medium text-blue-600">{STEPS[currentStep - 1].label}</span>
-              </div>
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-[#1a73e8] h-2 rounded-full transition-all duration-500"
-                style={{ width: `${(currentStep / STEPS.length) * 100}%` }}
-              />
-            </div>
-            <div className="flex justify-between mt-1.5 text-[10px] text-gray-400 px-0.5">
-              <span>Personal Info</span>
-              <span>Review & Submit</span>
-            </div>
+          {/* Step Indicator - Clickable Icons */}
+          <div className="flex items-center justify-center mb-10 overflow-x-auto pb-2">
+            {STEPS.map((step, index) => {
+              const StepIcon = step.icon;
+              const stepNum = index + 1;
+              const isActive = stepNum === currentStep;
+              const isCompleted = stepNum < currentStep;
+
+              return (
+                <div key={step.label} className="flex items-center">
+                  <button
+                    type="button"
+                    className="flex flex-col items-center group"
+                    onClick={() => {
+                      if (isCompleted || isActive) {
+                        setCurrentStep(stepNum);
+                        setErrors([]);
+                      }
+                    }}
+                    disabled={!isCompleted && !isActive}
+                  >
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 ${
+                        isCompleted
+                          ? "bg-green-600 text-white group-hover:bg-green-700 cursor-pointer"
+                          : isActive
+                          ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200 cursor-pointer"
+                          : "bg-gray-50 border border-gray-200 text-gray-400 cursor-default"
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Check size={18} />
+                      ) : (
+                        <StepIcon size={18} />
+                      )}
+                    </div>
+                    <span
+                      className={`text-[10px] mt-1.5 font-medium hidden sm:block max-w-[70px] text-center leading-tight ${
+                        isActive
+                          ? "text-blue-600"
+                          : isCompleted
+                          ? "text-green-600"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </button>
+                  {index < STEPS.length - 1 && (
+                    <div
+                      className={`w-4 sm:w-8 h-0.5 mx-0.5 sm:mx-1 transition-colors duration-500 ${
+                        stepNum < currentStep
+                          ? "bg-green-600"
+                          : "bg-gray-100"
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Error Messages */}
