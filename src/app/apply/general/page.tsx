@@ -1311,10 +1311,21 @@ export default function GeneralApplicationPage() {
                     </div>
                   </div>
 
-                  {/* Submit Notice */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-                    By submitting this application, you confirm that all information provided is accurate and that you have agreed to the terms and conditions. You also consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. Message & data rates may apply. Reply STOP to opt out. Consent is not a condition of purchase or tenancy.
-                  </div>
+                  {/* Consent Checkbox */}
+                  <label className="flex items-start gap-3 cursor-pointer group bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <input
+                      type="checkbox"
+                      checked={formData.consent}
+                      onChange={(e) => updateField("consent", e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                    />
+                    <span className="text-xs text-gray-700 leading-relaxed">
+                      By submitting this application, I confirm that all information provided is accurate. I consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. Message &amp; data rates may apply. I can opt out anytime by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                      <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800">Privacy Policy</a>
+                      {" "}and{" "}
+                      <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms &amp; Conditions</a>.
+                    </span>
+                  </label>
                 </motion.div>
               )}
             </AnimatePresence>

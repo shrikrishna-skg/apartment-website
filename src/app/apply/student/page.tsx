@@ -1195,33 +1195,18 @@ function StudentApplicationPage() {
                   </div>
 
                   {/* Consent */}
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <div
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center mt-0.5 transition-all flex-shrink-0 ${
-                        formData.consent
-                          ? "bg-[#1a73e8] border-[#1a73e8]"
-                          : "border-gray-300 group-hover:border-[#1a73e8]"
-                      }`}
-                      onClick={() => updateField("consent", !formData.consent)}
-                    >
-                      {formData.consent && (
-                        <Check size={14} className="text-white" />
-                      )}
-                    </div>
-                    <span
-                      className="text-sm text-gray-700 leading-relaxed"
-                      onClick={() => updateField("consent", !formData.consent)}
-                    >
-                      I certify that all information provided in this application
-                      is true and accurate to the best of my knowledge. I
-                      understand that providing false information may result in
-                      denial of my application or termination of my lease.
-                      <span className="block mt-2 text-xs text-gray-600">
-                        By submitting this form, I also consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
-                        <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Privacy Policy</a>
-                        {" "}and{" "}
-                        <a href="/terms" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Terms & Conditions</a>.
-                      </span>
+                  <label className="flex items-start gap-3 cursor-pointer group bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <input
+                      type="checkbox"
+                      checked={formData.consent as boolean}
+                      onChange={(e) => updateField("consent", e.target.checked)}
+                      className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0"
+                    />
+                    <span className="text-xs text-gray-700 leading-relaxed">
+                      I certify that all information provided in this application is true and accurate to the best of my knowledge. I understand that providing false information may result in denial of my application or termination of my lease. I also consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. Message &amp; data rates may apply. I can opt out anytime by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
+                      <a href="/privacy-policy" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Privacy Policy</a>
+                      {" "}and{" "}
+                      <a href="/terms" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => e.stopPropagation()}>Terms &amp; Conditions</a>.
                     </span>
                   </label>
                 </motion.div>
