@@ -3,6 +3,7 @@
  *
  * Uses dynamic import of googleapis to avoid slowing down dev server compilation.
  * Gracefully falls back to Supabase-only if credentials are not configured.
+ * Calendar: collegeplacecpl@gmail.com (College Place Apartments)
  */
 
 function isConfigured() {
