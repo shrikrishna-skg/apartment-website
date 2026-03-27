@@ -95,7 +95,9 @@ export default function MaintenancePage() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 50);
   }, [messages]);
 
   const handleSendMessage = () => {
@@ -320,7 +322,8 @@ export default function MaintenancePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="glass flex flex-col h-[calc(100vh-320px)] min-h-[400px] max-h-[700px] sm:min-h-[500px]"
+                  className="glass flex flex-col overflow-hidden"
+                  style={{ height: "clamp(420px, calc(100vh - 340px), 680px)" }}
                 >
                   {/* Chat Header */}
                   <div className="p-4 border-b border-gray-100 flex items-center gap-3">
@@ -336,7 +339,7 @@ export default function MaintenancePage() {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-4" style={{ minHeight: 0 }}>
                     {messages.map((msg, idx) => (
                       <div
                         key={idx}

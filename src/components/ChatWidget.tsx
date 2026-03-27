@@ -344,7 +344,9 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 w-[390px] max-w-[calc(100vw-48px)] h-[560px] max-h-[calc(100vh-100px)] bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden"
+            className="fixed z-50 bg-white shadow-2xl border border-gray-200 flex flex-col overflow-hidden
+              bottom-0 right-0 w-full h-[100dvh] rounded-none
+              sm:bottom-6 sm:right-6 sm:w-[390px] sm:max-w-[calc(100vw-48px)] sm:h-[560px] sm:max-h-[calc(100vh-100px)] sm:rounded-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 bg-[#1a73e8] text-white rounded-t-2xl shrink-0">
@@ -362,7 +364,7 @@ export default function ChatWidget() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-3" style={{ minHeight: 0 }}>
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   <div
