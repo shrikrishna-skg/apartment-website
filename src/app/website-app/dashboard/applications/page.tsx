@@ -29,6 +29,7 @@ interface Application {
   emergency_contact_name: string;
   emergency_contact_phone: string;
   emergency_contact_relationship: string;
+  emergency_relationship: string;
   employment_status: string;
   income_source: string;
   has_cosigner: boolean;
@@ -77,6 +78,22 @@ interface Application {
   evicted_from_tenancy: boolean;
   convicted_felony: boolean;
   arrested_or_convicted: boolean;
+  address_type: string;
+  course_name: string;
+  course_start_date: string;
+  advisor_phone: string;
+  advisor_email: string;
+  emergency_contact_email: string;
+  emergency_contact2_name: string;
+  emergency_contact2_phone: string;
+  emergency_contact2_email: string;
+  emergency_relationship2: string;
+  pets: Array<{ type?: string; weight?: string; age?: string; category?: string }>;
+  has_vehicle: boolean;
+  bankruptcy_details: string;
+  eviction_details: string;
+  felony_details: string;
+  arrest_details: string;
   references_info: string;
   agree_terms: boolean;
   signature_name: string;
@@ -340,7 +357,7 @@ export default function ApplicationsPage() {
 
   const openApplication = useCallback((app: Application) => {
     // Parse notes JSON and merge extra fields into the application object
-    let merged = { ...app };
+    const merged: Application = { ...app };
     if (app.notes && typeof app.notes === "string") {
       try {
         const extra = JSON.parse(app.notes as string);
