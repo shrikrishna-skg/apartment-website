@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       const typeLabel =
         body.applicant_type === "student" ? "Student" :
         body.applicant_type === "international" ? "International Student" :
-        "Working Professional";
+        "Working Professional / General";
 
       const details = [
         `Type: ${typeLabel}`,

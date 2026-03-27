@@ -54,9 +54,9 @@ const applicantTypes = [
   },
   {
     id: "professional",
-    title: "Working Professional",
+    title: "Working Professional / Other",
     icon: Briefcase,
-    description: "For employed individuals or general applicants",
+    description: "For employed individuals or general applicants.",
     href: "/apply/general",
     buttonLabel: "Start General Application",
     color: "bg-[#1a73e8]",

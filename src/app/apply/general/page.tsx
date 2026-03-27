@@ -17,48 +17,90 @@ import {
 
 const STEPS = [
   { label: "Personal Info", icon: User },
-  { label: "Employment & Address", icon: Briefcase },
+  { label: "Residence", icon: Briefcase },
+  { label: "Employment", icon: Briefcase },
+  { label: "General Info", icon: ClipboardCheck },
   { label: "Review & Submit", icon: ClipboardCheck },
 ];
 
 interface FormData {
-  // Step 1
+  // Step 1 - Personal Information
   fullName: string;
+  ssn: string;
+  maritalStatus: string;
+  gender: string;
+  drivingLicense: string;
+  dateOfBirth: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  ssn: string;
-  drivingLicense: string;
-  maritalStatus: string;
-  // Step 2
+  specificRequest: string;
+  housingRequirement: string;
+  leaseDuration: string;
+  preferredMoveIn: string;
+  // Step 2 - Residence Section
+  currentAddress: string;
+  housingStatus: string;
+  residenceFrom: string;
+  residenceTo: string;
+  landlordName: string;
+  landlordEmail: string;
+  landlordPhone: string;
+  rentAmount: string;
+  reasonForMoving: string;
+  // Step 3 - Employment
   employerName: string;
-  position: string;
-  monthlyIncome: string;
-  employmentDuration: string;
-  previousAddress: string;
-  previousCity: string;
-  previousState: string;
-  previousZip: string;
-  // Step 3
+  supervisor: string;
+  employerAddress: string;
+  employerPhone: string;
+  positionHeld: string;
+  dateOfHire: string;
+  salaryPerMonth: string;
+  // Step 4 - General Information
+  completedResidenceHistory: string;
+  hasPets: string;
+  petType: string;
+  petWeight: string;
+  petAge: string;
+  isESA: string;
+  // Step 5
   consent: boolean;
 }
 
 const initialFormData: FormData = {
   fullName: "",
+  ssn: "",
+  maritalStatus: "",
+  gender: "",
+  drivingLicense: "",
+  dateOfBirth: "",
   email: "",
   phone: "",
-  dateOfBirth: "",
-  ssn: "",
-  drivingLicense: "",
-  maritalStatus: "Single",
+  specificRequest: "",
+  housingRequirement: "",
+  leaseDuration: "",
+  preferredMoveIn: "",
+  currentAddress: "",
+  housingStatus: "",
+  residenceFrom: "",
+  residenceTo: "",
+  landlordName: "",
+  landlordEmail: "",
+  landlordPhone: "",
+  rentAmount: "",
+  reasonForMoving: "",
   employerName: "",
-  position: "",
-  monthlyIncome: "",
-  employmentDuration: "",
-  previousAddress: "",
-  previousCity: "",
-  previousState: "",
-  previousZip: "",
+  supervisor: "",
+  employerAddress: "",
+  employerPhone: "",
+  positionHeld: "",
+  dateOfHire: "",
+  salaryPerMonth: "",
+  completedResidenceHistory: "",
+  hasPets: "",
+  petType: "",
+  petWeight: "",
+  petAge: "",
+  isESA: "",
   consent: false,
 };
 
@@ -83,18 +125,46 @@ export default function GeneralApplicationPage() {
     const newErrors: string[] = [];
 
     if (currentStep === 1) {
-      if (!formData.fullName.trim()) newErrors.push("Full Name is required");
-      if (!formData.email.trim()) newErrors.push("Email is required");
-      if (!formData.phone.trim()) newErrors.push("Phone is required");
+      if (!formData.fullName.trim()) newErrors.push("Applicant's Name is required");
+      if (!formData.ssn.trim()) newErrors.push("Social Security / Passport No is required");
+      if (!formData.maritalStatus) newErrors.push("Marital Status is required");
+      if (!formData.gender) newErrors.push("Gender is required");
       if (!formData.dateOfBirth) newErrors.push("Date of Birth is required");
+      if (!formData.email.trim()) newErrors.push("Email is required");
+      if (!formData.phone.trim()) newErrors.push("Mobile No is required");
+      if (!formData.housingRequirement) newErrors.push("Housing Requirement is required");
+      if (!formData.leaseDuration) newErrors.push("Lease Duration is required");
+      if (!formData.preferredMoveIn) newErrors.push("Date of Move In is required");
     }
 
     if (currentStep === 2) {
-      if (!formData.employerName.trim()) newErrors.push("Employer Name is required");
-      if (!formData.monthlyIncome.trim()) newErrors.push("Monthly Income is required");
+      if (!formData.currentAddress.trim()) newErrors.push("Current Address is required");
+      if (!formData.housingStatus) newErrors.push("Housing Status is required");
+      if (!formData.residenceFrom) newErrors.push("From date is required");
+      if (!formData.residenceTo) newErrors.push("To date is required");
+      if (!formData.landlordName.trim()) newErrors.push("Owner/Landlord Name is required");
+      if (!formData.landlordEmail.trim()) newErrors.push("Owner/Landlord Email is required");
+      if (!formData.landlordPhone.trim()) newErrors.push("Owner/Landlord Phone is required");
+      if (!formData.rentAmount.trim()) newErrors.push("Rent Amount is required");
+      if (!formData.reasonForMoving.trim()) newErrors.push("Reason for Moving is required");
     }
 
     if (currentStep === 3) {
+      if (!formData.employerName.trim()) newErrors.push("Applicant's Employer is required");
+      if (!formData.supervisor.trim()) newErrors.push("Supervisor is required");
+      if (!formData.employerAddress.trim()) newErrors.push("Employer's Address / Location is required");
+      if (!formData.employerPhone.trim()) newErrors.push("Employer Phone is required");
+      if (!formData.positionHeld.trim()) newErrors.push("Position Held is required");
+      if (!formData.dateOfHire) newErrors.push("Date of Hire is required");
+      if (!formData.salaryPerMonth.trim()) newErrors.push("Salary Per Month is required");
+    }
+
+    if (currentStep === 4) {
+      if (!formData.completedResidenceHistory) newErrors.push("Please answer residence history question");
+      if (!formData.hasPets) newErrors.push("Please answer pets question");
+    }
+
+    if (currentStep === 5) {
       if (!formData.consent) newErrors.push("You must agree to the certification");
     }
 
@@ -153,18 +223,39 @@ export default function GeneralApplicationPage() {
         body: JSON.stringify({
           applicant_type: "professional",
           full_name: formData.fullName,
+          ssn: formData.ssn || null,
+          marital_status: formData.maritalStatus,
+          gender: formData.gender || null,
+          driving_license: formData.drivingLicense || null,
+          date_of_birth: formData.dateOfBirth || null,
           email: formData.email,
           mobile_number: formData.phone,
-          date_of_birth: formData.dateOfBirth || null,
-          ssn: formData.ssn || null,
-          driving_license: formData.drivingLicense || null,
-          marital_status: formData.maritalStatus,
+          specific_request: formData.specificRequest || null,
+          housing_requirement: formData.housingRequirement || null,
+          lease_duration: formData.leaseDuration || null,
+          preferred_move_in: formData.preferredMoveIn || null,
+          current_address: formData.currentAddress || null,
+          housing_status: formData.housingStatus || null,
+          residence_from: formData.residenceFrom || null,
+          residence_to: formData.residenceTo || null,
+          previous_landlord_name: formData.landlordName || null,
+          landlord_email: formData.landlordEmail || null,
+          landlord_phone: formData.landlordPhone || null,
+          rent_amount: formData.rentAmount || null,
+          reason_for_leaving: formData.reasonForMoving || null,
           employer_name: formData.employerName || null,
-          monthly_income: formData.monthlyIncome || null,
-          current_address: formData.previousAddress || null,
-          city: formData.previousCity || null,
-          state: formData.previousState || null,
-          zip_code: formData.previousZip || null,
+          supervisor: formData.supervisor || null,
+          employer_address: formData.employerAddress || null,
+          employer_phone: formData.employerPhone || null,
+          position_held: formData.positionHeld || null,
+          date_of_hire: formData.dateOfHire || null,
+          monthly_income: formData.salaryPerMonth || null,
+          completed_residence_history: formData.completedResidenceHistory === "Yes",
+          has_pets: formData.hasPets === "Yes",
+          pet_type: formData.petType || null,
+          pet_weight: formData.petWeight || null,
+          pet_age: formData.petAge || null,
+          is_esa: formData.isESA === "Yes",
           consent: formData.consent,
         }),
       });
@@ -305,7 +396,7 @@ export default function GeneralApplicationPage() {
               Back to Application Types
             </Link>
             <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-              <span className="text-gradient">General Application</span>
+              <span className="text-gradient">Working Professional / General Application</span>
             </h1>
             <p className="text-gray-600">
               Complete all steps below to submit your application
@@ -386,7 +477,7 @@ export default function GeneralApplicationPage() {
           {/* Form Steps */}
           <div className="glass p-6 sm:p-8">
             <AnimatePresence mode="wait">
-              {/* Step 1 - Personal Info */}
+              {/* Step 1 - Personal Information */}
               {currentStep === 1 && (
                 <motion.div
                   key="step1"
@@ -396,30 +487,67 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <User size={20} className="text-blue-600" />
-                    Personal Information
-                  </h2>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {renderInput("Full Name", "fullName", "text", "John Doe", true)}
-                    {renderInput("Email", "email", "email", "you@email.com", true)}
-                    {renderInput("Phone", "phone", "tel", "(615) 000-0000", true)}
-                    {renderInput("Date of Birth", "dateOfBirth", "date", "", true)}
-                    {renderInput("SSN", "ssn", "text", "XXX-XX-XXXX")}
-                    {renderInput("Driving License", "drivingLicense", "text", "License number")}
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Personal Information Section
                   </div>
 
-                  <div className="mt-5">
+                  <div className="space-y-5">
+                    {renderInput("Applicant's Name", "fullName", "text", "First and Last Name", true)}
+                    {renderInput("Social Security / Passport No", "ssn", "text", "e.g., 123-45-6789 or passport number", true)}
+
                     {renderRadioGroup("Marital Status", "maritalStatus", [
                       "Single",
                       "Married",
                     ])}
+
+                    {renderRadioGroup("Gender", "gender", [
+                      "Female",
+                      "Male",
+                      "Other",
+                    ])}
+
+                    {renderInput("Driving License Number", "drivingLicense", "text", "License number (if applicable)")}
+                    {renderInput("Date of Birth", "dateOfBirth", "date", "", true)}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {renderInput("Email", "email", "email", "name@domain.com", true)}
+                      {renderInput("Mobile No", "phone", "tel", "(###) ###-####", true)}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Specific Request</label>
+                      <textarea
+                        className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[80px]"
+                        placeholder="Brief description of any requests"
+                        value={formData.specificRequest}
+                        onChange={(e) => updateField("specificRequest", e.target.value)}
+                      />
+                    </div>
+
+                    {renderRadioGroup("Housing Requirement", "housingRequirement", [
+                      "Studio",
+                      "1 Bed / 1 Bath",
+                      "2 Bed / 2 Bath",
+                      "3 Bed / 3 Bath",
+                      "4 Bed / 4 Bath",
+                      "Other",
+                    ])}
+
+                    {renderRadioGroup("Lease Duration Preference", "leaseDuration", [
+                      "Month to Month",
+                      "Less than 6 Months",
+                      "6 Months",
+                      "6 Months and Above Flexible",
+                      "12 Months",
+                      "Other",
+                    ])}
+
+                    {renderInput("Date of Move In", "preferredMoveIn", "date", "", true)}
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 2 - Employment & Address */}
+              {/* Step 2 - Residence Section */}
               {currentStep === 2 && (
                 <motion.div
                   key="step2"
@@ -429,41 +557,142 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <Briefcase size={20} className="text-blue-600" />
-                    Employment & Previous Address
-                  </h2>
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Employment Details
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {renderInput("Employer Name", "employerName", "text", "Company name", true)}
-                    {renderInput("Position / Title", "position", "text", "Your role")}
-                    {renderInput("Monthly Income", "monthlyIncome", "text", "$0.00", true)}
-                    {renderInput("Employment Duration", "employmentDuration", "text", "e.g., 2 years")}
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Residence Section
                   </div>
 
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Previous Address
-                    </h3>
+                  <div className="space-y-5">
+                    {renderInput("Current Address (Include No, Street, City, State, Zip Code)", "currentAddress", "text", "Street address, City, State, Zip", true)}
+
+                    {renderRadioGroup("Housing Status", "housingStatus", [
+                      "Own",
+                      "Rent",
+                      "Living with Family or Friends",
+                    ])}
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <div className="sm:col-span-2">
-                        {renderInput("Street Address", "previousAddress", "text", "Street address")}
-                      </div>
-                      {renderInput("City", "previousCity", "text", "City")}
-                      {renderInput("State", "previousState", "text", "State")}
-                      {renderInput("Zip Code", "previousZip", "text", "Zip Code")}
+                      {renderInput("From", "residenceFrom", "date", "", true)}
+                      {renderInput("To", "residenceTo", "date", "", true)}
+                    </div>
+
+                    {renderInput("Owner/Landlord Name", "landlordName", "text", "Full name", true)}
+                    {renderInput("Owner/Landlord Email", "landlordEmail", "email", "landlord@example.com", true)}
+                    {renderInput("Owner/Landlord Phone Number", "landlordPhone", "tel", "(###) ###-####", true)}
+                    {renderInput("Rent Amount", "rentAmount", "text", "Amount in dollars", true)}
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Reason for Moving <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[80px]"
+                        placeholder="Brief explanation"
+                        value={formData.reasonForMoving}
+                        onChange={(e) => updateField("reasonForMoving", e.target.value)}
+                      />
                     </div>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 3 - Review & Submit */}
+              {/* Step 3 - Employment */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Employment
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderInput("Applicant's Employer", "employerName", "text", "Company name", true)}
+                    {renderInput("Supervisor", "supervisor", "text", "Full name", true)}
+                    {renderInput("Employer's Address / Location", "employerAddress", "text", "Street address, City, State", true)}
+                    {renderInput("Employer Phone", "employerPhone", "tel", "(###) ###-####", true)}
+                    {renderInput("Position Held", "positionHeld", "text", "Your job title", true)}
+                    {renderInput("Date of Hire", "dateOfHire", "date", "", true)}
+                    {renderInput("Salary Per Month", "salaryPerMonth", "text", "Amount in dollars", true)}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 4 - General Information */}
+              {currentStep === 4 && (
+                <motion.div
+                  key="step4"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    General Information
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderRadioGroup("Did you complete the residence history?", "completedResidenceHistory", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Do you have pets?", "hasPets", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {formData.hasPets === "Yes" && (
+                      <div className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2 mt-3">
+                        <div className="pl-4 space-y-5">
+                          {renderInput("Pet Type", "petType", "text", "e.g., Dog, Cat, Bird")}
+                          {renderInput("Pet Weight", "petWeight", "text", "e.g., 25 lbs")}
+                          {renderInput("Pet Age", "petAge", "text", "e.g., 3 years")}
+
+                          {renderRadioGroup("Is this an Emotional Support Animal (ESA)?", "isESA", [
+                            "Yes",
+                            "No",
+                          ])}
+
+                          {formData.isESA === "Yes" && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                              <p className="text-sm font-medium text-gray-700 mb-1">ESA Verification Document</p>
+                              <p className="text-xs text-gray-500 mb-3">
+                                Upload ESA registration, doctor&apos;s note, certification, or any official proof.
+                              </p>
+                              <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-white">
+                                <Upload size={20} className="text-gray-400 mb-1" />
+                                <span className="text-sm text-gray-500">Add file</span>
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      setFiles((prev) => [...prev, file]);
+                                      setFileLabels((prev) => [...prev, "ESA Verification"]);
+                                    }
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 5 - Review & Submit */}
+              {currentStep === 5 && (
+                <motion.div
+                  key="step5"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -485,30 +714,73 @@ export default function GeneralApplicationPage() {
                       Personal Information
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                      <SummaryRow label="Full Name" value={formData.fullName} />
-                      <SummaryRow label="Email" value={formData.email} />
-                      <SummaryRow label="Phone" value={formData.phone} />
-                      <SummaryRow label="Date of Birth" value={formData.dateOfBirth} />
-                      <SummaryRow label="SSN" value={formData.ssn || "Not provided"} />
-                      <SummaryRow label="Driving License" value={formData.drivingLicense || "Not provided"} />
+                      <SummaryRow label="Name" value={formData.fullName} />
+                      <SummaryRow label="SSN / Passport" value={formData.ssn || "Not provided"} />
                       <SummaryRow label="Marital Status" value={formData.maritalStatus} />
+                      <SummaryRow label="Gender" value={formData.gender || "Not provided"} />
+                      <SummaryRow label="Driving License" value={formData.drivingLicense || "Not provided"} />
+                      <SummaryRow label="Date of Birth" value={formData.dateOfBirth} />
+                      <SummaryRow label="Email" value={formData.email} />
+                      <SummaryRow label="Mobile" value={formData.phone} />
+                      <SummaryRow label="Housing" value={formData.housingRequirement || "Not selected"} />
+                      <SummaryRow label="Lease Duration" value={formData.leaseDuration || "Not selected"} />
+                      <SummaryRow label="Move-In Date" value={formData.preferredMoveIn || "Not set"} />
+                      {formData.specificRequest && (
+                        <SummaryRow label="Specific Request" value={formData.specificRequest} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Residence Summary */}
+                  <div className="glass-subtle p-5 mb-6">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      Residence Information
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Current Address" value={formData.currentAddress} />
+                      <SummaryRow label="Housing Status" value={formData.housingStatus || "Not provided"} />
+                      <SummaryRow label="From" value={formData.residenceFrom} />
+                      <SummaryRow label="To" value={formData.residenceTo} />
+                      <SummaryRow label="Landlord Name" value={formData.landlordName} />
+                      <SummaryRow label="Landlord Email" value={formData.landlordEmail} />
+                      <SummaryRow label="Landlord Phone" value={formData.landlordPhone} />
+                      <SummaryRow label="Rent Amount" value={formData.rentAmount} />
+                      <SummaryRow label="Reason for Moving" value={formData.reasonForMoving} />
                     </div>
                   </div>
 
                   {/* Employment Summary */}
-                  <div className="glass-subtle p-5 mb-6">
+                  <div className="glass-subtle p-5 mb-4">
                     <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Employment & Previous Address
+                      Employment
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Employer" value={formData.employerName} />
-                      <SummaryRow label="Position" value={formData.position || "Not provided"} />
-                      <SummaryRow label="Monthly Income" value={formData.monthlyIncome} />
-                      <SummaryRow label="Duration" value={formData.employmentDuration || "Not provided"} />
-                      <SummaryRow label="Previous Address" value={formData.previousAddress || "Not provided"} />
-                      <SummaryRow label="City" value={formData.previousCity || "Not provided"} />
-                      <SummaryRow label="State" value={formData.previousState || "Not provided"} />
-                      <SummaryRow label="Zip" value={formData.previousZip || "Not provided"} />
+                      <SummaryRow label="Supervisor" value={formData.supervisor} />
+                      <SummaryRow label="Address" value={formData.employerAddress} />
+                      <SummaryRow label="Phone" value={formData.employerPhone} />
+                      <SummaryRow label="Position" value={formData.positionHeld} />
+                      <SummaryRow label="Date of Hire" value={formData.dateOfHire} />
+                      <SummaryRow label="Salary/Month" value={formData.salaryPerMonth} />
+                    </div>
+                  </div>
+
+                  {/* General Info Summary */}
+                  <div className="glass-subtle p-5 mb-4">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      General Information
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Residence History Complete" value={formData.completedResidenceHistory} />
+                      <SummaryRow label="Has Pets" value={formData.hasPets} />
+                      {formData.hasPets === "Yes" && (
+                        <>
+                          <SummaryRow label="Pet Type" value={formData.petType || "Not provided"} />
+                          <SummaryRow label="Pet Weight" value={formData.petWeight || "Not provided"} />
+                          <SummaryRow label="Pet Age" value={formData.petAge || "Not provided"} />
+                          <SummaryRow label="ESA" value={formData.isESA || "No"} />
+                        </>
+                      )}
                     </div>
                   </div>
 
