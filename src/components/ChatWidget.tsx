@@ -7,6 +7,8 @@ import {
   X,
   Send,
   ImagePlus,
+  Camera,
+  Upload,
   Loader2,
   User,
   Clock,
@@ -85,7 +87,9 @@ export default function ChatWidget() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [showImageMenu, setShowImageMenu] = useState(false);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -601,6 +605,7 @@ export default function ChatWidget() {
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  setShowImageMenu(false);
                   sendMessage(input);
                 }}
                 className="flex items-center gap-2"
@@ -608,24 +613,60 @@ export default function ChatWidget() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*,.heic,.heif,.webp,.bmp,.tiff,.png,.jpg,.jpeg,.gif,.svg"
+                  accept="image/*,.heic,.heif,.webp,.bmp,.tiff,.png,.jpg,.jpeg,.gif,.svg,.pdf"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) handleImageUpload(file);
                     e.target.value = "";
+                    setShowImageMenu(false);
                   }}
                 />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={loading}
-                  className="p-2 rounded-lg text-[#4b5563] hover:bg-gray-100 hover:text-[#1a73e8] transition-colors bg-transparent border-none cursor-pointer disabled:opacity-40"
-                  aria-label="Upload image"
-                  title="Send a photo"
-                >
-                  <ImagePlus size={18} />
-                </button>
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file);
+                    e.target.value = "";
+                    setShowImageMenu(false);
+                  }}
+                />
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowImageMenu(!showImageMenu)}
+                    disabled={loading}
+                    className="p-2 rounded-lg text-[#4b5563] hover:bg-gray-100 hover:text-[#1a73e8] transition-colors bg-transparent border-none cursor-pointer disabled:opacity-40"
+                    aria-label="Attach image"
+                    title="Send a photo"
+                  >
+                    <ImagePlus size={18} />
+                  </button>
+                  {showImageMenu && (
+                    <div className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden w-44 z-50">
+                      <button
+                        type="button"
+                        onClick={() => { fileInputRef.current?.click(); }}
+                        className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-[13px] text-gray-700 hover:bg-blue-50 hover:text-[#1a73e8] transition-colors bg-transparent border-none cursor-pointer text-left"
+                      >
+                        <Upload size={16} />
+                        Upload from device
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { cameraInputRef.current?.click(); }}
+                        className="flex items-center gap-2.5 w-full px-3.5 py-2.5 text-[13px] text-gray-700 hover:bg-blue-50 hover:text-[#1a73e8] transition-colors bg-transparent border-none cursor-pointer text-left border-t border-gray-100"
+                      >
+                        <Camera size={16} />
+                        Take a photo
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <input
                   ref={inputRef}
                   type="text"
