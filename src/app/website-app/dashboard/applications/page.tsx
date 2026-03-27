@@ -134,10 +134,14 @@ type SortDir = "asc" | "desc";
 /* ─── Helpers ─── */
 function formatDate(d: string | undefined | null) {
   if (!d) return "—";
+  // If it already has a timezone label (e.g. "03/27/2026, 06:15 PM CT"), show as-is
+  if (typeof d === "string" && /[AP]M\s+[A-Z]{2,}/.test(d)) return d;
   try {
-    return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return String(d);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   } catch {
-    return d;
+    return String(d);
   }
 }
 
@@ -314,15 +318,28 @@ export default function ApplicationsPage() {
   }, []);
 
   const openApplication = useCallback((app: Application) => {
-    setSelected(app);
+    // Parse notes JSON and merge extra fields into the application object
+    let merged = { ...app };
+    if (app.notes && typeof app.notes === "string") {
+      try {
+        const extra = JSON.parse(app.notes);
+        if (extra && typeof extra === "object" && !Array.isArray(extra)) {
+          merged = { ...merged, ...extra };
+        }
+      } catch {
+        // notes is plain text, not JSON
+      }
+    }
+    setSelected(merged);
     setPreviewDoc(null);
     fetchDocuments(app.id);
-    // Load notes from localStorage
+    // Load notes from DB
+    const dbNotes = typeof app.notes === "string" ? app.notes : "";
     try {
-      const stored = localStorage.getItem(`app_notes_${app.id}`);
-      setNoteText(stored || "");
-    } catch {
+      JSON.parse(dbNotes);
       setNoteText("");
+    } catch {
+      setNoteText(dbNotes || "");
     }
     setNoteSaved(false);
   }, [fetchDocuments]);
@@ -405,31 +422,42 @@ export default function ApplicationsPage() {
     }
   }, []);
 
-  const saveNote = useCallback(() => {
+  const saveNote = useCallback(async () => {
     if (!selected) return;
     try {
-      localStorage.setItem(`app_notes_${selected.id}`, noteText);
-      setNotes((prev) => ({ ...prev, [selected.id]: noteText }));
-      setNoteSaved(true);
-      setTimeout(() => setNoteSaved(false), 2000);
+      const res = await fetch(`/api/applications/${selected.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes: noteText }),
+      });
+      if (res.ok) {
+        setNotes((prev) => ({ ...prev, [selected.id]: noteText }));
+        setApplications((prev) => prev.map((a) => (a.id === selected.id ? { ...a, notes: noteText } : a)));
+        setNoteSaved(true);
+        setTimeout(() => setNoteSaved(false), 2000);
+      }
     } catch {
       /* noop */
     }
   }, [selected, noteText]);
 
-  const approveApplication = useCallback(async (app: Application) => {
+  const approveApplication = useCallback(async (app: Application, sendEmail = false) => {
     setApproving(app.id);
     try {
       const res = await fetch(`/api/applications/${app.id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sendEmail }),
       });
       if (res.ok) {
         const updated = await res.json();
         setApplications((prev) => prev.map((a) => (a.id === app.id ? { ...a, status: "approved" } : a)));
         setSelected((prev) => (prev?.id === app.id ? { ...prev, status: "approved" } : prev));
         setConfirmApprove(null);
-        setApproveSuccess(updated.emailSent ? `${app.full_name}'s application approved & email sent!` : `${app.full_name}'s application approved! (Email could not be sent)`);
+        const msg = sendEmail
+          ? (updated.emailSent ? `${app.full_name}'s application approved & email sent!` : `${app.full_name}'s application approved! (Email could not be sent)`)
+          : `${app.full_name}'s application approved!`;
+        setApproveSuccess(msg);
         setTimeout(() => setApproveSuccess(null), 5000);
       } else {
         const err = await res.json();
@@ -541,13 +569,6 @@ export default function ApplicationsPage() {
             )}
           </p>
         </div>
-        <button
-          onClick={exportCSV}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-        >
-          <DownloadIcon />
-          Export CSV
-        </button>
       </div>
 
       {/* Stats Cards */}
@@ -741,7 +762,7 @@ export default function ApplicationsPage() {
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
           <div className="absolute inset-0 bg-black/30 transition-opacity" />
           <div
-            className="relative w-full max-w-2xl bg-white shadow-2xl overflow-y-auto animate-slide-in-right"
+            className="relative w-full max-w-4xl bg-white shadow-2xl overflow-y-auto animate-slide-in-right"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Panel Header */}
@@ -807,16 +828,30 @@ export default function ApplicationsPage() {
                   <div className="col-span-2 sm:col-span-3">
                     <DetailField label="Current Address" value={[selected.current_address, selected.city, selected.state, selected.zip_code].filter(Boolean).join(", ") || "—"} />
                   </div>
+                  {selected.address_type && <DetailField label="Address Type" value={selected.address_type} />}
                   {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
                     <>
                       <DetailField label="University" value={selected.university_name} />
                       <DetailField label="Student ID" value={selected.student_id} />
+                      {selected.course_name && <DetailField label="Course Name" value={selected.course_name} />}
+                      {selected.course_start_date && <DetailField label="Course Start" value={formatDate(selected.course_start_date)} />}
                       <DetailField label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
+                      {selected.advisor_phone && <DetailField label="Advisor Phone" value={selected.advisor_phone} />}
+                      {selected.advisor_email && <DetailField label="Advisor Email" value={selected.advisor_email} />}
                     </>
                   )}
                   <DetailField label="Emergency Contact" value={selected.emergency_contact_name} />
                   <DetailField label="Emergency Phone" value={selected.emergency_contact_phone} />
-                  <DetailField label="Relationship" value={selected.emergency_contact_relationship} />
+                  {selected.emergency_contact_email && <DetailField label="Emergency Email" value={selected.emergency_contact_email} />}
+                  <DetailField label="Relationship" value={selected.emergency_relationship} />
+                  {selected.emergency_contact2_name && (
+                    <>
+                      <DetailField label="Emergency Contact 2" value={selected.emergency_contact2_name} />
+                      <DetailField label="Emergency Phone 2" value={selected.emergency_contact2_phone} />
+                      {selected.emergency_contact2_email && <DetailField label="Emergency Email 2" value={selected.emergency_contact2_email} />}
+                      <DetailField label="Relationship 2" value={selected.emergency_relationship2} />
+                    </>
+                  )}
                 </div>
               </section>
 
@@ -911,16 +946,20 @@ export default function ApplicationsPage() {
                     icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>}
                   />
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <DetailField label="Gender" value={selected.gender} />
+                    {selected.gender && <DetailField label="Gender" value={selected.gender} />}
                     <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : "No"} />
-                    {selected.has_pets && (
-                      <>
-                        <DetailField label="Pet Type" value={selected.pet_type} />
-                        <DetailField label="Pet Weight" value={selected.pet_weight} />
-                        <DetailField label="Pet Age" value={selected.pet_age} />
-                        <DetailField label="ESA" value={selected.is_esa ? "Yes" : "No"} />
-                      </>
-                    )}
+                    {selected.has_vehicle !== undefined && <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : "No"} />}
+                    {selected.has_pets && Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
+                      <div key={idx} className="col-span-2 sm:col-span-3 p-3 bg-gray-50 rounded-xl">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">Pet {idx + 1}</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <DetailField label="Type" value={pet.type} />
+                          <DetailField label="Weight" value={pet.weight} />
+                          <DetailField label="Age" value={pet.age} />
+                          <DetailField label="Category" value={pet.category} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </section>
               )}
@@ -965,15 +1004,19 @@ export default function ApplicationsPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className={`p-3 rounded-xl ${selected.filed_bankruptcy ? "bg-red-50" : "bg-green-50"}`}>
                       <DetailField label="Filed Bankruptcy" value={selected.filed_bankruptcy ? "Yes" : "No"} />
+                      {selected.bankruptcy_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.bankruptcy_details)}</p>}
                     </div>
                     <div className={`p-3 rounded-xl ${selected.evicted_from_tenancy ? "bg-red-50" : "bg-green-50"}`}>
                       <DetailField label="Evicted from Tenancy" value={selected.evicted_from_tenancy ? "Yes" : "No"} />
+                      {selected.eviction_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.eviction_details)}</p>}
                     </div>
                     <div className={`p-3 rounded-xl ${selected.convicted_felony ? "bg-red-50" : "bg-green-50"}`}>
                       <DetailField label="Convicted of Felony" value={selected.convicted_felony ? "Yes" : "No"} />
+                      {selected.felony_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.felony_details)}</p>}
                     </div>
                     <div className={`p-3 rounded-xl ${selected.arrested_or_convicted ? "bg-red-50" : "bg-green-50"}`}>
                       <DetailField label="Arrested/Convicted" value={selected.arrested_or_convicted ? "Yes" : "No"} />
+                      {selected.arrest_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.arrest_details)}</p>}
                     </div>
                   </div>
                 </section>
@@ -1231,7 +1274,7 @@ export default function ApplicationsPage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">Approve Application?</h3>
               <p className="text-sm text-gray-500 mb-6">
-                This will approve <strong>{confirmApprove.full_name}</strong>&apos;s application and send them a congratulatory email at <strong>{confirmApprove.email}</strong>.
+                Approve <strong>{confirmApprove.full_name}</strong>&apos;s application. You can choose to send a notification email to <strong>{confirmApprove.email}</strong> or approve without emailing.
               </p>
               <div className="flex gap-3 justify-center">
                 <button
@@ -1241,23 +1284,18 @@ export default function ApplicationsPage() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => approveApplication(confirmApprove)}
+                  onClick={() => approveApplication(confirmApprove, false)}
+                  disabled={approving === confirmApprove.id}
+                  className="px-5 py-2.5 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-xl hover:bg-green-100 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+                >
+                  {approving === confirmApprove.id ? "Approving..." : "Approve Only"}
+                </button>
+                <button
+                  onClick={() => approveApplication(confirmApprove, true)}
                   disabled={approving === confirmApprove.id}
                   className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 inline-flex items-center gap-2"
                 >
-                  {approving === confirmApprove.id ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Approving...
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                      Approve &amp; Send Email
-                    </>
-                  )}
+                  {approving === confirmApprove.id ? "Sending..." : "Approve & Send Email"}
                 </button>
               </div>
             </div>

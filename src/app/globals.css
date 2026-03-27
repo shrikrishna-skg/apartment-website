@@ -30,8 +30,8 @@
   --on-tertiary-container: #134e4a;
 
   /* ── Text hierarchy ── */
-  --on-surface: #1f2937;
-  --on-surface-variant: #4b5563;
+  --on-surface: #111827;
+  --on-surface-variant: #374151;
   --outline: #d1d5db;
   --outline-variant: #e5e7eb;
 
@@ -67,9 +67,19 @@ body {
   background: var(--surface);
   color: var(--on-surface);
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  font-weight: 450;
   overflow-x: hidden;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+p, span, label, li {
+  color: var(--on-surface);
 }
 
 /* ── Ambient Background (subtle for light mode) ── */
@@ -166,6 +176,7 @@ body {
   border-radius: var(--shape-sm);
   padding: 0.75rem 1rem;
   color: var(--on-surface);
+  font-weight: 450;
   width: 100%;
   font-size: 1rem;
   line-height: 1.5rem;
@@ -175,7 +186,8 @@ body {
 }
 .input-glass::placeholder {
   color: var(--on-surface-variant);
-  opacity: 0.7;
+  opacity: 0.6;
+  font-weight: 400;
 }
 .input-glass:hover {
   border-color: var(--on-surface);

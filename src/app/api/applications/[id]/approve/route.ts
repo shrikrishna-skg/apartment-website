@@ -14,6 +14,8 @@ export async function POST(
 
   try {
     const { id } = await params;
+    const body = await request.json().catch(() => ({}));
+    const shouldSendEmail = body.sendEmail === true;
 
     // Update the application status to approved
     const { data, error } = await supabase
@@ -31,9 +33,9 @@ export async function POST(
       return NextResponse.json({ error: "Application not found" }, { status: 404 });
     }
 
-    // Send approval email to the applicant
+    // Only send approval email if admin explicitly requested it
     let emailSent = false;
-    if (data.email && data.full_name) {
+    if (shouldSendEmail && data.email && data.full_name) {
       emailSent = await sendApprovalEmail(data.full_name, data.email);
     }
 

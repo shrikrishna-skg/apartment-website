@@ -203,7 +203,7 @@ const initialFormData: FormData = {
   references: "",
   agreeTerms: "",
   signatureName: "",
-  signatureDate: new Date().toISOString().split("T")[0],
+  signatureDate: new Date().toLocaleString("en-US", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true }) + " CT",
   consent: false,
 };
 
@@ -362,6 +362,9 @@ export default function GeneralApplicationPage() {
     if (!validateStep()) return;
     setSubmitting(true);
     setSubmitError("");
+    // Set signature date/time to exact moment of submission
+    const submitTimestamp = new Date().toLocaleString("en-US", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }) + " CT";
+    formData.signatureDate = submitTimestamp;
     try {
       const res = await fetch("/api/applications", {
         method: "POST",
@@ -685,6 +688,7 @@ export default function GeneralApplicationPage() {
                       "Female",
                       "Male",
                       "Other",
+                      "Prefer not to say",
                     ])}
 
                     {renderInput("Driving License Number", "drivingLicense", "text", "License number (if applicable)")}
