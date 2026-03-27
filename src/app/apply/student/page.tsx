@@ -33,7 +33,15 @@ interface DocumentFile {
   category: string;
 }
 
-const REQUIRED_DOCS = [
+const REQUIRED_DOCS_STUDENT = [
+  {
+    key: "passportPhoto",
+    label: "Passport Size Photo",
+    description: "Upload a clear passport-size photograph",
+    required: true,
+    multiple: false,
+    maxSize: 10,
+  },
   {
     key: "studentId",
     label: "Student ID",
@@ -44,17 +52,9 @@ const REQUIRED_DOCS = [
   },
   {
     key: "stateId",
-    label: "State ID or Driver's License",
+    label: "State ID or Passport",
     description: "Government-issued photo identification",
     required: true,
-    multiple: false,
-    maxSize: 10,
-  },
-  {
-    key: "passport",
-    label: "Passport (If Applicable)",
-    description: "Required for international students",
-    required: false,
     multiple: false,
     maxSize: 10,
   },
@@ -63,6 +63,7 @@ const REQUIRED_DOCS = [
     label: "Visa / I-20 (If Applicable)",
     description: "Required for international students on a student visa",
     required: false,
+    internationalRequired: true,
     multiple: false,
     maxSize: 10,
   },
@@ -76,24 +77,16 @@ const REQUIRED_DOCS = [
   },
   {
     key: "proofOfIncome",
-    label: "Proof of Income / Financial Aid",
-    description: "Pay stubs, financial aid letter, scholarship letter, or sponsor letter",
-    required: false,
-    multiple: true,
-    maxSize: 10,
-  },
-  {
-    key: "acceptanceLetter",
-    label: "University Acceptance / Enrollment Letter",
-    description: "Proof of enrollment or acceptance from your university",
+    label: "Proof of Income (Pay stubs, Financial Aid, or Sponsor Letter)",
+    description: "Providing proof of income will help expedite and strengthen your application",
     required: true,
-    multiple: false,
-    maxSize: 10,
+    multiple: true,
+    maxSize: 100,
   },
   {
     key: "additional",
     label: "Additional Supporting Documents",
-    description: "Any other documents that support your application",
+    description: "Upload up to 5 additional files that support your application",
     required: false,
     multiple: true,
     maxSize: 10,
@@ -260,11 +253,9 @@ function StudentApplicationPage() {
 
     if (currentStep === 5) {
       // Validate required documents
-      const requiredDocs = isInternational
-        ? REQUIRED_DOCS.filter((d) => d.required || d.key === "passport" || d.key === "visa")
-        : REQUIRED_DOCS.filter((d) => d.required);
-      for (const doc of requiredDocs) {
-        if (!documentFiles[doc.key] || documentFiles[doc.key].length === 0) {
+      for (const doc of REQUIRED_DOCS_STUDENT) {
+        const isReq = doc.required || (isInternational && (doc as Record<string, unknown>).internationalRequired);
+        if (isReq && (!documentFiles[doc.key] || documentFiles[doc.key].length === 0)) {
           newErrors.push(`${doc.label} is required`);
         }
       }
@@ -978,14 +969,12 @@ function StudentApplicationPage() {
                   </p>
 
                   <div className="space-y-4">
-                    {REQUIRED_DOCS.map((doc) => {
-                      const isRequiredForUser = isInternational
-                        ? doc.required || doc.key === "passport" || doc.key === "visa"
-                        : doc.required;
+                    {REQUIRED_DOCS_STUDENT.map((doc) => {
+                      const isRequiredForUser = doc.required || (isInternational && !!(doc as Record<string, unknown>).internationalRequired);
                       const files = documentFiles[doc.key] || [];
 
-                      // Hide passport/visa for non-international unless they want to upload
-                      if (!isInternational && (doc.key === "visa")) return null;
+                      // Hide visa for non-international students
+                      if (!isInternational && doc.key === "visa") return null;
 
                       return (
                         <div
@@ -1179,7 +1168,7 @@ function StudentApplicationPage() {
                       <div className="space-y-1.5 text-sm">
                         {Object.entries(documentFiles).map(([category, files]) => {
                           if (files.length === 0) return null;
-                          const docDef = REQUIRED_DOCS.find((d) => d.key === category);
+                          const docDef = REQUIRED_DOCS_STUDENT.find((d) => d.key === category);
                           return (
                             <div key={category} className="flex items-center gap-2">
                               <Check size={14} className="text-green-600 shrink-0" />
