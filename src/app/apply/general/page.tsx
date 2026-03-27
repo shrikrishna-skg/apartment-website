@@ -16,6 +16,62 @@ import {
 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 
+interface DocumentFile {
+  file: File;
+  category: string;
+}
+
+const REQUIRED_DOCS_PROFESSIONAL = [
+  {
+    key: "passportPhoto",
+    label: "Passport Size Photo",
+    description: "Upload a clear passport-size photograph",
+    required: true,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "stateId",
+    label: "State ID or Passport",
+    description: "Government-issued photo identification",
+    required: true,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "visa",
+    label: "Visa (If Applicable)",
+    description: "Upload visa documentation if applicable",
+    required: false,
+    multiple: false,
+    maxSize: 10,
+  },
+  {
+    key: "bankStatement",
+    label: "Bank Statement",
+    description: "Past 3 months bank statement required",
+    required: true,
+    multiple: true,
+    maxSize: 10,
+  },
+  {
+    key: "proofOfIncome",
+    label: "Proof of Income (Pay stubs, Employer Letter, or Offer Letter)",
+    description: "Providing pay stubs from the past 3 months will help expedite and strengthen your application. Employer or offer letters may be accepted if pay stubs are not available.",
+    required: true,
+    multiple: true,
+    maxSize: 100,
+  },
+  {
+    key: "additional",
+    label: "Additional Supporting Documents",
+    description: "Upload up to 5 additional files that support your application",
+    required: false,
+    multiple: true,
+    maxSize: 10,
+  },
+];
+
 const STEPS = [
   { label: "Personal Info", icon: User },
   { label: "Residence", icon: Briefcase },
@@ -217,6 +273,14 @@ export default function GeneralApplicationPage() {
       if (!formData.arrestedOrConvicted) newErrors.push("Arrest/conviction question is required");
     }
 
+    if (currentStep === 7) {
+      for (const doc of REQUIRED_DOCS_PROFESSIONAL) {
+        if (doc.required && (!documentFiles[doc.key] || documentFiles[doc.key].length === 0)) {
+          newErrors.push(`${doc.label} is required`);
+        }
+      }
+    }
+
     if (currentStep === 8) {
       if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms and conditions");
       if (!formData.signatureName.trim()) newErrors.push("Electronic Signature is required");
@@ -233,7 +297,7 @@ export default function GeneralApplicationPage() {
 
   const handleNext = () => {
     if (validateStep()) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, STEPS.length));
     }
   };
 
@@ -244,31 +308,24 @@ export default function GeneralApplicationPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [fileLabels, setFileLabels] = useState<string[]>([]);
+  const [documentFiles, setDocumentFiles] = useState<Record<string, DocumentFile[]>>({});
 
-  const handleFileAdd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocFileAdd = (category: string, e: React.ChangeEvent<HTMLInputElement>, multiple: boolean) => {
     const files = e.target.files;
     if (!files) return;
-    const newFiles = Array.from(files);
-    setUploadedFiles((prev) => [...prev, ...newFiles]);
-    setFileLabels((prev) => [...prev, ...newFiles.map(() => "Supporting Document")]);
+    const newFiles = Array.from(files).map((f) => ({ file: f, category }));
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [category]: multiple ? [...(prev[category] || []), ...newFiles] : newFiles,
+    }));
     e.target.value = "";
   };
 
-  const removeFile = (index: number) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-    setFileLabels((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const updateFileLabel = (index: number, label: string) => {
-    setFileLabels((prev) => prev.map((l, i) => (i === index ? label : l)));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const removeDocFile = (category: string, index: number) => {
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [category]: (prev[category] || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -341,13 +398,14 @@ export default function GeneralApplicationPage() {
       }
       const appData = await res.json();
 
-      // Upload documents if any
-      if (uploadedFiles.length > 0 && appData.id) {
-        for (let i = 0; i < uploadedFiles.length; i++) {
+      // Upload documents by category
+      if (appData.id) {
+        const allDocs = Object.values(documentFiles).flat();
+        for (const doc of allDocs) {
           const fileForm = new FormData();
-          fileForm.append("file", uploadedFiles[i]);
+          fileForm.append("file", doc.file);
           fileForm.append("application_id", appData.id);
-          fileForm.append("document_label", fileLabels[i] || "Supporting Document");
+          fileForm.append("document_label", doc.category);
           await fetch("/api/documents/upload", { method: "POST", body: fileForm });
         }
       }
@@ -778,8 +836,10 @@ export default function GeneralApplicationPage() {
                                   onChange={(e) => {
                                     const file = e.target.files?.[0];
                                     if (file) {
-                                      setUploadedFiles((prev) => [...prev, file]);
-                                      setFileLabels((prev) => [...prev, "ESA Verification"]);
+                                      setDocumentFiles((prev) => ({
+                                        ...prev,
+                                        additional: [...(prev.additional || []), { file, category: "additional" }],
+                                      }));
                                     }
                                   }}
                                 />
@@ -880,70 +940,110 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                  <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <Upload size={20} className="text-blue-600" />
                     Required Documents
+                  </h2>
+                  <p className="text-gray-500 text-sm mb-6">
+                    Please upload all required documents. The more documents provided, the stronger your application.
+                  </p>
+
+                  <div className="space-y-4">
+                    {REQUIRED_DOCS_PROFESSIONAL.map((doc) => {
+                      const files = documentFiles[doc.key] || [];
+
+                      return (
+                        <div
+                          key={doc.key}
+                          className={`rounded-xl border-2 p-4 transition-all ${
+                            files.length > 0
+                              ? "border-green-200 bg-green-50/50"
+                              : doc.required
+                              ? "border-gray-200 bg-white"
+                              : "border-gray-100 bg-gray-50/50"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                                {doc.label}
+                                {doc.required && (
+                                  <span className="text-red-500 text-xs font-bold">*</span>
+                                )}
+                                {files.length > 0 && (
+                                  <Check size={16} className="text-green-600" />
+                                )}
+                              </h3>
+                              <p className="text-xs text-gray-500 mt-0.5">{doc.description}</p>
+                            </div>
+                          </div>
+
+                          {/* Uploaded files list */}
+                          {files.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {files.map((docFile, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-2 bg-white rounded-lg border border-gray-200 px-3 py-2"
+                                >
+                                  <FileText size={16} className="text-blue-500 shrink-0" />
+                                  <span className="text-sm text-gray-700 truncate flex-1">
+                                    {docFile.file.name}
+                                  </span>
+                                  <span className="text-xs text-gray-400">
+                                    {docFile.file.size < 1024 * 1024
+                                      ? `${(docFile.file.size / 1024).toFixed(1)} KB`
+                                      : `${(docFile.file.size / (1024 * 1024)).toFixed(1)} MB`}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeDocFile(doc.key, idx)}
+                                    className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Upload button */}
+                          <label className="flex items-center justify-center gap-2 px-3 py-2.5 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all group">
+                            <Upload size={16} className="text-gray-400 group-hover:text-blue-500" />
+                            <span className="text-xs text-gray-500 group-hover:text-blue-600">
+                              {files.length > 0
+                                ? doc.multiple
+                                  ? "Add more files"
+                                  : "Replace file"
+                                : `Upload ${doc.label}`}
+                            </span>
+                            <input
+                              type="file"
+                              multiple={doc.multiple}
+                              accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.doc,.docx"
+                              onChange={(e) => handleDocFileAdd(doc.key, e, doc.multiple)}
+                              className="sr-only"
+                            />
+                          </label>
+
+                          <p className="text-[10px] text-gray-400 mt-1.5">
+                            {doc.multiple ? "Upload multiple files." : "Upload 1 file."} Max {doc.maxSize} MB per file. PDF, images, or Word documents.
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6 text-sm text-gray-600">
-                    Please submit all the documents — the more documents provided, the stronger your application.
-                  </div>
-
-                  <div className="space-y-6">
-                    {/* Passport Photo */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">Passport Size Photo <span className="text-red-500">*</span></p>
-                      <p className="text-xs text-gray-500 mb-2">Upload 1 supported file. Max 10 MB.</p>
-                      <input type="file" accept="image/*,.pdf" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Passport Photo"]); } }} />
-                    </div>
-
-                    {/* State ID */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">State ID or Passport <span className="text-red-500">*</span></p>
-                      <p className="text-xs text-gray-500 mb-2">Upload 1 supported file. Max 10 MB.</p>
-                      <input type="file" accept="image/*,.pdf" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "State ID / Passport"]); } }} />
-                    </div>
-
-                    {/* Visa */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">Visa (If Applicable)</p>
-                      <p className="text-xs text-gray-500 mb-2">Upload 1 supported file. Max 10 MB.</p>
-                      <input type="file" accept="image/*,.pdf" className="text-sm" onChange={(e) => { const f = e.target.files?.[0]; if (f) { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Visa"]); } }} />
-                    </div>
-
-                    {/* Bank Statement */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">Bank Statement <span className="text-red-500">*</span></p>
-                      <p className="text-xs text-gray-500 mb-2">Upload supported files. Max 10 MB each.</p>
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Past 3 months bank statement required.</p>
-                      <input type="file" accept="image/*,.pdf" multiple className="text-sm" onChange={(e) => { const fl = e.target.files; if (fl) { Array.from(fl).forEach(f => { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Bank Statement"]); }); } }} />
-                    </div>
-
-                    {/* Proof of Income */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">Proof of Income (Pay stubs, Employer Letter, or Offer Letter) <span className="text-red-500">*</span></p>
-                      <p className="text-xs text-gray-500 mb-2">Upload up to 5 supported files. Max 100 MB per file.</p>
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Providing pay stubs from the past 3 months will help expedite and strengthen your application. Employer or offer letters may be accepted if pay stubs are not available.</p>
-                      <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="text-sm" onChange={(e) => { const fl = e.target.files; if (fl) { Array.from(fl).forEach(f => { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Proof of Income"]); }); } }} />
-                    </div>
-
-                    {/* Additional Documents */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">Additional Supporting Documents</p>
-                      <p className="text-xs text-gray-500 mb-2">Upload up to 5 additional files that support your application.</p>
-                      <input type="file" accept="image/*,.pdf,.doc,.docx" multiple className="text-sm" onChange={(e) => { const fl = e.target.files; if (fl) { Array.from(fl).forEach(f => { setUploadedFiles(prev => [...prev, f]); setFileLabels(prev => [...prev, "Additional Document"]); }); } }} />
-                    </div>
-
-                    {/* References */}
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <p className="text-sm font-semibold text-gray-800">References (2–3 personal/professional)</p>
-                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Include full name, relationship, phone number, and email for each reference.</p>
-                      <textarea
-                        className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[100px]"
-                        placeholder={"e.g., Name: John Smith | Relationship: Former Manager | Phone: (###) ###-#### | Email: john@email.com"}
-                        value={formData.references}
-                        onChange={(e) => updateField("references", e.target.value)}
-                      />
-                    </div>
+                  {/* References */}
+                  <div className="border border-gray-200 rounded-lg p-4 mt-6">
+                    <p className="text-sm font-semibold text-gray-800">References (2-3 personal/professional)</p>
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 mb-2 inline-block"><strong>Note:</strong> Include full name, relationship, phone number, and email for each reference.</p>
+                    <textarea
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[100px]"
+                      placeholder={"e.g., Name: John Smith | Relationship: Former Manager | Phone: (###) ###-#### | Email: john@email.com"}
+                      value={formData.references}
+                      onChange={(e) => updateField("references", e.target.value)}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -1132,15 +1232,16 @@ export default function GeneralApplicationPage() {
                       <h3 className="font-semibold text-gray-900">Documents</h3>
                       <button onClick={() => setCurrentStep(7)} className="text-blue-600 text-sm hover:underline">Edit</button>
                     </div>
-                    {uploadedFiles.length > 0 ? (
-                      <div className="space-y-1 text-sm">
-                        {fileLabels.filter((v, i, a) => a.indexOf(v) === i).map((label) => {
-                          const count = fileLabels.filter(l => l === label).length;
+                    {Object.keys(documentFiles).length > 0 ? (
+                      <div className="space-y-1.5 text-sm">
+                        {Object.entries(documentFiles).map(([category, files]) => {
+                          if (files.length === 0) return null;
+                          const docDef = REQUIRED_DOCS_PROFESSIONAL.find((d) => d.key === category);
                           return (
-                            <div key={label} className="flex items-center gap-2 text-gray-700">
-                              <Check size={14} className="text-green-600" />
-                              <span className="font-medium">{label}</span>
-                              <span className="text-gray-400">({count} file{count > 1 ? "s" : ""})</span>
+                            <div key={category} className="flex items-center gap-2 text-gray-700">
+                              <Check size={14} className="text-green-600 shrink-0" />
+                              <span className="font-medium">{docDef?.label || category}</span>
+                              <span className="text-gray-400">({files.length} file{files.length > 1 ? "s" : ""})</span>
                             </div>
                           );
                         })}
