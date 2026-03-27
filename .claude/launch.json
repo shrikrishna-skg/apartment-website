@@ -4,15 +4,8 @@
     {
       "name": "Next.js Dev Server",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "-p", "1212"],
-      "port": 1212,
-      "autoPort": true
-    },
-    {
-      "name": "Next.js Production Server",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "start"],
-      "port": 3000
+      "runtimeArgs": ["run", "dev"],
+      "port": 1111
     }
   ]
 }
