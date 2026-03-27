@@ -226,6 +226,7 @@ function StudentApplicationPage() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
+  const [visitedSteps, setVisitedSteps] = useState<Set<number>>(new Set());
 
   const updateField = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -271,6 +272,7 @@ function StudentApplicationPage() {
 
   const handleNext = () => {
     if (validateStep()) {
+      setVisitedSteps((prev) => new Set(prev).add(currentStep));
       setCurrentStep((prev) => Math.min(prev + 1, 6));
     }
   };
@@ -526,14 +528,14 @@ function StudentApplicationPage() {
                   >
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 cursor-pointer ${
-                        isCompleted
+                        isCompleted && visitedSteps.has(stepNum)
                           ? "bg-green-600 text-white group-hover:bg-green-700"
                           : isActive
                           ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-200"
                           : "bg-gray-50 border border-gray-200 text-gray-400 group-hover:border-blue-300 group-hover:text-blue-400"
                       }`}
                     >
-                      {isCompleted ? (
+                      {isCompleted && visitedSteps.has(stepNum) ? (
                         <Check size={18} />
                       ) : (
                         <StepIcon size={18} />
@@ -543,7 +545,7 @@ function StudentApplicationPage() {
                       className={`text-[10px] mt-1.5 font-medium hidden sm:block ${
                         isActive
                           ? "text-blue-600"
-                          : isCompleted
+                          : isCompleted && visitedSteps.has(stepNum)
                           ? "text-green-600"
                           : "text-gray-400"
                       }`}
@@ -554,7 +556,7 @@ function StudentApplicationPage() {
                   {index < STEPS.length - 1 && (
                     <div
                       className={`w-8 sm:w-14 h-0.5 mx-1 sm:mx-2 transition-colors duration-500 ${
-                        stepNum < currentStep
+                        stepNum < currentStep && visitedSteps.has(stepNum)
                           ? "bg-green-600"
                           : "bg-gray-100"
                       }`}
