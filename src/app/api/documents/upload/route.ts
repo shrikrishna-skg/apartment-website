@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/vnd.ms-excel",
-  "text/plain",
-];
+// Next.js App Router: increase max duration and disable body size limit
+export const maxDuration = 60;
+export const dynamic = "force-dynamic";
+
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB per file
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,18 +22,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "application_id is required" }, { status: 400 });
     }
 
-    // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: `File type "${file.type}" is not allowed. Accepted: PDF, images, Word, Excel, text files.` },
-        { status: 400 }
-      );
-    }
-
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File size exceeds 10MB limit" },
+        { error: "File size exceeds 100MB limit" },
         { status: 400 }
       );
     }

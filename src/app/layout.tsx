@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
 import { Analytics } from "@vercel/analytics/next";
+import ScrollToTop from "@/components/ScrollToTop";
 import { SITE } from "@/data/site-data";
 
 const dmSans = DM_Sans({
@@ -233,6 +234,7 @@ export default async function RootLayout({
         />
       </head>
       <body className={`${dmSans.variable} antialiased font-sans`}>
+        <ScrollToTop />
         {isStaffPortal ? (
           <>{children}</>
         ) : (

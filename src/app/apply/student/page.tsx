@@ -258,7 +258,7 @@ const initialFormData: FormData = {
   vehicle1Plate: "",
   agreeTerms: "",
   signatureName: "",
-  signatureDate: "",
+  signatureDate: new Date().toISOString().split("T")[0],
   consent: false,
 };
 
@@ -391,7 +391,21 @@ function StudentApplicationPage() {
   const handleDocFileAdd = (category: string, e: React.ChangeEvent<HTMLInputElement>, multiple: boolean) => {
     const files = e.target.files;
     if (!files) return;
-    const newFiles = Array.from(files).map((f) => ({ file: f, category }));
+    const MAX_SIZE = 4 * 1024 * 1024; // 4MB per file
+    const validFiles: File[] = [];
+    const rejected: string[] = [];
+    Array.from(files).forEach((f) => {
+      if (f.size > MAX_SIZE) {
+        rejected.push(`${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`);
+      } else {
+        validFiles.push(f);
+      }
+    });
+    if (rejected.length > 0) {
+      alert(`These files exceed the 4MB limit and were skipped:\n${rejected.join("\n")}\n\nPlease compress or resize them before uploading.`);
+    }
+    if (validFiles.length === 0) { e.target.value = ""; return; }
+    const newFiles = validFiles.map((f) => ({ file: f, category }));
     setDocumentFiles((prev) => ({
       ...prev,
       [category]: multiple ? [...(prev[category] || []), ...newFiles] : newFiles,
@@ -490,15 +504,19 @@ function StudentApplicationPage() {
       }
       const appData = await res.json();
 
-      // Upload documents by category
+      // Upload documents by category (best-effort, don't block submission)
       if (appData.id) {
         const allDocs = Object.values(documentFiles).flat();
         for (const doc of allDocs) {
-          const fileForm = new FormData();
-          fileForm.append("file", doc.file);
-          fileForm.append("application_id", appData.id);
-          fileForm.append("document_label", doc.category);
-          await fetch("/api/documents/upload", { method: "POST", body: fileForm });
+          try {
+            const fileForm = new FormData();
+            fileForm.append("file", doc.file);
+            fileForm.append("application_id", appData.id);
+            fileForm.append("document_label", doc.category);
+            await fetch("/api/documents/upload", { method: "POST", body: fileForm });
+          } catch {
+            // Document upload failure shouldn't block the application
+          }
         }
       }
 
@@ -1456,7 +1474,7 @@ function StudentApplicationPage() {
                           </label>
 
                           <p className="text-[10px] text-gray-400 mt-1.5">
-                            {doc.multiple ? "Upload multiple files." : "Upload 1 file."} Max {doc.maxSize} MB per file. PDF, images, or Word documents.
+                            {doc.multiple ? "Upload multiple files." : "Upload 1 file."} Max 4MB per file. All file types accepted.
                           </p>
                         </div>
                       );
@@ -1499,11 +1517,11 @@ function StudentApplicationPage() {
                       <label className="text-sm font-medium text-gray-700">
                         Signature Date<span className="text-red-600 ml-1">*</span>
                       </label>
-                      <DatePicker
+                      <input
+                        type="text"
+                        className="input-glass bg-gray-50"
                         value={formData.signatureDate}
-                        onChange={(val) => updateField("signatureDate", val)}
-                        required
-                        placeholder="Select signature date"
+                        readOnly
                       />
                     </div>
                   </div>
