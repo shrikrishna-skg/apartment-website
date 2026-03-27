@@ -327,7 +327,7 @@ export default function GeneralApplicationPage() {
           evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
           convicted_felony: formData.convictedFelony === "Yes",
           arrested_or_convicted: formData.arrestedOrConvicted === "Yes",
-          references: formData.references || null,
+          references_info: formData.references || null,
           agree_terms: formData.agreeTerms === "Yes, I agree",
           signature_name: formData.signatureName || null,
           signature_date: formData.signatureDate || null,
