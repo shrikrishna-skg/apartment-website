@@ -185,41 +185,50 @@ export default function MaintenancePage() {
       setPendingFiles([]);
       setPendingPreviews([]);
 
-      // Analyze the first image with Gemini
-      const imageFile = filesToProcess.find((f) => f.type.startsWith("image/"));
-      if (imageFile) {
+      // Analyze ALL images with Gemini
+      const imageFiles = filesToProcess.filter((f) => f.type.startsWith("image/"));
+      if (imageFiles.length > 0) {
         setLoading(true);
-        setMessages((prev) => [...prev, { role: "bot", text: "🔍 Analyzing your photo..." }]);
-        try {
-          const base64 = await fileToBase64(imageFile);
-          const imgRes = await fetch("/api/chat/image", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              image: base64,
-              mimeType: imageFile.type,
-              message: inputValue.trim() || "Maintenance issue photo from tenant",
-            }),
-          });
-          const imgData = await imgRes.json();
-          if (imgData.reply) {
-            imageAnalysis = imgData.reply;
-            // Replace "Analyzing..." with the actual analysis
-            setMessages((prev) => {
-              const updated = [...prev];
-              let analyzeIdx = -1;
-              for (let k = updated.length - 1; k >= 0; k--) { if (updated[k].text === "🔍 Analyzing your photo...") { analyzeIdx = k; break; } }
-              if (analyzeIdx >= 0) {
-                updated[analyzeIdx] = { role: "bot", text: `📸 **Photo Analysis:** ${imageAnalysis}` };
-              }
-              return updated;
+        const analyzingText = `🔍 Analyzing ${imageFiles.length} photo${imageFiles.length > 1 ? "s" : ""}...`;
+        setMessages((prev) => [...prev, { role: "bot", text: analyzingText }]);
+        const analyses: string[] = [];
+        for (const imageFile of imageFiles) {
+          try {
+            const base64 = await fileToBase64(imageFile);
+            const imgRes = await fetch("/api/chat/image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                image: base64,
+                mimeType: imageFile.type,
+                message: inputValue.trim() || "Maintenance issue photo from tenant",
+              }),
             });
-          } else {
-            // Remove analyzing message if failed
-            setMessages((prev) => prev.filter((m) => m.text !== "🔍 Analyzing your photo..."));
+            const imgData = await imgRes.json();
+            if (imgData.reply) {
+              analyses.push(imgData.reply.replace(/\[SUGGEST_TICKET\]/g, "").trim());
+            }
+          } catch {
+            // Skip failed analysis
           }
-        } catch {
-          setMessages((prev) => prev.filter((m) => m.text !== "🔍 Analyzing your photo..."));
+        }
+        if (analyses.length > 0) {
+          imageAnalysis = analyses.join("\n\n");
+          const displayText = analyses.length === 1
+            ? `📸 **Photo Analysis:** ${analyses[0]}`
+            : analyses.map((a, i) => `📸 **Photo ${i + 1}:** ${a}`).join("\n\n");
+          // Replace "Analyzing..." with the actual analysis
+          setMessages((prev) => {
+            const updated = [...prev];
+            let analyzeIdx = -1;
+            for (let k = updated.length - 1; k >= 0; k--) { if (updated[k].text === analyzingText) { analyzeIdx = k; break; } }
+            if (analyzeIdx >= 0) {
+              updated[analyzeIdx] = { role: "bot", text: displayText };
+            }
+            return updated;
+          });
+        } else {
+          setMessages((prev) => prev.filter((m) => m.text !== analyzingText));
         }
       }
     }
@@ -330,12 +339,10 @@ export default function MaintenancePage() {
     setLoading(false);
   };
 
-  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newFiles = Array.from(files);
+  // Shared function to add files with preview generation
+  const addFilesToPending = (newFiles: File[]) => {
+    if (newFiles.length === 0) return;
     setPendingFiles((prev) => [...prev, ...newFiles]);
-    // Create preview URLs for images
     newFiles.forEach((file) => {
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -344,10 +351,40 @@ export default function MaintenancePage() {
         };
         reader.readAsDataURL(file);
       } else {
+        // For PDFs and other files, no image preview
         setPendingPreviews((prev) => [...prev, ""]);
       }
     });
+  };
+
+  const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    addFilesToPending(Array.from(files));
     e.target.value = "";
+  };
+
+  // Handle paste (Ctrl+V / Cmd+V) for images and files
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    const pastedFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) {
+          // Give pasted images a better name
+          const ext = file.type.split("/")[1] || "png";
+          const namedFile = new File([file], `pasted-image-${Date.now()}.${ext}`, { type: file.type });
+          pastedFiles.push(namedFile);
+        }
+      }
+    }
+    if (pastedFiles.length > 0) {
+      e.preventDefault();
+      addFilesToPending(pastedFiles);
+    }
   };
 
   const removePendingFile = (idx: number) => {
@@ -579,7 +616,7 @@ export default function MaintenancePage() {
                       <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*,.pdf,.doc,.docx"
+                        accept="image/*,.pdf,.doc,.docx,.xlsx,.xls,.txt,.heic,.heif,.webp,.bmp,.tiff,.svg"
                         multiple
                         className="hidden"
                         onChange={handleFileAttach}
@@ -613,8 +650,10 @@ export default function MaintenancePage() {
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Type your message..."
-                        className="flex-1 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-[#f9fafb] outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]/20 transition-all"
+                        onPaste={handlePaste}
+                        placeholder="Type or paste an image..."
+                        disabled={loading}
+                        className="flex-1 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-[#f9fafb] outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]/20 transition-all disabled:opacity-50"
                       />
                       <button
                         onClick={handleSendMessage}

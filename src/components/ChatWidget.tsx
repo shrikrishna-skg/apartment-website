@@ -608,7 +608,7 @@ export default function ChatWidget() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,.heic,.heif,.webp,.bmp,.tiff,.png,.jpg,.jpeg,.gif,.svg"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -631,7 +631,21 @@ export default function ChatWidget() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about apartments, pricing, tours..."
+                  onPaste={(e) => {
+                    const items = e.clipboardData?.items;
+                    if (!items) return;
+                    for (let i = 0; i < items.length; i++) {
+                      if (items[i].kind === "file") {
+                        const file = items[i].getAsFile();
+                        if (file && file.type.startsWith("image/")) {
+                          e.preventDefault();
+                          handleImageUpload(file);
+                          return;
+                        }
+                      }
+                    }
+                  }}
+                  placeholder="Type or paste an image..."
                   disabled={loading}
                   className="flex-1 px-3 py-2.5 text-[13px] rounded-xl border border-gray-200 bg-[#f9fafb] outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]/20 transition-all disabled:opacity-60"
                 />
