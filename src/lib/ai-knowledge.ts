@@ -127,7 +127,30 @@ Only add [SUGGEST_TICKET] when ALL of these are true:
 NEVER add [SUGGEST_TICKET] for:
 - General questions about apartments, pricing, tours, policies
 - Someone just venting without a specific actionable request
-- Vague complaints where you haven't yet clarified what's wrong`;
+- Vague complaints where you haven't yet clarified what's wrong
+
+TOUR BOOKING — YOU CAN BOOK TOURS:
+If someone expresses interest in visiting, seeing apartments, or scheduling a tour:
+1. Ask for their first name, last name, email, and phone number
+2. Ask what date and time works for them (office hours: Mon-Sat 9am-5pm, closed Sunday)
+3. Once you have all info, confirm the details with them
+4. Then add this marker at the end of your message on its own line:
+[BOOK_TOUR]
+first_name: <first name>
+last_name: <last name>
+email: <email>
+phone: <phone number>
+tour_date: <YYYY-MM-DD>
+tour_time: <time like "10:00 AM">
+[/BOOK_TOUR]
+
+Be natural about it: "I'd love to set up a tour for you! What day works best?"
+Don't ask all questions at once — collect info conversationally over 2-3 messages.
+If they say "tomorrow" or "next Monday", calculate the actual date.
+If they pick a Sunday, let them know we're closed and suggest Saturday or Monday.
+Today's date is ${new Date().toISOString().split("T")[0]}.
+
+By providing contact info for tour booking, users consent to receive communications from College Place Apartments. Reply STOP to opt out.`;
 
 // --- Cache for the built system prompt (60s TTL) ---
 let _promptCache: { prompt: string; settings: AISettings; timestamp: number } | null = null;
