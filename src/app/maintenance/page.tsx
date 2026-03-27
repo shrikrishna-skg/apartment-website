@@ -21,6 +21,7 @@ import { SITE } from "@/data/site-data";
 interface Message {
   role: "bot" | "user";
   text: string;
+  image?: string; // base64 data URL for inline display
 }
 
 const MAINTENANCE_SYSTEM_PROMPT = `You are the College Place Apartments Maintenance Assistant — a warm, empathetic, and professional AI that helps tenants submit maintenance requests.
@@ -137,6 +138,8 @@ export default function MaintenancePage() {
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [ticketSubmitted, setTicketSubmitted] = useState(false);
+  const [chatEnded, setChatEnded] = useState(false);
+  const [sendingTranscript, setSendingTranscript] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -169,28 +172,34 @@ export default function MaintenancePage() {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if ((!inputValue.trim() && pendingFiles.length === 0) || loading) return;
+    if ((!inputValue.trim() && pendingFiles.length === 0) || loading || chatEnded) return;
 
     let imageAnalysis = "";
     const filesToProcess = [...pendingFiles];
+    const userText = inputValue.trim();
+    setInputValue("");
 
-    // Handle pending files — analyze images with Gemini
+    // Show images inline in chat + analyze with Gemini
     if (filesToProcess.length > 0) {
       setChatFiles((prev) => [...prev, ...filesToProcess]);
-      const fileNames = filesToProcess.map((f) => f.name).join(", ");
-      setMessages((prev) => [
-        ...prev,
-        { role: "user", text: `📷 Sent ${filesToProcess.length} photo${filesToProcess.length > 1 ? "s" : ""}: ${fileNames}` },
-      ]);
       setPendingFiles([]);
       setPendingPreviews([]);
 
-      // Analyze ALL images with Gemini
+      // Show each image inline in chat
+      for (const file of filesToProcess) {
+        if (file.type.startsWith("image/")) {
+          const dataUrl = await fileToDataUrl(file);
+          setMessages((prev) => [...prev, { role: "user", text: "📷 Photo", image: dataUrl }]);
+        } else {
+          setMessages((prev) => [...prev, { role: "user", text: `📎 ${file.name}` }]);
+        }
+      }
+
+      // Analyze images with Gemini
       const imageFiles = filesToProcess.filter((f) => f.type.startsWith("image/"));
       if (imageFiles.length > 0) {
         setLoading(true);
-        const analyzingText = `🔍 Analyzing ${imageFiles.length} photo${imageFiles.length > 1 ? "s" : ""}...`;
-        setMessages((prev) => [...prev, { role: "bot", text: analyzingText }]);
+        setMessages((prev) => [...prev, { role: "bot", text: "🔍 Analyzing your photo..." }]);
         const analyses: string[] = [];
         for (const imageFile of imageFiles) {
           try {
@@ -201,7 +210,7 @@ export default function MaintenancePage() {
               body: JSON.stringify({
                 image: base64,
                 mimeType: imageFile.type,
-                message: inputValue.trim() || "Maintenance issue photo from tenant",
+                message: userText || "Maintenance issue photo from tenant",
               }),
             });
             const imgData = await imgRes.json();
@@ -209,35 +218,31 @@ export default function MaintenancePage() {
               analyses.push(imgData.reply.replace(/\[SUGGEST_TICKET\]/g, "").trim());
             }
           } catch {
-            // Skip failed analysis
+            // Skip failed
           }
         }
-        if (analyses.length > 0) {
-          imageAnalysis = analyses.join("\n\n");
-          const displayText = analyses.length === 1
-            ? `📸 **Photo Analysis:** ${analyses[0]}`
-            : analyses.map((a, i) => `📸 **Photo ${i + 1}:** ${a}`).join("\n\n");
-          // Replace "Analyzing..." with the actual analysis
-          setMessages((prev) => {
-            const updated = [...prev];
-            let analyzeIdx = -1;
-            for (let k = updated.length - 1; k >= 0; k--) { if (updated[k].text === analyzingText) { analyzeIdx = k; break; } }
-            if (analyzeIdx >= 0) {
-              updated[analyzeIdx] = { role: "bot", text: displayText };
+        // Replace analyzing message with result
+        setMessages((prev) => {
+          const updated = [...prev];
+          let idx = -1;
+          for (let k = updated.length - 1; k >= 0; k--) { if (updated[k].text === "🔍 Analyzing your photo...") { idx = k; break; } }
+          if (idx >= 0) {
+            if (analyses.length > 0) {
+              imageAnalysis = analyses.join("\n\n");
+              updated[idx] = { role: "bot", text: analyses.length === 1 ? `📸 **Photo Analysis:** ${analyses[0]}` : analyses.map((a, i) => `📸 **Photo ${i + 1}:** ${a}`).join("\n\n") };
+            } else {
+              updated.splice(idx, 1);
             }
-            return updated;
-          });
-        } else {
-          setMessages((prev) => prev.filter((m) => m.text !== analyzingText));
-        }
+          }
+          return updated;
+        });
       }
     }
 
-    const userText = inputValue.trim();
+    // Show user text
     if (userText) {
       setMessages((prev) => [...prev, { role: "user", text: userText }]);
     }
-    setInputValue("");
     setLoading(true);
 
     try {
@@ -390,6 +395,33 @@ export default function MaintenancePage() {
   const removePendingFile = (idx: number) => {
     setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
     setPendingPreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleEndChat = async () => {
+    setChatEnded(true);
+    setSendingTranscript(true);
+    setMessages((prev) => [...prev, { role: "bot", text: "Thank you for reaching out! I'm sending a copy of this conversation to our office team. Have a great day! 👋" }]);
+    try {
+      // Build transcript text
+      const transcript = messages
+        .filter((m) => !m.text.startsWith("🔍"))
+        .map((m) => `${m.role === "user" ? "Tenant" : "Assistant"}: ${m.text}`)
+        .join("\n\n");
+
+      await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Maintenance Chat Transcript",
+          email: "chat@collegeplace.us",
+          inquiry_type: "maintenance-transcript",
+          message: `--- MAINTENANCE CHAT TRANSCRIPT ---\nDate: ${new Date().toLocaleString()}\n${ticketSubmitted ? "(Maintenance ticket was submitted during this chat)" : "(No ticket was submitted)"}\n\n${transcript}`,
+        }),
+      });
+    } catch {
+      // Non-blocking
+    }
+    setSendingTranscript(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -550,6 +582,9 @@ export default function MaintenancePage() {
                                 : "bg-gray-50 border border-gray-200 text-gray-700 rounded-bl-sm"
                             }`}
                           >
+                            {msg.image && (
+                              <img src={msg.image} alt="Uploaded" className="w-full max-h-48 object-cover rounded-lg mb-2" />
+                            )}
                             {msg.role === "bot" ? renderMd(msg.text) : msg.text}
                           </div>
                         </div>
@@ -663,6 +698,24 @@ export default function MaintenancePage() {
                         <Send size={18} />
                       </button>
                     </div>
+                    {/* End Chat button - shows after ticket submitted or after several messages */}
+                    {(ticketSubmitted || messages.length >= 6) && !chatEnded && (
+                      <div className="flex justify-center mt-2">
+                        <button
+                          type="button"
+                          onClick={handleEndChat}
+                          disabled={sendingTranscript}
+                          className="text-xs text-gray-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer underline"
+                        >
+                          {sendingTranscript ? "Sending transcript..." : "End chat & send transcript to office"}
+                        </button>
+                      </div>
+                    )}
+                    {chatEnded && (
+                      <div className="flex justify-center mt-2">
+                        <p className="text-xs text-green-600">✅ Chat ended. Transcript sent to office.</p>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ) : (
@@ -952,6 +1005,16 @@ export default function MaintenancePage() {
 }
 
 /* Simple markdown renderer for bot messages */
+/* Convert file to data URL for inline display */
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 /* Convert file to base64 for Gemini analysis */
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
