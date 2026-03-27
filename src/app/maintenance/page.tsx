@@ -23,13 +23,43 @@ interface Message {
   text: string;
 }
 
-const botResponses = [
-  "Thanks! Now, can you describe the issue you're experiencing?",
-  "Got it. How urgent is this issue? (Low, Medium, High, or Emergency)",
-  "Thank you! Your maintenance request has been submitted successfully. Our team will reach out within 24 hours. If this is an emergency, please call us directly at " +
-    SITE.phone +
-    ".",
-];
+const MAINTENANCE_SYSTEM_PROMPT = `You are the College Place Apartments Maintenance Assistant. Your ONLY job is to help tenants report and submit maintenance issues.
+
+CONVERSATION FLOW:
+1. Greet warmly and ask for their apartment number (if not given)
+2. Ask them to describe the issue clearly
+3. Based on their description, determine:
+   - Category: plumbing, electrical, hvac, appliance, pest_control, structural, other
+   - Urgency: low (can wait days), medium (this week), high (today), emergency (immediate danger)
+4. Show empathy for their situation
+5. Confirm the details and let them know you're submitting the request
+6. After submission, provide the confirmation
+
+SENTIMENT DETECTION:
+- If frustrated/angry → "I completely understand how frustrating that must be. Let me get this taken care of right away."
+- If worried/anxious → "Don't worry, we'll get this resolved. Let me make sure our team sees this."
+- If it's an emergency (water flooding, gas leak, fire, no heat, electrical sparks, sewage) → "⚠️ This sounds like an emergency! Please also call us directly at (615) 200-0620 right away."
+
+INTELLIGENCE:
+- Read between the lines. "Water everywhere" = plumbing emergency. "Weird smell from outlet" = electrical high priority.
+- Auto-detect urgency from context — don't always ask, infer when obvious.
+- Be conversational and human, not robotic.
+- Keep responses short (2-3 sentences max).
+
+WHEN READY TO SUBMIT (you have apartment + description + can infer category & urgency):
+End your message with this exact marker on its own line:
+[SUBMIT_MAINTENANCE]
+apartment: <unit number>
+category: <category>
+urgency: <low|medium|high|emergency>
+description: <clear summary of the issue>
+[/SUBMIT_MAINTENANCE]
+
+NEVER guess apartment numbers. Always ask if not provided.
+NEVER submit without a clear description of the issue.
+If someone asks non-maintenance questions (pricing, tours, applications), politely redirect: "I'm your maintenance assistant — for questions about pricing or tours, please use our main chat or visit collegeplace.us. How can I help with a maintenance issue?"
+
+Contact: (615) 200-0620 | office@collegeplace.us | Mon-Sat 9am-5pm`;
 
 const issueCategories = [
   "Plumbing",
@@ -65,11 +95,12 @@ export default function MaintenancePage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "bot",
-      text: "Hi! I'll help you submit a maintenance request. What's your apartment number?",
+      text: "👋 Hi there! I'm the College Place maintenance assistant. Tell me your apartment number and what's going on — I'm here to help!",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [botResponseIndex, setBotResponseIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [ticketSubmitted, setTicketSubmitted] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -87,8 +118,6 @@ export default function MaintenancePage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Chat state for collecting maintenance info
-  const [chatData, setChatData] = useState({ apartment: "", description: "", urgency: "" });
   const [chatFiles, setChatFiles] = useState<File[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
@@ -103,95 +132,110 @@ export default function MaintenancePage() {
     }, 50);
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim() && pendingFiles.length === 0) return;
+  const handleSendMessage = async () => {
+    if ((!inputValue.trim() && pendingFiles.length === 0) || loading) return;
 
-    // Add pending files to chat files and show in messages
+    // Handle pending files
     if (pendingFiles.length > 0) {
       setChatFiles((prev) => [...prev, ...pendingFiles]);
       const fileNames = pendingFiles.map((f) => f.name).join(", ");
       setMessages((prev) => [
         ...prev,
-        { role: "user", text: `📎 ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}: ${fileNames}` },
+        { role: "user", text: `📎 ${pendingFiles.length} photo${pendingFiles.length > 1 ? "s" : ""}: ${fileNames}` },
       ]);
       setPendingFiles([]);
       setPendingPreviews([]);
-      if (!inputValue.trim()) {
-        setTimeout(() => {
-          setMessages((prev) => [
-            ...prev,
-            { role: "bot", text: `Got it! I've received your file${pendingFiles.length > 1 ? "s" : ""}. ${botResponseIndex === 0 ? "What's your apartment number?" : "Please continue describing the issue."}` },
-          ]);
-        }, 500);
-        return;
-      }
     }
 
-    if (!inputValue.trim()) return;
-
-    const userMessage: Message = { role: "user", text: inputValue.trim() };
-    setMessages((prev) => [...prev, userMessage]);
-
-    // Collect data from chat responses
-    const updatedChatData = { ...chatData };
-    if (botResponseIndex === 0) updatedChatData.apartment = inputValue.trim();
-    if (botResponseIndex === 1) updatedChatData.description = inputValue.trim();
-    if (botResponseIndex === 2) updatedChatData.urgency = inputValue.trim().toLowerCase();
-    setChatData(updatedChatData);
-
+    const userText = inputValue.trim();
+    if (userText) {
+      setMessages((prev) => [...prev, { role: "user", text: userText }]);
+    }
     setInputValue("");
+    setLoading(true);
 
-    if (botResponseIndex < botResponses.length) {
-      const responseText = botResponses[botResponseIndex];
-      setTimeout(() => {
-        setMessages((prev) => [...prev, { role: "bot", text: responseText }]);
-      }, 1000);
+    try {
+      // Build conversation history for AI
+      const allMessages = [
+        ...messages.filter((m) => m.text),
+        ...(userText ? [{ role: "user" as const, text: userText }] : []),
+      ];
 
-      // On the last bot response (urgency collected), submit to API
-      if (botResponseIndex === 2) {
-        const urgencyMap: Record<string, string> = {
-          low: "low", medium: "medium", high: "high", emergency: "emergency",
-        };
-        const urgencyValue = urgencyMap[updatedChatData.urgency] || "medium";
-        fetch("/api/maintenance", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            apartment: updatedChatData.apartment,
-            full_name: "Chat User",
-            email: "chat@collegeplace.us",
-            description: updatedChatData.description +
-              (chatFiles.length > 0 ? `\n\n[${chatFiles.length} photo(s) attached]` : ""),
-            urgency: urgencyValue,
-          }),
-        })
-          .then((res) => res.json())
-          .then(async (data) => {
-            if (chatFiles.length > 0 && data.id) {
-              for (const file of chatFiles) {
-                const fileForm = new FormData();
-                fileForm.append("file", file);
-                fileForm.append("application_id", data.id);
-                fileForm.append("document_label", "Maintenance Photo");
-                await fetch("/api/documents/upload", { method: "POST", body: fileForm }).catch(() => {});
-              }
+      const aiMessages = allMessages.map((m) => ({
+        role: m.role === "bot" ? "assistant" : "user",
+        content: m.text,
+      }));
+
+      // Call the chat API with maintenance system prompt
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: aiMessages,
+          systemPromptOverride: MAINTENANCE_SYSTEM_PROMPT,
+        }),
+      });
+
+      const data = await res.json();
+      let reply = data.reply || "I'm sorry, I couldn't process that. Please try again.";
+
+      // Check if AI wants to submit a maintenance ticket
+      const submitMatch = reply.match(/\[SUBMIT_MAINTENANCE\]([\s\S]*?)\[\/SUBMIT_MAINTENANCE\]/);
+      if (submitMatch && !ticketSubmitted) {
+        const details = submitMatch[1];
+        const apartment = details.match(/apartment:\s*(.+)/i)?.[1]?.trim() || "";
+        const category = details.match(/category:\s*(.+)/i)?.[1]?.trim() || "other";
+        const urgency = details.match(/urgency:\s*(.+)/i)?.[1]?.trim() || "medium";
+        const description = details.match(/description:\s*(.+)/i)?.[1]?.trim() || "";
+
+        // Remove the marker from the display reply
+        reply = reply.replace(/\[SUBMIT_MAINTENANCE\][\s\S]*?\[\/SUBMIT_MAINTENANCE\]/, "").trim();
+
+        // Submit to maintenance API
+        try {
+          const maintRes = await fetch("/api/maintenance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              apartment,
+              full_name: "Chat User",
+              email: "chat@collegeplace.us",
+              category,
+              description: description + (chatFiles.length > 0 ? `\n\n[${chatFiles.length} photo(s) attached]` : ""),
+              urgency,
+            }),
+          });
+          const maintData = await maintRes.json();
+
+          // Upload attached files
+          if (chatFiles.length > 0 && maintData.id) {
+            for (const file of chatFiles) {
+              const fileForm = new FormData();
+              fileForm.append("file", file);
+              fileForm.append("application_id", maintData.id);
+              fileForm.append("document_label", "Maintenance Photo");
+              await fetch("/api/documents/upload", { method: "POST", body: fileForm }).catch(() => {});
             }
-          })
-          .catch(() => {});
+          }
+
+          setTicketSubmitted(true);
+          reply += `\n\n✅ **Maintenance request submitted!** Our team will review this and reach out within 24 hours.`;
+          if (urgency === "emergency") {
+            reply += `\n\n⚠️ Since this is an emergency, please also call **(615) 200-0620** right away.`;
+          }
+        } catch {
+          reply += "\n\n(There was an issue submitting automatically. Please call (615) 200-0620 to report this.)";
+        }
       }
 
-      setBotResponseIndex((prev) => prev + 1);
-    } else {
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "bot",
-            text: "Your request is already submitted. For additional help, please call us at " + SITE.phone + ".",
-          },
-        ]);
-      }, 1000);
+      setMessages((prev) => [...prev, { role: "bot", text: reply }]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Sorry, I'm having trouble connecting. Please try again or call us at (615) 200-0620." },
+      ]);
     }
+    setLoading(false);
   };
 
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,7 +264,7 @@ export default function MaintenancePage() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey && !loading) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -377,11 +421,27 @@ export default function MaintenancePage() {
                                 : "bg-gray-50 border border-gray-200 text-gray-700 rounded-bl-sm"
                             }`}
                           >
-                            {msg.text}
+                            {msg.role === "bot" ? renderMd(msg.text) : msg.text}
                           </div>
                         </div>
                       </div>
                     ))}
+                    {loading && (
+                      <div className="flex justify-start">
+                        <div className="flex items-end gap-2">
+                          <div className="w-7 h-7 rounded-full bg-[#1a73e8] flex items-center justify-center flex-shrink-0">
+                            <Bot size={14} className="text-white" />
+                          </div>
+                          <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-gray-50 border border-gray-200">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div ref={chatEndRef} />
                   </div>
 
@@ -764,4 +824,25 @@ export default function MaintenancePage() {
       </main>
     </>
   );
+}
+
+/* Simple markdown renderer for bot messages */
+function renderMd(text: string) {
+  // Split by newlines, handle bold (**text**), and basic formatting
+  return text.split("\n").map((line, i) => {
+    if (!line.trim()) return <br key={i} />;
+    // Replace **bold** with <strong>
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    return (
+      <span key={i}>
+        {i > 0 && <br />}
+        {parts.map((part, j) => {
+          if (part.startsWith("**") && part.endsWith("**")) {
+            return <strong key={j}>{part.slice(2, -2)}</strong>;
+          }
+          return <span key={j}>{part}</span>;
+        })}
+      </span>
+    );
+  });
 }

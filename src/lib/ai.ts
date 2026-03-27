@@ -10,16 +10,18 @@ function getGroq() {
 
 export async function chatWithGroq(
   messages: { role: "user" | "assistant"; content: string }[],
-  sessionId?: string
+  sessionId?: string,
+  systemPromptOverride?: string
 ) {
   // Get the dynamic system prompt and AI settings from the knowledge base
   const { prompt, settings } = await getSystemPrompt();
+  const finalPrompt = systemPromptOverride || prompt;
 
   const response = await getGroq().chat.completions.create({
     model: settings.model_name,
-    messages: [{ role: "system", content: prompt }, ...messages],
-    temperature: settings.temperature,
-    max_tokens: settings.max_tokens,
+    messages: [{ role: "system", content: finalPrompt }, ...messages],
+    temperature: systemPromptOverride ? 0.4 : settings.temperature,
+    max_tokens: systemPromptOverride ? 500 : settings.max_tokens,
   });
 
   const reply =

@@ -3,13 +3,13 @@ import { chatWithGroq, extractTicketDetails } from "@/lib/ai";
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, sessionId } = await req.json();
+    const { messages, sessionId, systemPromptOverride } = await req.json();
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: "Messages required" }, { status: 400 });
     }
 
-    const reply = await chatWithGroq(messages, sessionId);
+    const reply = await chatWithGroq(messages, sessionId, systemPromptOverride);
 
     // Check if AI suggests creating a ticket (contains [SUGGEST_TICKET] marker)
     const suggestTicket = reply.includes("[SUGGEST_TICKET]");
