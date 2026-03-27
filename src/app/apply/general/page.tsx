@@ -8,11 +8,14 @@ import {
   ArrowRight,
   Check,
   User,
+  MapPin,
   Briefcase,
   ClipboardCheck,
   Upload,
   FileText,
   X,
+  Car,
+  ShieldCheck,
 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 
@@ -373,7 +376,8 @@ export default function GeneralApplicationPage() {
           pet_type: formData.petType || null,
           pet_weight: formData.petWeight || null,
           pet_age: formData.petAge || null,
-          is_esa: formData.isESA === "Yes",
+          pet_category: formData.isESA || null,
+          is_esa: formData.isESA === "Emotional Support Animal" || formData.isESA === "Service Animal",
           vehicle1_make: formData.vehicle1Make || null,
           vehicle1_year: formData.vehicle1Year || null,
           vehicle1_color: formData.vehicle1Color || null,
@@ -559,7 +563,7 @@ export default function GeneralApplicationPage() {
                     }}
                   >
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 cursor-pointer ${
+                      className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-500 cursor-pointer ${
                         isCompleted && visitedSteps.has(stepNum)
                           ? "bg-green-600 text-white group-hover:bg-green-700"
                           : isActive
@@ -568,13 +572,13 @@ export default function GeneralApplicationPage() {
                       }`}
                     >
                       {isCompleted && visitedSteps.has(stepNum) ? (
-                        <Check size={18} />
+                        <Check size={16} />
                       ) : (
-                        <StepIcon size={18} />
+                        <StepIcon size={16} />
                       )}
                     </div>
                     <span
-                      className={`text-[10px] mt-1.5 font-medium hidden sm:block max-w-[70px] text-center leading-tight ${
+                      className={`text-[9px] mt-1 font-medium hidden sm:block max-w-[56px] text-center leading-tight ${
                         isActive
                           ? "text-blue-600"
                           : isCompleted && visitedSteps.has(stepNum)
@@ -587,7 +591,7 @@ export default function GeneralApplicationPage() {
                   </button>
                   {index < STEPS.length - 1 && (
                     <div
-                      className={`w-4 sm:w-8 h-0.5 mx-0.5 sm:mx-1 transition-colors duration-500 ${
+                      className={`w-3 sm:w-6 h-0.5 mx-0.5 transition-colors duration-500 ${
                         stepNum < currentStep && visitedSteps.has(stepNum)
                           ? "bg-green-600"
                           : "bg-gray-100"
@@ -631,9 +635,10 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
-                    Personal Information Section
-                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <User size={20} className="text-blue-600" />
+                    Personal Information
+                  </h2>
 
                   <div className="space-y-5">
                     {renderInput("Applicant's Name", "fullName", "text", "First and Last Name", true)}
@@ -723,9 +728,10 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
-                    Residence Section
-                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <MapPin size={20} className="text-blue-600" />
+                    Residence
+                  </h2>
 
                   <div className="space-y-5">
                     {renderInput("Current Address (Include No, Street, City, State, Zip Code)", "currentAddress", "text", "Street address, City, State, Zip", true)}
@@ -793,9 +799,10 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <Briefcase size={20} className="text-blue-600" />
                     Employment
-                  </div>
+                  </h2>
 
                   <div className="space-y-5">
                     {renderInput("Applicant's Employer", "employerName", "text", "Company name", true)}
@@ -830,9 +837,10 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <FileText size={20} className="text-blue-600" />
                     General Information
-                  </div>
+                  </h2>
 
                   <div className="space-y-5">
                     {renderRadioGroup("Did you complete the residence history?", "completedResidenceHistory", [
@@ -852,33 +860,44 @@ export default function GeneralApplicationPage() {
                           {renderInput("Pet Weight", "petWeight", "text", "e.g., 25 lbs")}
                           {renderInput("Pet Age", "petAge", "text", "e.g., 3 years")}
 
-                          {renderRadioGroup("Is this an Emotional Support Animal (ESA)?", "isESA", [
-                            "Yes",
-                            "No",
+                          {renderRadioGroup("Pet Category", "isESA", [
+                            "Regular",
+                            "Emotional Support Animal",
+                            "Service Animal",
                           ])}
 
-                          {formData.isESA === "Yes" && (
+                          {(formData.isESA === "Emotional Support Animal" || formData.isESA === "Service Animal") && (
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                              <p className="text-sm font-medium text-gray-700 mb-1">ESA Verification Document</p>
-                              <p className="text-xs text-gray-500 mb-3">
-                                Upload ESA registration, doctor&apos;s note, certification, or any official proof.
+                              <p className="text-sm font-medium text-gray-700 mb-1">
+                                {formData.isESA} Verification Document
                               </p>
+                              <p className="text-xs text-gray-500 mb-3">
+                                Upload registration, doctor&apos;s note, certification, or any official proof.
+                              </p>
+                              {(documentFiles["esaDoc"] || []).length > 0 && (
+                                <div className="mb-3 space-y-1.5">
+                                  {documentFiles["esaDoc"].map((doc, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 text-sm text-gray-700 bg-white rounded px-3 py-1.5">
+                                      <FileText size={14} className="text-blue-500" />
+                                      <span className="truncate flex-1">{doc.file.name}</span>
+                                      <button type="button" onClick={() => removeDocFile("esaDoc", idx)} className="text-red-400 hover:text-red-600">
+                                        <X size={14} />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                               <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors bg-white">
                                 <Upload size={20} className="text-gray-400 mb-1" />
-                                <span className="text-sm text-gray-500">Add file</span>
+                                <span className="text-sm text-gray-500">
+                                  {(documentFiles["esaDoc"] || []).length > 0 ? "Add more files" : "Upload document"}
+                                </span>
                                 <input
                                   type="file"
                                   className="hidden"
+                                  multiple
                                   accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      setDocumentFiles((prev) => ({
-                                        ...prev,
-                                        additional: [...(prev.additional || []), { file, category: "additional" }],
-                                      }));
-                                    }
-                                  }}
+                                  onChange={(e) => handleDocFileAdd("esaDoc", e, true)}
                                 />
                               </label>
                             </div>
@@ -900,9 +919,10 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <Car size={20} className="text-blue-600" />
                     Vehicle Information
-                  </div>
+                  </h2>
 
                   <div className="space-y-5">
                     {renderInput("Vehicle 1 Make (e.g. Honda, Toyota, BMW)", "vehicle1Make", "text", "Your answer")}
@@ -939,9 +959,10 @@ export default function GeneralApplicationPage() {
                   exit="exit"
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <ShieldCheck size={20} className="text-blue-600" />
                     Background Check Questions
-                  </div>
+                  </h2>
 
                   <div className="space-y-5">
                     {renderRadioGroup("Has applicant, spouse or any proposed resident ever filed for Bankruptcy?", "filedBankruptcy", [
@@ -1221,7 +1242,7 @@ export default function GeneralApplicationPage() {
                           <SummaryRow label="Pet Type" value={formData.petType || "Not provided"} />
                           <SummaryRow label="Pet Weight" value={formData.petWeight || "Not provided"} />
                           <SummaryRow label="Pet Age" value={formData.petAge || "Not provided"} />
-                          <SummaryRow label="ESA" value={formData.isESA || "No"} />
+                          <SummaryRow label="Pet Category" value={formData.isESA || "N/A"} />
                         </>
                       )}
                     </div>
