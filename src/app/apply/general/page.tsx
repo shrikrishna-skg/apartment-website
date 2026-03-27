@@ -20,7 +20,9 @@ const STEPS = [
   { label: "Residence", icon: Briefcase },
   { label: "Employment", icon: Briefcase },
   { label: "General Info", icon: ClipboardCheck },
-  { label: "Review & Submit", icon: ClipboardCheck },
+  { label: "Vehicle", icon: ClipboardCheck },
+  { label: "Background", icon: ClipboardCheck },
+  { label: "Review", icon: ClipboardCheck },
 ];
 
 interface FormData {
@@ -62,7 +64,22 @@ interface FormData {
   petWeight: string;
   petAge: string;
   isESA: string;
-  // Step 5
+  // Step 5 - Vehicle Information
+  vehicle1Make: string;
+  vehicle1Year: string;
+  vehicle1Color: string;
+  vehicle1Plate: string;
+  hasSecondVehicle: string;
+  vehicle2Make: string;
+  vehicle2Year: string;
+  vehicle2Color: string;
+  vehicle2Plate: string;
+  // Step 6 - Background Check
+  filedBankruptcy: string;
+  evictedFromTenancy: string;
+  convictedFelony: string;
+  arrestedOrConvicted: string;
+  // Step 7
   consent: boolean;
 }
 
@@ -101,6 +118,19 @@ const initialFormData: FormData = {
   petWeight: "",
   petAge: "",
   isESA: "",
+  vehicle1Make: "",
+  vehicle1Year: "",
+  vehicle1Color: "",
+  vehicle1Plate: "",
+  hasSecondVehicle: "",
+  vehicle2Make: "",
+  vehicle2Year: "",
+  vehicle2Color: "",
+  vehicle2Plate: "",
+  filedBankruptcy: "",
+  evictedFromTenancy: "",
+  convictedFelony: "",
+  arrestedOrConvicted: "",
   consent: false,
 };
 
@@ -165,6 +195,17 @@ export default function GeneralApplicationPage() {
     }
 
     if (currentStep === 5) {
+      if (!formData.hasSecondVehicle) newErrors.push("Please answer the 2nd vehicle question");
+    }
+
+    if (currentStep === 6) {
+      if (!formData.filedBankruptcy) newErrors.push("Bankruptcy question is required");
+      if (!formData.evictedFromTenancy) newErrors.push("Eviction question is required");
+      if (!formData.convictedFelony) newErrors.push("Felony conviction question is required");
+      if (!formData.arrestedOrConvicted) newErrors.push("Arrest/conviction question is required");
+    }
+
+    if (currentStep === 7) {
       if (!formData.consent) newErrors.push("You must agree to the certification");
     }
 
@@ -256,6 +297,19 @@ export default function GeneralApplicationPage() {
           pet_weight: formData.petWeight || null,
           pet_age: formData.petAge || null,
           is_esa: formData.isESA === "Yes",
+          vehicle1_make: formData.vehicle1Make || null,
+          vehicle1_year: formData.vehicle1Year || null,
+          vehicle1_color: formData.vehicle1Color || null,
+          vehicle1_plate: formData.vehicle1Plate || null,
+          has_second_vehicle: formData.hasSecondVehicle === "Yes",
+          vehicle2_make: formData.vehicle2Make || null,
+          vehicle2_year: formData.vehicle2Year || null,
+          vehicle2_color: formData.vehicle2Color || null,
+          vehicle2_plate: formData.vehicle2Plate || null,
+          filed_bankruptcy: formData.filedBankruptcy === "Yes",
+          evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
+          convicted_felony: formData.convictedFelony === "Yes",
+          arrested_or_convicted: formData.arrestedOrConvicted === "Yes",
           consent: formData.consent,
         }),
       });
@@ -689,10 +743,87 @@ export default function GeneralApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 5 - Review & Submit */}
+              {/* Step 5 - Vehicle Information */}
               {currentStep === 5 && (
                 <motion.div
                   key="step5"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Vehicle Information
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderInput("Vehicle 1 Make (e.g. Honda, Toyota, BMW)", "vehicle1Make", "text", "Your answer")}
+                    {renderInput("Vehicle 1 Year", "vehicle1Year", "text", "Your answer")}
+                    {renderInput("Vehicle 1 Color", "vehicle1Color", "text", "Your answer")}
+                    {renderInput("Vehicle 1 License Plate Number", "vehicle1Plate", "text", "Your answer")}
+
+                    {renderRadioGroup("Do you have a 2nd vehicle?", "hasSecondVehicle", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {formData.hasSecondVehicle === "Yes" && (
+                      <div className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2 mt-3">
+                        <div className="pl-4 space-y-5">
+                          {renderInput("Vehicle 2 Make", "vehicle2Make", "text", "Your answer")}
+                          {renderInput("Vehicle 2 Year", "vehicle2Year", "text", "Your answer")}
+                          {renderInput("Vehicle 2 Color", "vehicle2Color", "text", "Your answer")}
+                          {renderInput("Vehicle 2 License Plate Number", "vehicle2Plate", "text", "Your answer")}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 6 - Background Check Questions */}
+              {currentStep === 6 && (
+                <motion.div
+                  key="step6"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className="bg-blue-600 text-white rounded-lg px-5 py-3 mb-6 font-semibold text-base">
+                    Background Check Questions
+                  </div>
+
+                  <div className="space-y-5">
+                    {renderRadioGroup("Has applicant, spouse or any proposed resident ever filed for Bankruptcy?", "filedBankruptcy", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Been Evicted from Tenancy?", "evictedFromTenancy", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Been convicted of a felony?", "convictedFelony", [
+                      "Yes",
+                      "No",
+                    ])}
+
+                    {renderRadioGroup("Have you ever been arrested or convicted of a felony/misdemeanor?", "arrestedOrConvicted", [
+                      "Yes",
+                      "No",
+                    ])}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 7 - Review & Submit */}
+              {currentStep === 7 && (
+                <motion.div
+                  key="step7"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -781,6 +912,40 @@ export default function GeneralApplicationPage() {
                           <SummaryRow label="ESA" value={formData.isESA || "No"} />
                         </>
                       )}
+                    </div>
+                  </div>
+
+                  {/* Vehicle Summary */}
+                  <div className="glass-subtle p-5 mb-4">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      Vehicle Information
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                      <SummaryRow label="Vehicle 1 Make" value={formData.vehicle1Make || "None"} />
+                      <SummaryRow label="Year" value={formData.vehicle1Year || "N/A"} />
+                      <SummaryRow label="Color" value={formData.vehicle1Color || "N/A"} />
+                      <SummaryRow label="Plate" value={formData.vehicle1Plate || "N/A"} />
+                      {formData.hasSecondVehicle === "Yes" && (
+                        <>
+                          <SummaryRow label="Vehicle 2 Make" value={formData.vehicle2Make || "N/A"} />
+                          <SummaryRow label="Year" value={formData.vehicle2Year || "N/A"} />
+                          <SummaryRow label="Color" value={formData.vehicle2Color || "N/A"} />
+                          <SummaryRow label="Plate" value={formData.vehicle2Plate || "N/A"} />
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Background Check Summary */}
+                  <div className="glass-subtle p-5 mb-4">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      Background Check
+                    </h3>
+                    <div className="grid grid-cols-1 gap-y-2 text-sm">
+                      <SummaryRow label="Filed for Bankruptcy" value={formData.filedBankruptcy} />
+                      <SummaryRow label="Evicted from Tenancy" value={formData.evictedFromTenancy} />
+                      <SummaryRow label="Convicted of Felony" value={formData.convictedFelony} />
+                      <SummaryRow label="Arrested/Convicted" value={formData.arrestedOrConvicted} />
                     </div>
                   </div>
 
