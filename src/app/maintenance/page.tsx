@@ -89,6 +89,8 @@ export default function MaintenancePage() {
   // Chat state for collecting maintenance info
   const [chatData, setChatData] = useState({ apartment: "", description: "", urgency: "" });
   const [chatFiles, setChatFiles] = useState<File[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -97,6 +99,29 @@ export default function MaintenancePage() {
   }, [messages]);
 
   const handleSendMessage = () => {
+    if (!inputValue.trim() && pendingFiles.length === 0) return;
+
+    // Add pending files to chat files and show in messages
+    if (pendingFiles.length > 0) {
+      setChatFiles((prev) => [...prev, ...pendingFiles]);
+      const fileNames = pendingFiles.map((f) => f.name).join(", ");
+      setMessages((prev) => [
+        ...prev,
+        { role: "user", text: `📎 ${pendingFiles.length} file${pendingFiles.length > 1 ? "s" : ""}: ${fileNames}` },
+      ]);
+      setPendingFiles([]);
+      setPendingPreviews([]);
+      if (!inputValue.trim()) {
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            { role: "bot", text: `Got it! I've received your file${pendingFiles.length > 1 ? "s" : ""}. ${botResponseIndex === 0 ? "What's your apartment number?" : "Please continue describing the issue."}` },
+          ]);
+        }, 500);
+        return;
+      }
+    }
+
     if (!inputValue.trim()) return;
 
     const userMessage: Message = { role: "user", text: inputValue.trim() };
@@ -168,21 +193,25 @@ export default function MaintenancePage() {
     const files = e.target.files;
     if (!files) return;
     const newFiles = Array.from(files);
-    setChatFiles((prev) => [...prev, ...newFiles]);
-    setMessages((prev) => [
-      ...prev,
-      ...newFiles.map((f) => ({
-        role: "user" as const,
-        text: `📎 Attached: ${f.name} (${(f.size / 1024).toFixed(0)} KB)`,
-      })),
-    ]);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { role: "bot", text: `Got it! I've received ${newFiles.length} file${newFiles.length > 1 ? "s" : ""}. ${botResponseIndex === 0 ? "Now, what's your apartment number?" : "Please continue describing the issue."}` },
-      ]);
-    }, 500);
+    setPendingFiles((prev) => [...prev, ...newFiles]);
+    // Create preview URLs for images
+    newFiles.forEach((file) => {
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setPendingPreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPendingPreviews((prev) => [...prev, ""]);
+      }
+    });
     e.target.value = "";
+  };
+
+  const removePendingFile = (idx: number) => {
+    setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
+    setPendingPreviews((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -291,8 +320,7 @@ export default function MaintenancePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="glass flex flex-col"
-                  style={{ height: "600px" }}
+                  className="glass flex flex-col h-[calc(100vh-320px)] min-h-[400px] max-h-[700px] sm:min-h-[500px]"
                 >
                   {/* Chat Header */}
                   <div className="p-4 border-b border-gray-100 flex items-center gap-3">
@@ -352,26 +380,43 @@ export default function MaintenancePage() {
                   </div>
 
                   {/* Chat Input */}
-                  <div className="p-4 border-t border-gray-100">
-                    {/* Attached files preview */}
-                    {chatFiles.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {chatFiles.map((file, idx) => (
-                          <div key={idx} className="flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs px-2.5 py-1.5 rounded-full">
-                            <Paperclip size={12} />
-                            <span className="max-w-[100px] truncate">{file.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => setChatFiles((prev) => prev.filter((_, i) => i !== idx))}
-                              className="ml-0.5 text-blue-400 hover:text-red-500 font-bold"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        ))}
+                  <div className="border-t border-gray-100 shrink-0">
+                    {/* Pending file previews - shown above input before sending */}
+                    {pendingFiles.length > 0 && (
+                      <div className="px-4 pt-3 pb-1">
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                          {pendingFiles.map((file, idx) => (
+                            <div key={idx} className="relative shrink-0">
+                              {pendingPreviews[idx] ? (
+                                <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-blue-200 bg-gray-50">
+                                  <img
+                                    src={pendingPreviews[idx]}
+                                    alt={file.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-16 h-16 rounded-lg border-2 border-blue-200 bg-blue-50 flex flex-col items-center justify-center">
+                                  <Paperclip size={14} className="text-blue-500" />
+                                  <span className="text-[8px] text-blue-600 mt-0.5 max-w-[50px] truncate">{file.name}</span>
+                                </div>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removePendingFile(idx)}
+                                className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600 shadow-sm"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-[10px] text-gray-400 mt-1">
+                          {pendingFiles.length} file{pendingFiles.length > 1 ? "s" : ""} ready — press Send or Enter to attach
+                        </p>
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-4 py-3">
                       {/* Hidden file inputs */}
                       <input
                         ref={fileInputRef}
@@ -411,12 +456,12 @@ export default function MaintenancePage() {
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="Type your message..."
-                        className="input-glass flex-1"
+                        className="flex-1 px-3 py-2.5 text-sm rounded-xl border border-gray-200 bg-[#f9fafb] outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]/20 transition-all"
                       />
                       <button
                         onClick={handleSendMessage}
-                        disabled={!inputValue.trim()}
-                        className="w-10 h-10 rounded-full bg-[#1a73e8] flex items-center justify-center text-white hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!inputValue.trim() && pendingFiles.length === 0}
+                        className="w-10 h-10 shrink-0 rounded-full bg-[#1a73e8] flex items-center justify-center text-white hover:shadow-lg hover:shadow-blue-200 transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Send size={18} />
                       </button>
