@@ -180,16 +180,25 @@ export default function MaintenancePage() {
     setInputValue("");
 
     // Show images inline in chat + analyze with Gemini
+    const savedPreviews = [...pendingPreviews];
     if (filesToProcess.length > 0) {
       setChatFiles((prev) => [...prev, ...filesToProcess]);
       setPendingFiles([]);
       setPendingPreviews([]);
 
-      // Show each image inline in chat
-      for (const file of filesToProcess) {
-        if (file.type.startsWith("image/")) {
-          const dataUrl = await fileToDataUrl(file);
-          setMessages((prev) => [...prev, { role: "user", text: "📷 Photo", image: dataUrl }]);
+      // Show each image inline in chat using saved previews
+      for (let fi = 0; fi < filesToProcess.length; fi++) {
+        const file = filesToProcess[fi];
+        if (file.type.startsWith("image/") && savedPreviews[fi]) {
+          setMessages((prev) => [...prev, { role: "user", text: "📷 Photo", image: savedPreviews[fi] }]);
+        } else if (file.type.startsWith("image/")) {
+          // Fallback: read file again
+          try {
+            const dataUrl = await fileToDataUrl(file);
+            setMessages((prev) => [...prev, { role: "user", text: "📷 Photo", image: dataUrl }]);
+          } catch {
+            setMessages((prev) => [...prev, { role: "user", text: `📷 ${file.name}` }]);
+          }
         } else {
           setMessages((prev) => [...prev, { role: "user", text: `📎 ${file.name}` }]);
         }

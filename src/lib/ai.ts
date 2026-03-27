@@ -92,7 +92,19 @@ IMPORTANT: If this is clearly a maintenance issue that needs staff attention, en
   );
 
   const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't analyze that image clearly. Could you try sending it again, or describe what you're seeing?";
+
+  if (data.error) {
+    console.error("[Gemini] API error:", data.error.message);
+    return `I had trouble analyzing that image (${data.error.message}). Could you describe what you're seeing?`;
+  }
+
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    console.error("[Gemini] No text in response:", JSON.stringify(data).slice(0, 500));
+    return "I couldn't analyze that image clearly. Could you try sending it again, or describe what you're seeing?";
+  }
+
+  return text;
 }
 
 // Extract structured info from conversation for ticket details

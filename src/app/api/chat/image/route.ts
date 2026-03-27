@@ -9,9 +9,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Image required" }, { status: 400 });
     }
 
+    // Ensure we have clean base64 (strip data URL prefix if present)
+    let cleanBase64 = image;
+    if (cleanBase64.startsWith("data:")) {
+      cleanBase64 = cleanBase64.split(",")[1] || cleanBase64;
+    }
+    const effectiveMime = mimeType || "image/jpeg";
+
+    console.log(`[Image API] Received image: mime=${effectiveMime}, base64Length=${cleanBase64.length}`);
+
     const reply = await analyzeImageWithGemini(
-      image,
-      mimeType || "image/jpeg",
+      cleanBase64,
+      effectiveMime,
       message || ""
     );
 
