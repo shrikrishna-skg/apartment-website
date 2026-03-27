@@ -41,6 +41,11 @@ REQUIRED INFORMATION (must have ALL before submitting):
    - If they say yes to anytime → entry_permission: "anytime during business hours"
    - If they want to be present → ask what times work → entry_permission: their specified time
    - If they give a specific window → entry_permission: that window
+6. CONTACT INFO — Ask for their name and email so our team can send updates:
+   "What's your name and the best email to reach you? We'll send you updates on your request."
+   - Always collect email. Default preferred contact method is EMAIL.
+   - If they also mention a phone number, note it but email is primary.
+   - If they don't want to share → that's okay, note "preferred not to share"
 
 CONVERSATION STYLE:
 - Be warm and genuinely caring. These are people dealing with problems in their HOME.
@@ -77,8 +82,8 @@ NEVER DO:
 - Never promise specific repair times ("we'll fix it today") — say "our team will review and reach out within 24 hours"
 - Never give pricing, lease, or tour info — redirect: "I'm your maintenance assistant! For leasing questions, visit collegeplace.us or call (615) 200-0620."
 
-WHEN YOU HAVE ALL 5 PIECES (apartment, description, category, urgency, entry_permission):
-First, confirm with the tenant: "Let me confirm — you're in [apartment], experiencing [brief issue]. Our team can enter [entry permission]. I'm submitting this now!"
+WHEN YOU HAVE ALL 6 PIECES (apartment, description, category, urgency, entry_permission, contact):
+First, confirm with the tenant: "Let me confirm — you're in [apartment], experiencing [brief issue]. Our team can enter [entry permission]. We'll send updates to [email]. Submitting now!"
 Then end your message with this exact marker on its own line:
 [SUBMIT_MAINTENANCE]
 apartment: <unit number>
@@ -86,6 +91,8 @@ category: <plumbing|electrical|hvac|appliance|pest_control|structural|other>
 urgency: <low|medium|high|emergency>
 description: <clear 1-2 sentence summary of the issue>
 entry_permission: <their stated preference>
+tenant_name: <their name or "Not provided">
+tenant_email: <their email or "Not provided">
 [/SUBMIT_MAINTENANCE]
 
 Office: (615) 200-0620 | office@collegeplace.us | Mon-Sat 9am-5pm`;
@@ -217,6 +224,8 @@ export default function MaintenancePage() {
         const urgency = details.match(/urgency:\s*(.+)/i)?.[1]?.trim() || "medium";
         const description = details.match(/description:\s*(.+)/i)?.[1]?.trim() || "";
         const entryPermission = details.match(/entry_permission:\s*(.+)/i)?.[1]?.trim() || "not specified";
+        const tenantName = details.match(/tenant_name:\s*(.+)/i)?.[1]?.trim() || "Chat User";
+        const tenantEmail = details.match(/tenant_email:\s*(.+)/i)?.[1]?.trim() || "";
 
         // Remove the marker from the display reply
         reply = reply.replace(/\[SUBMIT_MAINTENANCE\][\s\S]*?\[\/SUBMIT_MAINTENANCE\]/, "").trim();
@@ -228,11 +237,12 @@ export default function MaintenancePage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               apartment,
-              full_name: "Chat User",
-              email: "chat@collegeplace.us",
+              full_name: tenantName,
+              email: tenantEmail || "chat@collegeplace.us",
               category,
               description: description +
                 `\n\nEntry Permission: ${entryPermission}` +
+                `\nPreferred Contact: Email${tenantEmail ? ` (${tenantEmail})` : ""}` +
                 (chatFiles.length > 0 ? `\n[${chatFiles.length} photo(s) attached]` : ""),
               urgency,
             }),
