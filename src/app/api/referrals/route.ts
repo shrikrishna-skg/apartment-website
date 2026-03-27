@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSession } from "@/lib/auth";
+import { sendStaffNotification } from "@/lib/email";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,6 +54,30 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
+    }
+
+    // Send staff notification (best-effort)
+    try {
+      const details = [
+        `Unit: ${body.referrer_unit}`,
+        `Phone: ${body.referrer_phone}`,
+        `Relationship: ${body.relationship || "friend"}`,
+        `\nReferred Friend: ${body.friend_name}`,
+        body.friend_email ? `Friend Email: ${body.friend_email}` : null,
+        body.friend_phone ? `Friend Phone: ${body.friend_phone}` : null,
+        body.move_in_timeline ? `Move-in Timeline: ${body.move_in_timeline}` : null,
+        body.budget_range ? `Budget: ${body.budget_range}` : null,
+        body.notes ? `\nNotes: ${body.notes}` : null,
+      ].filter(Boolean).join("\n");
+
+      await sendStaffNotification({
+        type: "referral",
+        name: body.referrer_name,
+        email: body.referrer_email,
+        details,
+      });
+    } catch {
+      // Email is best-effort
     }
 
     return NextResponse.json(data, { status: 201 });

@@ -147,29 +147,123 @@ export async function sendStaffNotification(params: {
   const transporter = getTransporter();
   if (!transporter) return null;
 
-  const subjectMap = {
-    tour: "New Tour Booking",
-    application: "New Application",
-    inquiry: "New Contact Inquiry",
-    maintenance: "New Maintenance Request",
-    referral: "New Referral",
+  const DASHBOARD_URL = "https://apartment-website-six.vercel.app/website-app/dashboard";
+
+  const config = {
+    tour: { label: "New Tour Booking", icon: "📅", color: "#1a73e8", bg: "#eff6ff", border: "#bfdbfe", dashPath: "/tours" },
+    application: { label: "New Application", icon: "📝", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe", dashPath: "/applications" },
+    inquiry: { label: "New Contact Inquiry", icon: "💬", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", dashPath: "/inquiries" },
+    maintenance: { label: "New Maintenance Request", icon: "🔧", color: "#dc2626", bg: "#fef2f2", border: "#fecaca", dashPath: "/maintenance" },
+    referral: { label: "New Referral", icon: "🤝", color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", dashPath: "/referrals" },
   };
+  const c = config[params.type];
+
+  const now = new Date().toLocaleString("en-US", {
+    weekday: "short", month: "short", day: "numeric", year: "numeric",
+    hour: "numeric", minute: "2-digit", hour12: true, timeZone: "America/Chicago",
+  });
+
+  const detailLines = params.details.split("\n").filter(Boolean).map((line) => {
+    const [key, ...rest] = line.split(":");
+    if (rest.length > 0 && !line.startsWith("\n")) {
+      return `<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:140px;vertical-align:top;">${escapeHtml(key.trim())}</td><td style="padding:6px 0;color:#1f2937;font-size:13px;font-weight:500;">${escapeHtml(rest.join(":").trim())}</td></tr>`;
+    }
+    return `<tr><td colspan="2" style="padding:6px 0;color:#1f2937;font-size:13px;">${escapeHtml(line.trim())}</td></tr>`;
+  }).join("");
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <!-- Header -->
+        <tr>
+          <td style="background:#1a73e8;padding:24px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">College Place</h1>
+                  <p style="margin:4px 0 0;color:rgba(255,255,255,0.8);font-size:12px;letter-spacing:1px;text-transform:uppercase;">Staff Notification</p>
+                </td>
+                <td align="right" valign="middle">
+                  <span style="display:inline-block;padding:6px 14px;font-size:12px;font-weight:600;border-radius:20px;background:${c.bg};color:${c.color};border:1px solid ${c.border};">${c.icon} ${c.label}</span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Contact Info -->
+        <tr>
+          <td style="padding:28px 32px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:${c.bg};border:1px solid ${c.border};border-radius:10px;">
+              <tr>
+                <td style="padding:20px;">
+                  <h2 style="margin:0 0 4px;color:${c.color};font-size:16px;font-weight:700;">${c.icon} ${c.label}</h2>
+                  <p style="margin:0;color:#6b7280;font-size:12px;">${now}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Person Info -->
+        <tr>
+          <td style="padding:20px 32px 0;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                  <span style="color:#6b7280;font-size:13px;">Name</span><br/>
+                  <span style="color:#1f2937;font-size:15px;font-weight:600;">${escapeHtml(params.name)}</span>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;border-bottom:1px solid #f3f4f6;">
+                  <span style="color:#6b7280;font-size:13px;">Email</span><br/>
+                  <a href="mailto:${escapeHtml(params.email)}" style="color:#1a73e8;font-size:15px;font-weight:500;text-decoration:none;">${escapeHtml(params.email)}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Details -->
+        <tr>
+          <td style="padding:20px 32px;">
+            <h3 style="margin:0 0 12px;color:#1f2937;font-size:14px;font-weight:600;">Details</h3>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;">
+              <tr><td style="padding:16px;">
+                <table width="100%" cellpadding="0" cellspacing="0">${detailLines}</table>
+              </td></tr>
+            </table>
+          </td>
+        </tr>
+        <!-- CTA -->
+        <tr>
+          <td style="padding:0 32px 28px;" align="center">
+            <a href="${DASHBOARD_URL}${c.dashPath}" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;">View in Dashboard</a>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;color:#9ca3af;font-size:11px;">
+              College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130<br/>
+              (615) 200-0620 &bull; office@collegeplace.us
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 
   const info = await transporter.sendMail({
     from: `"College Place Website" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
     to: "office@collegeplace.us",
-    subject: `[${subjectMap[params.type]}] ${params.name}`,
-    html: `
-      <div style="font-family:sans-serif;padding:20px;">
-        <h2 style="color:#1a73e8;">${subjectMap[params.type]}</h2>
-        <p><strong>Name:</strong> ${params.name}</p>
-        <p><strong>Email:</strong> ${params.email}</p>
-        <pre style="background:#f4f4f5;padding:16px;border-radius:8px;white-space:pre-wrap;">${params.details}</pre>
-        <p style="color:#6b7280;font-size:13px;margin-top:20px;">
-          View in <a href="https://collegeplace.us/website-app/dashboard" style="color:#1a73e8;">Staff Dashboard</a>
-        </p>
-      </div>
-    `,
+    subject: `${c.icon} [${c.label}] ${params.name}`,
+    html,
   });
 
   return info.messageId;
@@ -326,7 +420,7 @@ export async function sendTicketEmail(params: {
         <!-- Action -->
         <tr>
           <td style="padding:8px 32px 24px;" align="center">
-            <a href="https://collegeplace.us/website-app/dashboard" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;">View in Dashboard</a>
+            <a href="https://apartment-website-six.vercel.app/website-app/dashboard" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;">View in Dashboard</a>
           </td>
         </tr>
 
