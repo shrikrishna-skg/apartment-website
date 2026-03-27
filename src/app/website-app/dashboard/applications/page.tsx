@@ -47,6 +47,40 @@ interface Application {
   ref2_phone: string;
   ref2_relationship: string;
   consent: boolean;
+  gender: string;
+  housing_status: string;
+  residence_from: string;
+  residence_to: string;
+  landlord_email: string;
+  rent_amount: string;
+  supervisor: string;
+  employer_address: string;
+  employer_phone: string;
+  position_held: string;
+  date_of_hire: string;
+  completed_residence_history: boolean;
+  has_pets: boolean;
+  pet_type: string;
+  pet_weight: string;
+  pet_age: string;
+  is_esa: boolean;
+  vehicle1_make: string;
+  vehicle1_year: string;
+  vehicle1_color: string;
+  vehicle1_plate: string;
+  has_second_vehicle: boolean;
+  vehicle2_make: string;
+  vehicle2_year: string;
+  vehicle2_color: string;
+  vehicle2_plate: string;
+  filed_bankruptcy: boolean;
+  evicted_from_tenancy: boolean;
+  convicted_felony: boolean;
+  arrested_or_convicted: boolean;
+  references_info: string;
+  agree_terms: boolean;
+  signature_name: string;
+  signature_date: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -672,9 +706,18 @@ export default function ApplicationsPage() {
                 </div>
                 <p className="text-sm text-gray-400 mt-0.5">{selected.email}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors shrink-0 ml-4">
-                <CloseIcon />
-              </button>
+              <div className="flex items-center gap-2 shrink-0 ml-4">
+                <button
+                  onClick={() => window.print()}
+                  className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                  title="Print Application"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" /></svg>
+                </button>
+                <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  <CloseIcon />
+                </button>
+              </div>
             </div>
 
             <div className="px-6 py-6 space-y-8">
@@ -793,7 +836,115 @@ export default function ApplicationsPage() {
                 </div>
               </section>
 
-              {/* Section 5: Housing Preferences */}
+              {/* Section 5: Residence Info (Professional apps) */}
+              {(selected.housing_status || selected.residence_from || selected.landlord_email) && (
+                <section>
+                  <SectionHeading
+                    title="Residence Details"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" /></svg>}
+                  />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <DetailField label="Housing Status" value={selected.housing_status} />
+                    <DetailField label="From" value={formatDate(selected.residence_from as string)} />
+                    <DetailField label="To" value={formatDate(selected.residence_to as string)} />
+                    <DetailField label="Landlord Email" value={selected.landlord_email} />
+                    <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : undefined} />
+                  </div>
+                </section>
+              )}
+
+              {/* Section 5b: General Info (Pets) */}
+              {(selected.has_pets !== undefined && selected.has_pets !== null) && (
+                <section>
+                  <SectionHeading
+                    title="General Information"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>}
+                  />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <DetailField label="Gender" value={selected.gender} />
+                    <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : "No"} />
+                    {selected.has_pets && (
+                      <>
+                        <DetailField label="Pet Type" value={selected.pet_type} />
+                        <DetailField label="Pet Weight" value={selected.pet_weight} />
+                        <DetailField label="Pet Age" value={selected.pet_age} />
+                        <DetailField label="ESA" value={selected.is_esa ? "Yes" : "No"} />
+                      </>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              {/* Section 5c: Vehicle Info */}
+              {selected.vehicle1_make && (
+                <section>
+                  <SectionHeading
+                    title="Vehicle Information"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 00-.879-2.121l-3.007-3.007a3 3 0 00-2.12-.879H6.75A2.25 2.25 0 004.5 10.5v6" /></svg>}
+                  />
+                  <div className="p-3 bg-gray-50 rounded-xl mb-3">
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle 1</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <DetailField label="Make" value={selected.vehicle1_make} />
+                      <DetailField label="Year" value={selected.vehicle1_year} />
+                      <DetailField label="Color" value={selected.vehicle1_color} />
+                      <DetailField label="Plate" value={selected.vehicle1_plate} />
+                    </div>
+                  </div>
+                  {selected.has_second_vehicle && (
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle 2</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <DetailField label="Make" value={selected.vehicle2_make} />
+                        <DetailField label="Year" value={selected.vehicle2_year} />
+                        <DetailField label="Color" value={selected.vehicle2_color} />
+                        <DetailField label="Plate" value={selected.vehicle2_plate} />
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* Section 5d: Background Check */}
+              {(selected.filed_bankruptcy !== undefined && selected.filed_bankruptcy !== null) && (
+                <section>
+                  <SectionHeading
+                    title="Background Check"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>}
+                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className={`p-3 rounded-xl ${selected.filed_bankruptcy ? "bg-red-50" : "bg-green-50"}`}>
+                      <DetailField label="Filed Bankruptcy" value={selected.filed_bankruptcy ? "Yes" : "No"} />
+                    </div>
+                    <div className={`p-3 rounded-xl ${selected.evicted_from_tenancy ? "bg-red-50" : "bg-green-50"}`}>
+                      <DetailField label="Evicted from Tenancy" value={selected.evicted_from_tenancy ? "Yes" : "No"} />
+                    </div>
+                    <div className={`p-3 rounded-xl ${selected.convicted_felony ? "bg-red-50" : "bg-green-50"}`}>
+                      <DetailField label="Convicted of Felony" value={selected.convicted_felony ? "Yes" : "No"} />
+                    </div>
+                    <div className={`p-3 rounded-xl ${selected.arrested_or_convicted ? "bg-red-50" : "bg-green-50"}`}>
+                      <DetailField label="Arrested/Convicted" value={selected.arrested_or_convicted ? "Yes" : "No"} />
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Section 5e: Authorization */}
+              {selected.signature_name && (
+                <section>
+                  <SectionHeading
+                    title="Authorization & Signature"
+                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>}
+                  />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <DetailField label="Agreed to Terms" value={selected.agree_terms ? "Yes" : "No"} />
+                    <DetailField label="Electronic Signature" value={selected.signature_name} />
+                    <DetailField label="Signature Date" value={formatDate(selected.signature_date as string)} />
+                  </div>
+                </section>
+              )}
+
+              {/* Section 6: Housing Preferences */}
               <section>
                 <SectionHeading
                   title="Housing Preferences"
