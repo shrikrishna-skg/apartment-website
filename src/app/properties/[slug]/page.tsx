@@ -33,6 +33,7 @@ import {
   Shield,
   Zap,
   Star,
+  X,
 } from "lucide-react";
 
 /* ── animation helpers ── */
@@ -73,6 +74,7 @@ export default function PropertyDetailPage() {
   const [selectedPhoto, setSelectedPhoto] = useState(0);
   const [selectedFloorPlan, setSelectedFloorPlan] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   /* ── not found ── */
   if (!property) {
@@ -162,13 +164,17 @@ export default function PropertyDetailPage() {
         className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-6"
       >
         {/* Main Image */}
-        <div className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden" style={{ height: "clamp(240px, 50vh, 560px)", background: "var(--surface-container-low)" }}>
+        <div
+          className="relative w-full rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer"
+          style={{ height: "clamp(240px, 50vh, 560px)", background: "var(--surface-container-low)" }}
+          onClick={() => setLightboxOpen(true)}
+        >
           <Image
             src={currentPhotos[selectedPhoto]}
             alt={`${property.name} - ${activeFloorPlan?.name || ''} Photo ${selectedPhoto + 1}`}
             fill
             sizes="100vw"
-            style={{ objectFit: "cover" }}
+            style={{ objectFit: "contain" }}
             priority
           />
 
@@ -240,6 +246,83 @@ export default function PropertyDetailPage() {
         </div>
       </motion.section>
 
+      {/* ── Fullscreen Lightbox ── */}
+      {lightboxOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
+          onClick={() => setLightboxOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") setLightboxOpen(false);
+            if (e.key === "ArrowLeft") handlePrevPhoto();
+            if (e.key === "ArrowRight") handleNextPhoto();
+          }}
+          tabIndex={0}
+          ref={(el) => el?.focus()}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxOpen(false)}
+            className="absolute top-4 right-4 z-50 w-10 h-10 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close lightbox"
+          >
+            <X className="w-6 h-6 text-white" />
+          </button>
+
+          {/* Photo counter */}
+          <div className="absolute top-4 left-4 z-50">
+            <span className="text-white/80 text-sm font-medium">
+              {selectedPhoto + 1} / {totalPhotos}
+            </span>
+          </div>
+
+          {/* Main image */}
+          <div className="relative w-full h-full p-4 sm:p-12" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={currentPhotos[selectedPhoto]}
+              alt={`${property.name} Photo ${selectedPhoto + 1}`}
+              fill
+              sizes="100vw"
+              style={{ objectFit: "contain" }}
+              quality={90}
+            />
+          </div>
+
+          {/* Nav arrows */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handlePrevPhoto(); }}
+            className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/25 transition-colors"
+            aria-label="Previous photo"
+          >
+            <ChevronLeft className="w-7 h-7 text-white" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleNextPhoto(); }}
+            className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-50 w-12 h-12 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/25 transition-colors"
+            aria-label="Next photo"
+          >
+            <ChevronRight className="w-7 h-7 text-white" />
+          </button>
+
+          {/* Thumbnail strip */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 overflow-x-auto max-w-[90vw] pb-1" style={{ scrollbarWidth: "thin" }}>
+            {currentPhotos.map((photo, i) => (
+              <button
+                key={i}
+                onClick={(e) => { e.stopPropagation(); setSelectedPhoto(i); }}
+                className={`relative shrink-0 rounded-md overflow-hidden transition-all duration-200 ${
+                  selectedPhoto === i
+                    ? "ring-2 ring-white scale-110 opacity-100"
+                    : "opacity-50 hover:opacity-90"
+                }`}
+                style={{ width: 64, height: 48 }}
+              >
+                <Image src={photo} alt={`Thumb ${i + 1}`} fill sizes="64px" style={{ objectFit: "cover" }} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Section 3: Property Info Header ── */}
       <motion.header
         initial="hidden"
@@ -256,6 +339,9 @@ export default function PropertyDetailPage() {
         <p className="text-base font-medium text-gray-500 mb-2">
           {activeFloorPlan?.name} – ${activeFloorPlan?.price}/month
         </p>
+        {activeFloorPlan?.description && (
+          <p className="text-sm text-gray-500 mb-2">{activeFloorPlan.description}</p>
+        )}
 
         {/* Address */}
         <div className="flex items-center gap-2 mb-5" style={{ color: "var(--on-surface-variant)" }}>

@@ -52,9 +52,9 @@ const quickTips = [
   },
   {
     icon: Building,
-    title: "Elevator Access",
+    title: "Building Access",
     description:
-      "Reserve elevator time for multi-story buildings by calling the leasing office. Priority slots are available between 8am-12pm.",
+      "Pick up your keys and access cards from the leasing office on move-in day. Our team will walk you through building entry, mailbox access, and laundry facilities.",
     color: "from-blue-500 to-cyan-500",
   },
   {

@@ -21,7 +21,7 @@ export const SITE = {
     weekend: "Sunday: Closed",
   },
   social: {
-    instagram: "https://www.instagram.com/collegeplacecpl/",
+    instagram: "https://www.instagram.com/collegeplace.us/",
     facebook: "https://www.facebook.com/collegeplacecpl/",
   },
   mapsUrl:
@@ -69,6 +69,7 @@ export interface FloorPlan {
   photoCount: number;
   has3DTour: boolean;
   photos?: string[];
+  description?: string;
 }
 
 export const PROPERTIES: Property[] = [
@@ -235,15 +236,20 @@ export const PROPERTIES: Property[] = [
     name: "College Pointe Apartments",
     address: "915 Brown Dr, Murfreesboro, TN 37130",
     description:
-      "Modern student apartments close to MTSU campus with spacious layouts and contemporary amenities. Choose from our well-designed 2-bedroom units perfect for student living.",
-    beds: 2,
-    baths: 2,
-    sqft: "900",
-    startingPrice: 550,
+      "Modern student apartments close to MTSU campus with spacious layouts and contemporary amenities. Choose from our well-designed 2 and 3-bedroom units perfect for student living. Individual leasing at $500–$550 per bedroom with utilities available at $100/person/month.",
+    beds: 3,
+    baths: 3,
+    sqft: "900–1200",
+    startingPrice: 500,
     image: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/556db2975_college-center-murfreesboro-tn-building-photo.jpg",
     tags: ["Parking", "Pet-Friendly", "Individual Leasing"],
     floorPlans: [
       { name: "2 Bed / 2 Bath", beds: 2, baths: 2, sqft: "900", price: 550, photoCount: 3, has3DTour: false, photos: [
+        "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/556db2975_college-center-murfreesboro-tn-building-photo.jpg",
+        "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/e28987513_college-center-murfreesboro-tn-living-area--shared-unit.jpg",
+        "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6626e8df8_Screenshot_31-7-2024_105220_earthgooglecom.jpg",
+      ] },
+      { name: "3 Bed / 3 Bath (per room)", beds: 3, baths: 3, sqft: "1200", price: 500, photoCount: 3, has3DTour: false, description: "$500/bedroom/person. Utilities: $100/person/month (water, internet, trash). Extra person in same room: additional $100/month.", photos: [
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/556db2975_college-center-murfreesboro-tn-building-photo.jpg",
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/e28987513_college-center-murfreesboro-tn-living-area--shared-unit.jpg",
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6626e8df8_Screenshot_31-7-2024_105220_earthgooglecom.jpg",

@@ -54,20 +54,22 @@ export default function BlogPage() {
 
         {/* Search & Filter */}
         <div className="mb-10 flex flex-col gap-4 sm:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search articles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input-glass w-full pl-12"
+              className="input-glass w-full"
+              style={{ paddingLeft: "2.75rem" }}
             />
           </div>
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="input-glass cursor-pointer sm:w-56"
+            className="input-glass cursor-pointer"
+            style={{ width: "auto", minWidth: "14rem" }}
           >
             {categories.map((cat) => (
               <option key={cat} value={cat} className="bg-white">

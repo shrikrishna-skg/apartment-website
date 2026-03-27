@@ -98,13 +98,12 @@ export default function PropertiesPage() {
         }
       }
 
-      /* price */
+      /* price — check if ANY floor plan matches the price range */
       if (selectedPrice) {
-        const price = property.startingPrice;
-        if (selectedPrice === "under600" && price >= 600) return false;
-        if (selectedPrice === "600to800" && (price < 600 || price > 800))
-          return false;
-        if (selectedPrice === "800plus" && price < 800) return false;
+        const prices = [property.startingPrice, ...property.floorPlans.map((fp) => fp.price)];
+        if (selectedPrice === "under600" && !prices.some((p) => p < 600)) return false;
+        if (selectedPrice === "600to800" && !prices.some((p) => p >= 600 && p <= 800)) return false;
+        if (selectedPrice === "800plus" && !prices.some((p) => p >= 800)) return false;
       }
 
       return true;
@@ -179,13 +178,14 @@ export default function PropertiesPage() {
         >
           {/* Search bar */}
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by property name, address, or features..."
-              className="input-glass w-full pl-12 pr-10"
+              className="input-glass w-full"
+              style={{ paddingLeft: "2.75rem", paddingRight: "2.5rem" }}
             />
             {searchQuery && (
               <button

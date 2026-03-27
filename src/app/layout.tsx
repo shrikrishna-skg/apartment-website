@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
 import LeadCapturePopup from "@/components/LeadCapturePopup";
+import { Analytics } from "@vercel/analytics/next";
 import { SITE } from "@/data/site-data";
 
 const dmSans = DM_Sans({
@@ -244,6 +245,7 @@ export default async function RootLayout({
             <LeadCapturePopup />
           </>
         )}
+        <Analytics />
       </body>
     </html>
   );

@@ -72,13 +72,14 @@ export default function FAQPage() {
 
         {/* Search Bar */}
         <div className="relative mb-8">
-          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search questions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-glass w-full pl-12"
+            className="input-glass w-full"
+            style={{ paddingLeft: "2.75rem" }}
           />
         </div>
 
