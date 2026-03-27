@@ -322,8 +322,7 @@ export default function MaintenancePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="glass flex flex-col overflow-hidden"
-                  style={{ height: "clamp(420px, calc(100vh - 340px), 680px)" }}
+                  className="glass flex flex-col overflow-hidden h-[calc(100vh-280px)] min-h-[500px]"
                 >
                   {/* Chat Header */}
                   <div className="p-4 border-b border-gray-100 flex items-center gap-3">
