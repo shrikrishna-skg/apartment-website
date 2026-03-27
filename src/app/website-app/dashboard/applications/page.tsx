@@ -1032,73 +1032,56 @@ export default function ApplicationsPage() {
                 ) : documents.length === 0 ? (
                   <p className="text-sm text-gray-400 py-3">No documents uploaded with this application.</p>
                 ) : (
-                  <div className="space-y-2">
-                    {documents.map((doc) => {
-                      const icon = getFileIcon(doc.file_type);
-                      const iconStyles: Record<string, string> = {
-                        pdf: "bg-red-100 text-red-600",
-                        img: "bg-blue-100 text-blue-600",
-                        doc: "bg-purple-100 text-purple-600",
-                        xls: "bg-green-100 text-green-600",
-                        file: "bg-gray-100 text-gray-600",
-                      };
-                      return (
-                        <div key={doc.id}>
-                          <div className="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${iconStyles[icon]}`}>
-                              {icon.toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">{doc.file_name}</p>
-                              <p className="text-xs text-gray-400">
-                                {doc.document_label || "Document"} &middot; {formatFileSize(doc.file_size)}
-                              </p>
-                            </div>
-                            {isPreviewable(doc.file_type) && (
-                              <button
-                                onClick={() => setPreviewDoc(previewDoc?.id === doc.id ? null : doc)}
-                                className="px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors shrink-0"
-                              >
-                                {previewDoc?.id === doc.id ? "Hide" : "Preview"}
-                              </button>
-                            )}
+                  <div className="space-y-4">
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                        {/* Document header */}
+                        <div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">{doc.document_label || "Document"}</p>
+                            <p className="text-xs text-gray-400">{doc.file_name} · {formatFileSize(doc.file_size)}</p>
+                          </div>
+                          <div className="flex gap-1.5">
                             <a
                               href={`/api/documents/${doc.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors shrink-0"
+                              className="px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                             >
-                              View
+                              Open
                             </a>
                             <a
                               href={`/api/documents/${doc.id}?download=1`}
-                              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors shrink-0"
+                              className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                             >
                               Download
                             </a>
                           </div>
-                          {/* Inline preview */}
-                          {previewDoc?.id === doc.id && (
-                            <div className="mt-2 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-                              {doc.file_type === "application/pdf" ? (
-                                <iframe
-                                  src={`/api/documents/${doc.id}`}
-                                  className="w-full h-[400px]"
-                                  title={doc.file_name}
-                                />
-                              ) : doc.file_type.startsWith("image/") ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                  src={`/api/documents/${doc.id}`}
-                                  alt={doc.file_name}
-                                  className="w-full max-h-[400px] object-contain"
-                                />
-                              ) : null}
+                        </div>
+                        {/* Inline document display */}
+                        <div className="bg-white">
+                          {doc.file_type.startsWith("image/") ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={`/api/documents/${doc.id}`}
+                              alt={doc.document_label || doc.file_name}
+                              className="w-full max-h-[500px] object-contain p-2"
+                              loading="lazy"
+                            />
+                          ) : doc.file_type === "application/pdf" ? (
+                            <iframe
+                              src={`/api/documents/${doc.id}`}
+                              className="w-full h-[500px]"
+                              title={doc.file_name}
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+                              Preview not available — click Open to view
                             </div>
                           )}
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 )}
               </section>
@@ -1497,11 +1480,32 @@ export default function ApplicationsPage() {
 
                   {documents.length > 0 && (
                     <PrintSection title={`Documents (${documents.length})`}>
-                      <div className="space-y-2">
+                      <div className="space-y-4">
                         {documents.map((doc) => (
-                          <div key={doc.id} className="flex items-center gap-3 py-2 border-b last:border-0">
-                            <span className="text-sm font-medium text-gray-900">{doc.document_label || doc.file_name}</span>
-                            <span className="text-xs text-gray-400">{doc.file_name} ({formatFileSize(doc.file_size)})</span>
+                          <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                            <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+                              <span className="text-sm font-semibold text-gray-900">{doc.document_label || "Document"}</span>
+                              <span className="text-xs text-gray-400">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
+                            </div>
+                            {doc.file_type.startsWith("image/") ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={`/api/documents/${doc.id}`}
+                                alt={doc.document_label || doc.file_name}
+                                className="w-full max-h-[600px] object-contain p-2"
+                                loading="lazy"
+                              />
+                            ) : doc.file_type === "application/pdf" ? (
+                              <iframe
+                                src={`/api/documents/${doc.id}`}
+                                className="w-full h-[500px]"
+                                title={doc.file_name}
+                              />
+                            ) : (
+                              <div className="py-4 text-center text-sm text-gray-400">
+                                {doc.file_name} — open to view
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
