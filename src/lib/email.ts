@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 
+// Email: collegeplacecpl@gmail.com via Gmail SMTP
 function getTransporter() {
   const user = process.env.SMTP_USER || process.env.GMAIL_USER;
   const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
