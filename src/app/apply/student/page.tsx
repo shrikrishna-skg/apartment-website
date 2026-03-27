@@ -197,7 +197,7 @@ interface FormData {
 const initialFormData: FormData = {
   fullName: "",
   ssn: "",
-  maritalStatus: "Single",
+  maritalStatus: "",
   gender: "",
   drivingLicense: "",
   dateOfBirth: "",
@@ -212,7 +212,7 @@ const initialFormData: FormData = {
   city: "",
   state: "",
   zipCode: "",
-  universityName: "Middle Tennessee State University",
+  universityName: "",
   studentId: "",
   courseName: "",
   courseStartDate: "",
@@ -227,7 +227,7 @@ const initialFormData: FormData = {
   emergencyContact2Phone: "",
   emergencyContact2Email: "",
   emergencyRelationship2: "",
-  employmentStatus: "Student",
+  employmentStatus: "",
   employerName: "",
   monthlyIncome: "",
   incomeSource: "",
@@ -365,7 +365,8 @@ function StudentApplicationPage() {
     }
 
     if (currentStep === 9) {
-      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms first (Step 8)");
+      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms and conditions (Step 8)");
+      if (!formData.consent) newErrors.push("You must check the consent checkbox before submitting");
     }
 
     setErrors(newErrors);
@@ -1513,7 +1514,7 @@ function StudentApplicationPage() {
                     {renderRadioGroup("Do you agree to the terms and conditions?", "agreeTerms", [
                       "Yes, I agree",
                       "No",
-                    ])}
+                    ], true)}
 
                     {renderInput("Full Name (Electronic Signature)", "signatureName", "text", "Type your full name as signature", true)}
                     <div className="flex flex-col gap-1.5">

@@ -132,6 +132,23 @@ type SortKey = "full_name" | "applicant_type" | "mobile_number" | "housing_requi
 type SortDir = "asc" | "desc";
 
 /* ─── Helpers ─── */
+const DOC_LABEL_MAP: Record<string, string> = {
+  passportPhoto: "Passport Size Photo",
+  studentId: "Student ID",
+  stateId: "State ID or Passport",
+  visa: "Visa / I-20",
+  bankStatement: "Bank Statement",
+  proofOfIncome: "Proof of Income",
+  additional: "Additional Documents",
+};
+
+function formatDocLabel(label: string | null): string {
+  if (!label) return "Document";
+  // Handle ESA doc labels like "esaDoc-0", "esaDoc-1"
+  if (label.startsWith("esaDoc")) return "ESA / Service Animal Document";
+  return DOC_LABEL_MAP[label] || label.replace(/([A-Z])/g, " $1").replace(/^./, s => s.toUpperCase());
+}
+
 function formatDate(d: string | undefined | null) {
   if (!d) return "—";
   // If it already has a timezone label (e.g. "03/27/2026, 06:15 PM CT"), show as-is
@@ -153,8 +170,12 @@ function formatFileSize(bytes: number) {
 
 function maskSSN(ssn: string | undefined | null) {
   if (!ssn) return "—";
-  const last4 = ssn.replace(/\D/g, "").slice(-4);
-  return last4 ? `***-**-${last4}` : "—";
+  const digits = ssn.replace(/\D/g, "");
+  if (digits.length >= 4) {
+    return `***-**-${digits.slice(-4)}`;
+  }
+  // Non-numeric (passport number) — show as-is
+  return ssn;
 }
 
 function getFileIcon(type: string) {
@@ -322,9 +343,14 @@ export default function ApplicationsPage() {
     let merged = { ...app };
     if (app.notes && typeof app.notes === "string") {
       try {
-        const extra = JSON.parse(app.notes);
+        const extra = JSON.parse(app.notes as string);
         if (extra && typeof extra === "object" && !Array.isArray(extra)) {
-          merged = { ...merged, ...extra };
+          // Extra fields from notes override null/undefined DB values
+          for (const [key, value] of Object.entries(extra)) {
+            if (value !== null && value !== undefined) {
+              merged[key] = value;
+            }
+          }
         }
       } catch {
         // notes is plain text, not JSON
@@ -938,31 +964,29 @@ export default function ApplicationsPage() {
                 </section>
               )}
 
-              {/* Section 5b: General Info (Pets) */}
-              {(selected.has_pets !== undefined && selected.has_pets !== null) && (
-                <section>
-                  <SectionHeading
-                    title="General Information"
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>}
-                  />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {selected.gender && <DetailField label="Gender" value={selected.gender} />}
-                    <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : "No"} />
-                    {selected.has_vehicle !== undefined && <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : "No"} />}
-                    {selected.has_pets && Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
-                      <div key={idx} className="col-span-2 sm:col-span-3 p-3 bg-gray-50 rounded-xl">
-                        <p className="text-xs font-semibold text-gray-500 mb-2">Pet {idx + 1}</p>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                          <DetailField label="Type" value={pet.type} />
-                          <DetailField label="Weight" value={pet.weight} />
-                          <DetailField label="Age" value={pet.age} />
-                          <DetailField label="Category" value={pet.category} />
-                        </div>
+              {/* Section 5b: General Info */}
+              <section>
+                <SectionHeading
+                  title="General Information"
+                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>}
+                />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <DetailField label="Gender" value={selected.gender || "—"} />
+                  <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : selected.has_pets === false ? "No" : "—"} />
+                  <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : selected.has_vehicle === false ? "No" : "—"} />
+                  {selected.has_pets && Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
+                    <div key={idx} className="col-span-2 sm:col-span-3 p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Pet {idx + 1}</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <DetailField label="Type" value={pet.type} />
+                        <DetailField label="Weight" value={pet.weight} />
+                        <DetailField label="Age" value={pet.age} />
+                        <DetailField label="Category" value={pet.category} />
                       </div>
-                    ))}
-                  </div>
-                </section>
-              )}
+                    </div>
+                  ))}
+                </div>
+              </section>
 
               {/* Section 5c: Vehicle Info */}
               {selected.vehicle1_make && (
@@ -995,8 +1019,7 @@ export default function ApplicationsPage() {
               )}
 
               {/* Section 5d: Background Check */}
-              {(selected.filed_bankruptcy !== undefined && selected.filed_bankruptcy !== null) && (
-                <section>
+              <section>
                   <SectionHeading
                     title="Background Check"
                     icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>}
@@ -1020,22 +1043,20 @@ export default function ApplicationsPage() {
                     </div>
                   </div>
                 </section>
-              )}
 
               {/* Section 5e: Authorization */}
-              {selected.signature_name && (
-                <section>
-                  <SectionHeading
+              <section>
+                <SectionHeading
                     title="Authorization & Signature"
                     icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>}
                   />
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <DetailField label="Agreed to Terms" value={selected.agree_terms ? "Yes" : "No"} />
-                    <DetailField label="Electronic Signature" value={selected.signature_name} />
+                    <DetailField label="Agreed to Terms" value={selected.agree_terms ? "Yes" : selected.agree_terms === false ? "No" : "—"} />
+                    <DetailField label="Electronic Signature" value={selected.signature_name || "—"} />
                     <DetailField label="Signature Date" value={formatDate(selected.signature_date as string)} />
+                    <DetailField label="Consent" value={selected.consent ? "Yes" : selected.consent === false ? "No" : "—"} />
                   </div>
                 </section>
-              )}
 
               {/* Section 6: Housing Preferences */}
               <section>
@@ -1081,7 +1102,7 @@ export default function ApplicationsPage() {
                         {/* Document header */}
                         <div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
                           <div>
-                            <p className="text-sm font-semibold text-gray-900">{doc.document_label || "Document"}</p>
+                            <p className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</p>
                             <p className="text-xs text-gray-400">{doc.file_name} · {formatFileSize(doc.file_size)}</p>
                           </div>
                           <div className="flex gap-1.5">

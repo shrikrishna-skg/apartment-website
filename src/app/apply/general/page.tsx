@@ -303,7 +303,8 @@ export default function GeneralApplicationPage() {
     }
 
     if (currentStep === 9) {
-      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms first (Step 8)");
+      if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") newErrors.push("You must agree to the terms and conditions (Step 8)");
+      if (!formData.consent) newErrors.push("You must check the consent checkbox before submitting");
     }
 
     setErrors(newErrors);
@@ -1209,7 +1210,7 @@ export default function GeneralApplicationPage() {
                     {renderRadioGroup("Do you agree to the terms and conditions?", "agreeTerms", [
                       "Yes, I agree",
                       "No",
-                    ])}
+                    ], true)}
 
                     {renderInput("Full Name (Electronic Signature)", "signatureName", "text", "Type your full name as signature", true)}
                     <div className="flex flex-col gap-1.5">
