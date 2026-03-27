@@ -171,16 +171,57 @@ export default function MaintenancePage() {
   const handleSendMessage = async () => {
     if ((!inputValue.trim() && pendingFiles.length === 0) || loading) return;
 
-    // Handle pending files
-    if (pendingFiles.length > 0) {
-      setChatFiles((prev) => [...prev, ...pendingFiles]);
-      const fileNames = pendingFiles.map((f) => f.name).join(", ");
+    let imageAnalysis = "";
+    const filesToProcess = [...pendingFiles];
+
+    // Handle pending files — analyze images with Gemini
+    if (filesToProcess.length > 0) {
+      setChatFiles((prev) => [...prev, ...filesToProcess]);
+      const fileNames = filesToProcess.map((f) => f.name).join(", ");
       setMessages((prev) => [
         ...prev,
-        { role: "user", text: `📎 ${pendingFiles.length} photo${pendingFiles.length > 1 ? "s" : ""}: ${fileNames}` },
+        { role: "user", text: `📷 Sent ${filesToProcess.length} photo${filesToProcess.length > 1 ? "s" : ""}: ${fileNames}` },
       ]);
       setPendingFiles([]);
       setPendingPreviews([]);
+
+      // Analyze the first image with Gemini
+      const imageFile = filesToProcess.find((f) => f.type.startsWith("image/"));
+      if (imageFile) {
+        setLoading(true);
+        setMessages((prev) => [...prev, { role: "bot", text: "🔍 Analyzing your photo..." }]);
+        try {
+          const base64 = await fileToBase64(imageFile);
+          const imgRes = await fetch("/api/chat/image", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              image: base64,
+              mimeType: imageFile.type,
+              message: inputValue.trim() || "Maintenance issue photo from tenant",
+            }),
+          });
+          const imgData = await imgRes.json();
+          if (imgData.reply) {
+            imageAnalysis = imgData.reply;
+            // Replace "Analyzing..." with the actual analysis
+            setMessages((prev) => {
+              const updated = [...prev];
+              let analyzeIdx = -1;
+              for (let k = updated.length - 1; k >= 0; k--) { if (updated[k].text === "🔍 Analyzing your photo...") { analyzeIdx = k; break; } }
+              if (analyzeIdx >= 0) {
+                updated[analyzeIdx] = { role: "bot", text: `📸 **Photo Analysis:** ${imageAnalysis}` };
+              }
+              return updated;
+            });
+          } else {
+            // Remove analyzing message if failed
+            setMessages((prev) => prev.filter((m) => m.text !== "🔍 Analyzing your photo..."));
+          }
+        } catch {
+          setMessages((prev) => prev.filter((m) => m.text !== "🔍 Analyzing your photo..."));
+        }
+      }
     }
 
     const userText = inputValue.trim();
@@ -191,9 +232,10 @@ export default function MaintenancePage() {
     setLoading(true);
 
     try {
-      // Build conversation history for AI
+      // Build conversation history for AI (include image analysis as context)
       const allMessages = [
-        ...messages.filter((m) => m.text),
+        ...messages.filter((m) => m.text && m.text !== "🔍 Analyzing your photo..."),
+        ...(imageAnalysis ? [{ role: "bot" as const, text: `Photo Analysis: ${imageAnalysis}` }] : []),
         ...(userText ? [{ role: "user" as const, text: userText }] : []),
       ];
 
@@ -201,6 +243,14 @@ export default function MaintenancePage() {
         role: m.role === "bot" ? "assistant" : "user",
         content: m.text,
       }));
+
+      // If only image was sent (no text), add context for the AI
+      if (!userText && imageAnalysis) {
+        aiMessages.push({
+          role: "user",
+          content: "I just sent a photo of the issue. Please review the analysis above and help me submit a maintenance request.",
+        });
+      }
 
       // Call the chat API with maintenance system prompt
       const res = await fetch("/api/chat", {
@@ -866,6 +916,22 @@ export default function MaintenancePage() {
       </main>
     </>
   );
+}
+
+/* Simple markdown renderer for bot messages */
+/* Convert file to base64 for Gemini analysis */
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the data URL prefix (e.g. "data:image/jpeg;base64,")
+      const base64 = result.split(",")[1] || result;
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 /* Simple markdown renderer for bot messages */
