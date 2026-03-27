@@ -338,6 +338,23 @@ export default function MaintenancePage() {
           if (urgency === "emergency") {
             reply += `\n\n⚠️ Since this is an emergency, please also call **(615) 200-0620** right away.`;
           }
+
+          // Auto-send transcript to office (fire-and-forget)
+          const allMsgs = [...messages, { role: "user" as const, text: userText || "📷 Photo" }, { role: "bot" as const, text: reply }];
+          const transcript = allMsgs
+            .filter((m) => m.text && !m.text.startsWith("🔍"))
+            .map((m) => `${m.role === "user" ? "Tenant" : "Assistant"}: ${m.text}`)
+            .join("\n\n");
+          fetch("/api/contact", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: "Maintenance Chat Transcript",
+              email: tenantEmail || "chat@collegeplace.us",
+              inquiry_type: "maintenance-transcript",
+              message: `--- MAINTENANCE CHAT TRANSCRIPT ---\nDate: ${new Date().toLocaleString()}\nApartment: ${apartment}\nCategory: ${category}\nUrgency: ${urgency}\nEntry Permission: ${entryPermission}\n\n${transcript}`,
+            }),
+          }).catch(() => {});
         } catch {
           reply += "\n\n(There was an issue submitting automatically. Please call (615) 200-0620 to report this.)";
         }
@@ -707,24 +724,6 @@ export default function MaintenancePage() {
                         <Send size={18} />
                       </button>
                     </div>
-                    {/* End Chat button - shows after ticket submitted or after several messages */}
-                    {(ticketSubmitted || messages.length >= 6) && !chatEnded && (
-                      <div className="flex justify-center mt-2">
-                        <button
-                          type="button"
-                          onClick={handleEndChat}
-                          disabled={sendingTranscript}
-                          className="text-xs text-gray-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer underline"
-                        >
-                          {sendingTranscript ? "Sending transcript..." : "End chat & send transcript to office"}
-                        </button>
-                      </div>
-                    )}
-                    {chatEnded && (
-                      <div className="flex justify-center mt-2">
-                        <p className="text-xs text-green-600">✅ Chat ended. Transcript sent to office.</p>
-                      </div>
-                    )}
                   </div>
                 </motion.div>
               ) : (
