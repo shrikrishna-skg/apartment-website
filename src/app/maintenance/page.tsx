@@ -892,12 +892,6 @@ export default function MaintenancePage() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                  <p className="text-xs text-red-300 leading-relaxed">
-                    For gas leaks, flooding, or fire emergencies, call 911
-                    immediately and then contact our emergency maintenance line.
-                  </p>
-                </div>
               </motion.div>
 
               {/* Office Hours */}
