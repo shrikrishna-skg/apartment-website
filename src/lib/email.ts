@@ -147,7 +147,7 @@ export async function sendStaffNotification(params: {
   const transporter = getTransporter();
   if (!transporter) return null;
 
-  const DASHBOARD_URL = "https://apartment-website-six.vercel.app/website-app/dashboard";
+  const DASHBOARD_URL = "https://collegeplace.us/website-app/dashboard";
 
   const config = {
     tour: { label: "New Tour Booking", icon: "📅", color: "#1a73e8", bg: "#eff6ff", border: "#bfdbfe", dashPath: "/tours" },
@@ -420,7 +420,7 @@ export async function sendTicketEmail(params: {
         <!-- Action -->
         <tr>
           <td style="padding:8px 32px 24px;" align="center">
-            <a href="https://apartment-website-six.vercel.app/website-app/dashboard" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;">View in Dashboard</a>
+            <a href="https://collegeplace.us/website-app/dashboard" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:14px;font-weight:600;">View in Dashboard</a>
           </td>
         </tr>
 
