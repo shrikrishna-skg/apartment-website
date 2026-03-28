@@ -857,14 +857,15 @@ export default function ApplicationsPage() {
                   <DetailField label="SSN" value={maskSSN(selected.ssn)} />
                   <DetailField label="Driving License" value={selected.driving_license} />
                   <DetailField label="Marital Status" value={selected.marital_status ? capitalize(selected.marital_status) : "—"} />
+                  <DetailField label="Gender" value={selected.gender ? capitalize(selected.gender) : "—"} />
                   <DetailField label="Applicant Type" value={TYPE_LABELS[selected.applicant_type] || selected.applicant_type} />
                 </div>
               </section>
 
-              {/* Section 2: Address & Education */}
+              {/* Section 2: Address & Education / Address & Residence */}
               <section>
                 <SectionHeading
-                  title="Address & Education"
+                  title={selected.applicant_type === "professional" ? "Address & Residence" : "Address & Education"}
                   icon={
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -875,7 +876,9 @@ export default function ApplicationsPage() {
                   <div className="col-span-2 sm:col-span-3">
                     <DetailField label="Current Address" value={[selected.current_address, selected.city, selected.state, selected.zip_code].filter(Boolean).join(", ") || "—"} />
                   </div>
-                  {selected.address_type && <DetailField label="Address Type" value={selected.address_type} />}
+                  {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                    <DetailField label="Address Type" value={selected.address_type || "—"} />
+                  )}
                   {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
                     <>
                       <DetailField label="University" value={selected.university_name} />
@@ -913,10 +916,23 @@ export default function ApplicationsPage() {
                   }
                 />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />
+                  {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                    <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />
+                  )}
                   <DetailField label="Employer" value={selected.employer_name} />
                   <DetailField label="Monthly Income" value={selected.monthly_income ? `$${Number(selected.monthly_income).toLocaleString()}` : "—"} />
-                  <DetailField label="Income Source" value={selected.income_source} />
+                  {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                    <DetailField label="Income Source" value={selected.income_source} />
+                  )}
+                  {selected.applicant_type === "professional" && (
+                    <>
+                      <DetailField label="Supervisor" value={selected.supervisor} />
+                      <DetailField label="Employer Address" value={selected.employer_address} />
+                      <DetailField label="Employer Phone" value={selected.employer_phone} />
+                      <DetailField label="Position Held" value={selected.position_held} />
+                      <DetailField label="Date of Hire" value={formatDate(selected.date_of_hire)} />
+                    </>
+                  )}
                 </div>
                 {selected.has_cosigner && (
                   <div className="mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
@@ -946,30 +962,48 @@ export default function ApplicationsPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <DetailField label="Name" value={selected.previous_landlord_name} />
                     <DetailField label="Phone" value={selected.landlord_phone} />
-                    <DetailField label="Address" value={selected.landlord_address} />
+                    {selected.applicant_type === "professional" && (
+                      <DetailField label="Email" value={selected.landlord_email} />
+                    )}
+                    {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                      <DetailField label="Address" value={selected.landlord_address} />
+                    )}
                     <DetailField label="Reason for Leaving" value={selected.reason_for_leaving} />
-                    <DetailField label="Length of Stay" value={selected.length_of_stay} />
+                    {selected.applicant_type === "professional" && (
+                      <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : undefined} />
+                    )}
+                    {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                      <DetailField label="Length of Stay" value={selected.length_of_stay} />
+                    )}
                   </div>
                 </div>
-                {/* References */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3 bg-gray-50 rounded-xl">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">Reference 1</p>
-                    <DetailField label="Name" value={selected.ref1_name} />
-                    <div className="mt-2"><DetailField label="Phone" value={selected.ref1_phone} /></div>
-                    <div className="mt-2"><DetailField label="Relationship" value={selected.ref1_relationship} /></div>
+                {/* References (student/international: structured refs, professional: references_info text) */}
+                {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Reference 1</p>
+                      <DetailField label="Name" value={selected.ref1_name} />
+                      <div className="mt-2"><DetailField label="Phone" value={selected.ref1_phone} /></div>
+                      <div className="mt-2"><DetailField label="Relationship" value={selected.ref1_relationship} /></div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Reference 2</p>
+                      <DetailField label="Name" value={selected.ref2_name} />
+                      <div className="mt-2"><DetailField label="Phone" value={selected.ref2_phone} /></div>
+                      <div className="mt-2"><DetailField label="Relationship" value={selected.ref2_relationship} /></div>
+                    </div>
                   </div>
+                )}
+                {selected.applicant_type === "professional" && (
                   <div className="p-3 bg-gray-50 rounded-xl">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">Reference 2</p>
-                    <DetailField label="Name" value={selected.ref2_name} />
-                    <div className="mt-2"><DetailField label="Phone" value={selected.ref2_phone} /></div>
-                    <div className="mt-2"><DetailField label="Relationship" value={selected.ref2_relationship} /></div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">References</p>
+                    <DetailField label="References Info" value={selected.references_info} />
                   </div>
-                </div>
+                )}
               </section>
 
               {/* Section 5: Residence Info (Professional apps) */}
-              {(selected.housing_status || selected.residence_from || selected.landlord_email) && (
+              {selected.applicant_type === "professional" && (
                 <section>
                   <SectionHeading
                     title="Residence Details"
@@ -995,6 +1029,9 @@ export default function ApplicationsPage() {
                   <DetailField label="Gender" value={selected.gender || "—"} />
                   <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : selected.has_pets === false ? "No" : "—"} />
                   <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : selected.has_vehicle === false ? "No" : "—"} />
+                  {selected.applicant_type === "professional" && (
+                    <DetailField label="Completed Residence History" value={selected.completed_residence_history ? "Yes" : selected.completed_residence_history === false ? "No" : "—"} />
+                  )}
                   {selected.has_pets && Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
                     <div key={idx} className="col-span-2 sm:col-span-3 p-3 bg-gray-50 rounded-xl">
                       <p className="text-xs font-semibold text-gray-500 mb-2">Pet {idx + 1}</p>
@@ -1010,7 +1047,7 @@ export default function ApplicationsPage() {
               </section>
 
               {/* Section 5c: Vehicle Info */}
-              {selected.vehicle1_make && (
+              {(selected.vehicle1_make || selected.has_vehicle) && (
                 <section>
                   <SectionHeading
                     title="Vehicle Information"
@@ -1428,19 +1465,37 @@ export default function ApplicationsPage() {
                     </div>
                   </PrintSection>
 
-                  <PrintSection title="Address & Education">
+                  <PrintSection title={selected.applicant_type === "professional" ? "Address & Residence" : "Address & Education"}>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="col-span-3"><Field label="Current Address" value={`${selected.current_address || ""}${selected.city ? `, ${selected.city}` : ""}${selected.state ? `, ${selected.state}` : ""} ${selected.zip_code || ""}`} /></div>
-                      <Field label="University" value={selected.university_name} />
-                      <Field label="Student ID" value={selected.student_id} />
-                      <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
+                      {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                        <>
+                          <Field label="Address Type" value={selected.address_type} />
+                          <Field label="University" value={selected.university_name} />
+                          <Field label="Student ID" value={selected.student_id} />
+                          <Field label="Course Name" value={selected.course_name} />
+                          <Field label="Course Start" value={formatDate(selected.course_start_date)} />
+                          <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
+                          <Field label="Advisor Phone" value={selected.advisor_phone} />
+                          <Field label="Advisor Email" value={selected.advisor_email} />
+                        </>
+                      )}
                       <Field label="Emergency Contact" value={selected.emergency_contact_name} />
                       <Field label="Emergency Phone" value={selected.emergency_contact_phone} />
-                      <Field label="Relationship" value={selected.emergency_contact_relationship} />
+                      {selected.emergency_contact_email && <Field label="Emergency Email" value={selected.emergency_contact_email} />}
+                      <Field label="Relationship" value={selected.emergency_relationship} />
+                      {selected.emergency_contact2_name && (
+                        <>
+                          <Field label="Emergency Contact 2" value={selected.emergency_contact2_name} />
+                          <Field label="Emergency Phone 2" value={selected.emergency_contact2_phone} />
+                          {selected.emergency_contact2_email && <Field label="Emergency Email 2" value={selected.emergency_contact2_email} />}
+                          <Field label="Relationship 2" value={selected.emergency_relationship2} />
+                        </>
+                      )}
                     </div>
                   </PrintSection>
 
-                  {(selected.housing_status || selected.residence_from) && (
+                  {selected.applicant_type === "professional" && (
                     <PrintSection title="Residence Details">
                       <div className="grid grid-cols-3 gap-4">
                         <Field label="Housing Status" value={selected.housing_status} />
@@ -1454,13 +1509,23 @@ export default function ApplicationsPage() {
 
                   <PrintSection title="Employment & Income">
                     <div className="grid grid-cols-3 gap-4">
-                      <Field label="Employment Status" value={selected.employment_status} />
+                      {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                        <Field label="Employment Status" value={selected.employment_status} />
+                      )}
                       <Field label="Employer" value={selected.employer_name} />
                       <Field label="Monthly Income" value={selected.monthly_income ? `$${selected.monthly_income}` : undefined} />
-                      {selected.supervisor && <Field label="Supervisor" value={selected.supervisor} />}
-                      {selected.position_held && <Field label="Position" value={selected.position_held} />}
-                      {selected.date_of_hire && <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
-                      <Field label="Income Source" value={selected.income_source} />
+                      {selected.applicant_type === "professional" && (
+                        <>
+                          <Field label="Supervisor" value={selected.supervisor} />
+                          <Field label="Employer Address" value={selected.employer_address} />
+                          <Field label="Employer Phone" value={selected.employer_phone} />
+                          <Field label="Position Held" value={selected.position_held} />
+                          <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />
+                        </>
+                      )}
+                      {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
+                        <Field label="Income Source" value={selected.income_source} />
+                      )}
                       {selected.has_cosigner && (
                         <>
                           <Field label="Co-signer Name" value={selected.cosigner_name} />
@@ -1501,23 +1566,29 @@ export default function ApplicationsPage() {
                     )}
                   </PrintSection>
 
-                  {(selected.has_pets !== undefined && selected.has_pets !== null) && (
-                    <PrintSection title="General Information">
-                      <div className="grid grid-cols-3 gap-4">
-                        <Field label="Has Pets" value={selected.has_pets} />
-                        {selected.has_pets && (
-                          <>
-                            <Field label="Pet Type" value={selected.pet_type} />
-                            <Field label="Pet Weight" value={selected.pet_weight} />
-                            <Field label="Pet Age" value={selected.pet_age} />
-                            <Field label="ESA" value={selected.is_esa} />
-                          </>
-                        )}
-                      </div>
-                    </PrintSection>
-                  )}
+                  <PrintSection title="General Information">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Gender" value={selected.gender} />
+                      <Field label="Has Pets" value={selected.has_pets} />
+                      <Field label="Has Vehicle" value={selected.has_vehicle} />
+                      {selected.applicant_type === "professional" && (
+                        <Field label="Completed Residence History" value={selected.completed_residence_history} />
+                      )}
+                      {selected.has_pets && Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
+                        <div key={idx} className="col-span-3 border-t pt-2 mt-1">
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Pet {idx + 1}</p>
+                          <div className="grid grid-cols-4 gap-3">
+                            <Field label="Type" value={pet.type} />
+                            <Field label="Weight" value={pet.weight} />
+                            <Field label="Age" value={pet.age} />
+                            <Field label="Category" value={pet.category} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </PrintSection>
 
-                  {selected.vehicle1_make && (
+                  {(selected.vehicle1_make || selected.has_vehicle) && (
                     <PrintSection title="Vehicle Information">
                       <div className="grid grid-cols-4 gap-4">
                         <Field label="Make" value={selected.vehicle1_make} />
@@ -1536,16 +1607,26 @@ export default function ApplicationsPage() {
                     </PrintSection>
                   )}
 
-                  {(selected.filed_bankruptcy !== undefined && selected.filed_bankruptcy !== null) && (
-                    <PrintSection title="Background Check">
-                      <div className="grid grid-cols-2 gap-4">
+                  <PrintSection title="Background Check">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
                         <Field label="Filed for Bankruptcy" value={selected.filed_bankruptcy} />
-                        <Field label="Evicted from Tenancy" value={selected.evicted_from_tenancy} />
-                        <Field label="Convicted of Felony" value={selected.convicted_felony} />
-                        <Field label="Arrested/Convicted" value={selected.arrested_or_convicted} />
+                        {selected.bankruptcy_details && <p className="text-xs text-gray-600 italic">{String(selected.bankruptcy_details)}</p>}
                       </div>
-                    </PrintSection>
-                  )}
+                      <div>
+                        <Field label="Evicted from Tenancy" value={selected.evicted_from_tenancy} />
+                        {selected.eviction_details && <p className="text-xs text-gray-600 italic">{String(selected.eviction_details)}</p>}
+                      </div>
+                      <div>
+                        <Field label="Convicted of Felony" value={selected.convicted_felony} />
+                        {selected.felony_details && <p className="text-xs text-gray-600 italic">{String(selected.felony_details)}</p>}
+                      </div>
+                      <div>
+                        <Field label="Arrested/Convicted" value={selected.arrested_or_convicted} />
+                        {selected.arrest_details && <p className="text-xs text-gray-600 italic">{String(selected.arrest_details)}</p>}
+                      </div>
+                    </div>
+                  </PrintSection>
 
                   <PrintSection title="Housing Preferences">
                     <div className="grid grid-cols-3 gap-4">
@@ -1556,15 +1637,14 @@ export default function ApplicationsPage() {
                     </div>
                   </PrintSection>
 
-                  {selected.signature_name && (
-                    <PrintSection title="Authorization & Signature">
-                      <div className="grid grid-cols-3 gap-4">
-                        <Field label="Agreed to Terms" value={selected.agree_terms} />
-                        <Field label="Electronic Signature" value={selected.signature_name} />
-                        <Field label="Signature Date" value={formatDate(selected.signature_date)} />
-                      </div>
-                    </PrintSection>
-                  )}
+                  <PrintSection title="Authorization & Signature">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Agreed to Terms" value={selected.agree_terms} />
+                      <Field label="Electronic Signature" value={selected.signature_name} />
+                      <Field label="Signature Date" value={formatDate(selected.signature_date)} />
+                      <Field label="Consent" value={selected.consent} />
+                    </div>
+                  </PrintSection>
 
                   {documents.length > 0 && (
                     <PrintSection title={`Documents (${documents.length})`}>
