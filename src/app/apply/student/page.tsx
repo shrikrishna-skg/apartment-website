@@ -1072,7 +1072,7 @@ function StudentApplicationPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Pet Information</h3>
                       <div className="mb-5">
-                        {renderRadioGroup("Do you have pets? *", "hasPets", ["Yes", "No"], true)}
+                        {renderRadioGroup("Do you have pets?", "hasPets", ["Yes", "No"], true)}
                       </div>
 
                       {formData.hasPets === "Yes" && (
@@ -1156,7 +1156,7 @@ function StudentApplicationPage() {
                     <div className="border-t border-gray-100 pt-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Vehicle Information</h3>
                       <div className="mb-5">
-                        {renderRadioGroup("Do you have a vehicle? *", "hasVehicle", ["Yes", "No"], true)}
+                        {renderRadioGroup("Do you have a vehicle?", "hasVehicle", ["Yes", "No"], true)}
                       </div>
 
                       {formData.hasVehicle === "Yes" && (
@@ -1337,7 +1337,7 @@ function StudentApplicationPage() {
                     {renderRadioGroup("Has applicant, spouse or any proposed resident ever filed for Bankruptcy?", "filedBankruptcy", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
                     {formData.filedBankruptcy === "Yes" && (
                       <div className="pl-4 border-l-2 border-blue-200 ml-2">
                         {renderInput("Please provide details", "bankruptcyDetails", "text", "Explain the circumstances...")}
@@ -1347,7 +1347,7 @@ function StudentApplicationPage() {
                     {renderRadioGroup("Been Evicted from Tenancy?", "evictedFromTenancy", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
                     {formData.evictedFromTenancy === "Yes" && (
                       <div className="pl-4 border-l-2 border-blue-200 ml-2">
                         {renderInput("Please provide details", "evictionDetails", "text", "Explain the circumstances...")}
@@ -1357,7 +1357,7 @@ function StudentApplicationPage() {
                     {renderRadioGroup("Been convicted of a felony?", "convictedFelony", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
                     {formData.convictedFelony === "Yes" && (
                       <div className="pl-4 border-l-2 border-blue-200 ml-2">
                         {renderInput("Please provide details", "felonyDetails", "text", "Explain the circumstances...")}
@@ -1367,7 +1367,7 @@ function StudentApplicationPage() {
                     {renderRadioGroup("Have you ever been arrested or convicted of a felony/misdemeanor?", "arrestedOrConvicted", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
                     {formData.arrestedOrConvicted === "Yes" && (
                       <div className="pl-4 border-l-2 border-blue-200 ml-2">
                         {renderInput("Please provide details", "arrestDetails", "text", "Explain the circumstances...")}

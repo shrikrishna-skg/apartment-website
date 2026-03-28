@@ -337,6 +337,7 @@ export default function ApplicationsPage() {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [noteText, setNoteText] = useState("");
   const [noteSaved, setNoteSaved] = useState(false);
+  const [noteSavedAt, setNoteSavedAt] = useState<string | null>(null);
   const [confirmApprove, setConfirmApprove] = useState<Application | null>(null);
   const [approving, setApproving] = useState<string | null>(null);
   const [approveSuccess, setApproveSuccess] = useState<string | null>(null);
@@ -378,13 +379,15 @@ export default function ApplicationsPage() {
     fetchDocuments(app.id);
     // Load notes from DB
     const dbNotes = typeof app.notes === "string" ? app.notes : "";
+    let plainNote = "";
     try {
-      JSON.parse(dbNotes);
-      setNoteText("");
+      JSON.parse(dbNotes); // If it parses as JSON, it's extra fields not admin notes
     } catch {
-      setNoteText(dbNotes || "");
+      plainNote = dbNotes || "";
     }
+    setNoteText(plainNote);
     setNoteSaved(false);
+    setNoteSavedAt(plainNote ? formatDate(app.updated_at) : null);
   }, [fetchDocuments]);
 
   const fetchApplications = useCallback(async () => {
@@ -477,7 +480,8 @@ export default function ApplicationsPage() {
         setNotes((prev) => ({ ...prev, [selected.id]: noteText }));
         setApplications((prev) => prev.map((a) => (a.id === selected.id ? { ...a, notes: noteText } : a)));
         setNoteSaved(true);
-        setTimeout(() => setNoteSaved(false), 2000);
+        setNoteSavedAt(new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }) + " CT");
+        setTimeout(() => setNoteSaved(false), 3000);
       }
     } catch {
       /* noop */
@@ -1244,6 +1248,14 @@ export default function ApplicationsPage() {
                       <span className="text-xs text-green-600 font-medium">Saved successfully</span>
                     )}
                   </div>
+                  {/* Saved note display */}
+                  {noteText && noteSavedAt && (
+                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-100 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-1">Saved Note</p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{noteText}</p>
+                      <p className="text-[10px] text-gray-400 mt-2">Last saved: {noteSavedAt}</p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Timestamps */}

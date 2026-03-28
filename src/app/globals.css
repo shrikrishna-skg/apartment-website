@@ -78,9 +78,6 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--on-surface);
 }
 
-p, span, label, li {
-  color: var(--on-surface);
-}
 
 /* ── Ambient Background (subtle for light mode) ── */
 .bg-ambient {
