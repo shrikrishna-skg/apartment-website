@@ -91,6 +91,14 @@ const REQUIRED_DOCS_STUDENT = [
     maxSize: 100,
   },
   {
+    key: "admissionLetter",
+    label: "Admission Letter / Course Registration Letter / Course Schedule",
+    description: "Upload your admission letter, course registration letter, or course schedule",
+    required: true,
+    multiple: true,
+    maxSize: 10,
+  },
+  {
     key: "additional",
     label: "Additional Supporting Documents",
     description: "Upload up to 5 additional files that support your application",
