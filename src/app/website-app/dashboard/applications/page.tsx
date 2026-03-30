@@ -185,13 +185,8 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function maskSSN(ssn: string | undefined | null) {
+function formatSSN(ssn: string | undefined | null) {
   if (!ssn) return "—";
-  const digits = ssn.replace(/\D/g, "");
-  if (digits.length >= 4) {
-    return `***-**-${digits.slice(-4)}`;
-  }
-  // Non-numeric (passport number) — show as-is
   return ssn;
 }
 
@@ -854,7 +849,7 @@ export default function ApplicationsPage() {
                   <DetailField label="Email" value={selected.email} />
                   <DetailField label="Phone" value={selected.mobile_number} />
                   <DetailField label="Date of Birth" value={formatDate(selected.date_of_birth)} />
-                  <DetailField label="SSN" value={maskSSN(selected.ssn)} />
+                  <DetailField label="SSN" value={formatSSN(selected.ssn)} />
                   <DetailField label="Driving License" value={selected.driving_license} />
                   <DetailField label="Marital Status" value={selected.marital_status ? capitalize(selected.marital_status) : "—"} />
                   <DetailField label="Gender" value={selected.gender ? capitalize(selected.gender) : "—"} />
@@ -1457,7 +1452,7 @@ export default function ApplicationsPage() {
                       <Field label="Email" value={selected.email} />
                       <Field label="Phone" value={selected.mobile_number} />
                       <Field label="Date of Birth" value={formatDate(selected.date_of_birth)} />
-                      <Field label="SSN / Passport" value={maskSSN(selected.ssn)} />
+                      <Field label="SSN / Passport" value={formatSSN(selected.ssn)} />
                       <Field label="Driving License" value={selected.driving_license} />
                       <Field label="Marital Status" value={selected.marital_status} />
                       <Field label="Gender" value={selected.gender} />
