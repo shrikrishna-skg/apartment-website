@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -108,9 +108,13 @@ export default function PropertyDetailPage() {
   const currentPhotos = activeFloorPlan?.photos?.length ? activeFloorPlan.photos : property.photos;
   const totalPhotos = currentPhotos.length;
 
+  const galleryRef = useRef<HTMLElement>(null);
+
   const handleFloorPlanSelect = (idx: number) => {
     setSelectedFloorPlan(idx);
     setSelectedPhoto(0); // Reset to first photo when switching floor plan
+    // Scroll to photo gallery so user can see the photos
+    galleryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const handleCopyLink = () => {
@@ -158,6 +162,7 @@ export default function PropertyDetailPage() {
 
       {/* ── Section 2: Image Gallery ── */}
       <motion.section
+        ref={galleryRef}
         initial="hidden"
         animate="visible"
         variants={fadeIn}
@@ -337,7 +342,7 @@ export default function PropertyDetailPage() {
           {property.name}
         </h1>
         <p className="text-base font-medium text-gray-500 mb-2">
-          {activeFloorPlan?.name} – ${activeFloorPlan?.price}/month
+          {activeFloorPlan?.name} – ${activeFloorPlan?.price}/month{activeFloorPlan?.name?.toLowerCase().includes("per room") ? " per bedroom" : ""}
         </p>
         {activeFloorPlan?.description && (
           <p className="text-sm text-gray-500 mb-2">{activeFloorPlan.description}</p>
@@ -355,7 +360,7 @@ export default function PropertyDetailPage() {
             { icon: <Bed className="w-4 h-4" />, label: `${property.beds} Beds`, color: "rgba(26,115,232,0.08)", border: "rgba(26,115,232,0.2)", text: "#1a73e8" },
             { icon: <Bath className="w-4 h-4" />, label: `${property.baths} Baths`, color: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.2)", text: "#7c3aed" },
             { icon: <Maximize2 className="w-4 h-4" />, label: `${property.sqft} sqft`, color: "rgba(13,148,136,0.08)", border: "rgba(13,148,136,0.2)", text: "#0d9488" },
-            { icon: <DollarSign className="w-4 h-4" />, label: `From $${property.startingPrice}/mo`, color: "rgba(22,163,74,0.08)", border: "rgba(22,163,74,0.2)", text: "#16a34a" },
+            { icon: <DollarSign className="w-4 h-4" />, label: `From ${property.startingPrice}/mo`, color: "rgba(22,163,74,0.08)", border: "rgba(22,163,74,0.2)", text: "#16a34a" },
           ].map((badge) => (
             <span
               key={badge.label}
@@ -461,7 +466,7 @@ export default function PropertyDetailPage() {
                           </span>
                           <span className="flex items-center gap-1.5 font-semibold" style={{ color: "var(--tertiary)" }}>
                             <DollarSign className="w-4 h-4" />
-                            ${fp.price}/mo
+                            {fp.price}/mo
                           </span>
                           <span className="flex items-center gap-1.5">
                             <Camera className="w-4 h-4 text-blue-600" />
