@@ -16,6 +16,16 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      const tableMissing = error.code === "42P01" || error.code === "PGRST204" || msg.includes("does not exist") || msg.includes("schema cache") || msg.includes("could not find");
+      if (tableMissing) {
+        return NextResponse.json({
+          total_conversations: 0, conversations_this_week: 0, conversations_today: 0,
+          avg_message_count: 0, ticket_conversion_rate: 0,
+          top_topics: [], sentiment_distribution: {},
+          recent_unanswered: [],
+        });
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 

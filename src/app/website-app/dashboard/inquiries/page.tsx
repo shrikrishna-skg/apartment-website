@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
 
 interface Inquiry {
   id: string;
@@ -23,6 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function InquiriesPage() {
+  const { toast, setToast, showToast } = useSonarToast();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -32,6 +34,11 @@ export default function InquiriesPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Inquiry | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
+  const [sendingReply, setSendingReply] = useState(false);
+  const [replySent, setReplySent] = useState(false);
 
   useEffect(() => {
     fetchInquiries();
@@ -169,7 +176,7 @@ export default function InquiriesPage() {
       {/* Inquiry List */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <p className="text-gray-400 text-sm">No inquiries found.</p>
+          <p className="text-gray-600 text-sm">No inquiries found.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -181,6 +188,9 @@ export default function InquiriesPage() {
               }`}
               onClick={() => {
                 setSelected(inquiry);
+                setReplyOpen(false);
+                setReplyText("");
+                setReplySent(false);
                 if (inquiry.status === "new") updateStatus(inquiry.id, "contacted");
               }}
             >
@@ -192,16 +202,16 @@ export default function InquiriesPage() {
                       {inquiry.status}
                     </span>
                     {inquiry.inquiry_type && (
-                      <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
                         {inquiry.inquiry_type.replace(/_/g, " ")}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-gray-400 mb-1.5">{inquiry.email} {inquiry.phone ? `| ${inquiry.phone}` : ""}</p>
+                  <p className="text-xs text-gray-600 mb-1.5">{inquiry.email} {inquiry.phone ? `| ${inquiry.phone}` : ""}</p>
                   <p className="text-sm text-gray-600 line-clamp-2">{inquiry.message}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs text-gray-400">{timeAgo(inquiry.created_at)}</p>
+                  <p className="text-xs text-gray-600">{timeAgo(inquiry.created_at)}</p>
                   <select
                     value={inquiry.status}
                     onChange={(e) => {
@@ -219,7 +229,7 @@ export default function InquiriesPage() {
                   <button
                     onClick={(e) => { e.stopPropagation(); setConfirmDelete(inquiry); }}
                     title="Delete"
-                    className="mt-2 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="mt-2 p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -239,10 +249,10 @@ export default function InquiriesPage() {
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">{selected.name}</h3>
-                <p className="text-sm text-gray-400">{selected.email} {selected.phone ? `| ${selected.phone}` : ""}</p>
+                <p className="text-sm text-gray-600">{selected.email} {selected.phone ? `| ${selected.phone}` : ""}</p>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -250,41 +260,161 @@ export default function InquiriesPage() {
             <div className="px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Type</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Type</p>
                   <p className="text-sm font-medium text-gray-900">{selected.inquiry_type?.replace(/_/g, " ") || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Status</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Status</p>
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[selected.status]}`}>
                     {selected.status}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Submitted</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Submitted</p>
                   <p className="text-sm font-medium text-gray-900">{formatDate(selected.created_at)}</p>
                 </div>
                 {selected.property_slug && (
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Property</p>
+                    <p className="text-xs text-gray-600 mb-0.5">Property</p>
                     <p className="text-sm font-medium text-gray-900">{selected.property_slug}</p>
                   </div>
                 )}
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1">Message</p>
+                <p className="text-xs text-gray-600 mb-1">Message</p>
                 <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-4 whitespace-pre-wrap">{selected.message}</div>
               </div>
 
-              {/* Quick reply link */}
-              <a
-                href={`mailto:${selected.email}?subject=Re: Your inquiry to College Place Apartments`}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                </svg>
-                Reply via Email
-              </a>
+              {/* Reply Section */}
+              {!replyOpen && !replySent && (
+                <button
+                  onClick={() => { setReplyOpen(true); setReplyText(""); setReplySent(false); }}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  Reply via Email
+                </button>
+              )}
+
+              {replySent && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-green-700">Reply sent successfully!</p>
+                    <p className="text-xs text-green-600">Email delivered to {selected.email} and CC to office@collegeplace.us</p>
+                  </div>
+                </div>
+              )}
+
+              {replyOpen && !replySent && (
+                <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-gray-700">Reply to {selected.name}</p>
+                    <p className="text-[10px] text-gray-600">CC: office@collegeplace.us</p>
+                  </div>
+
+                  <textarea
+                    value={replyText}
+                    onChange={(e) => setReplyText(e.target.value)}
+                    placeholder="Type your reply or use AI to generate one..."
+                    rows={6}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 resize-none bg-white"
+                  />
+
+                  <div className="flex items-center gap-2">
+                    {/* AI Generate Button */}
+                    <button
+                      onClick={async () => {
+                        setGeneratingAI(true);
+                        try {
+                          const res = await fetch(`/api/contact/${selected.id}/ai-reply`, { method: "POST" });
+                          const data = await res.json();
+                          if (data.suggestion) setReplyText(data.suggestion);
+                        } catch {
+                          // Silently fail — user can type manually
+                        } finally {
+                          setGeneratingAI(false);
+                        }
+                      }}
+                      disabled={generatingAI}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50"
+                    >
+                      {generatingAI ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+                          </svg>
+                          AI Suggest
+                        </>
+                      )}
+                    </button>
+
+                    <div className="flex-1" />
+
+                    {/* Cancel */}
+                    <button
+                      onClick={() => setReplyOpen(false)}
+                      className="px-3 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+
+                    {/* Send */}
+                    <button
+                      onClick={async () => {
+                        if (!replyText.trim()) return;
+                        setSendingReply(true);
+                        try {
+                          const res = await fetch(`/api/contact/${selected.id}/reply`, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ replyMessage: replyText }),
+                          });
+                          if (res.ok) {
+                            const data = await res.json();
+                            setReplySent(true);
+                            setReplyOpen(false);
+                            showToast(`Reply sent to ${selected.email}`);
+                            if (data.statusUpdated) {
+                              setInquiries((prev) => prev.map((i) => (i.id === selected.id ? { ...i, status: "contacted" } : i)));
+                              setSelected({ ...selected, status: "contacted" });
+                            }
+                          } else {
+                            showToast("Failed to send reply", "error");
+                          }
+                        } finally {
+                          setSendingReply(false);
+                        }
+                      }}
+                      disabled={sendingReply || !replyText.trim()}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    >
+                      {sendingReply ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                          </svg>
+                          Send Reply
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-gray-100">
                 <p className="text-xs font-medium text-gray-500 mb-2">Update Status</p>
@@ -337,6 +467,7 @@ export default function InquiriesPage() {
           </div>
         </div>
       )}
+      <SonarToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

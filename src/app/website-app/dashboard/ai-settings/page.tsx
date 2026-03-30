@@ -200,6 +200,9 @@ export default function AISettingsPage() {
   const [showArticleForm, setShowArticleForm] = useState(false);
   const [articleForm, setArticleForm] = useState({ title: "", content: "", category: "faq", tags: "", priority: 0 });
   const [savingArticle, setSavingArticle] = useState(false);
+  const [showGenerateForm, setShowGenerateForm] = useState(false);
+  const [generateTopic, setGenerateTopic] = useState("");
+  const [generatingArticle, setGeneratingArticle] = useState(false);
 
   // --- Versions states ---
   const [expandedVersion, setExpandedVersion] = useState<string | null>(null);
@@ -277,11 +280,39 @@ export default function AISettingsPage() {
     }
   }, [showToast]);
 
-  // Load initial data
+  // Auto-setup: check tables, seed data if needed, then load
   useEffect(() => {
-    fetchSettings();
-    fetchArticles();
-  }, [fetchSettings, fetchArticles]);
+    async function initAI() {
+      try {
+        // Check if tables exist
+        const checkRes = await fetch("/api/ai/setup");
+        if (checkRes.ok) {
+          const checkData = await checkRes.json();
+          if (!checkData.allExist) {
+            showToast("AI tables need to be created — run supabase/ai-knowledge-base-setup.sql in Supabase SQL Editor", "error");
+            // Still try to load with graceful fallbacks
+            fetchSettings();
+            fetchArticles();
+            return;
+          }
+          // Tables exist — run auto-seed (idempotent), wait for completion
+          const seedRes = await fetch("/api/ai/setup", { method: "POST" });
+          if (seedRes.ok) {
+            const seedData = await seedRes.json();
+            if (seedData.status === "tables_missing") {
+              showToast("AI tables not found — run ai-knowledge-base-setup.sql in Supabase SQL Editor", "error");
+            }
+          }
+        }
+      } catch {
+        // Setup check failed — continue anyway, individual fetches will handle errors
+      }
+      // Load data after setup completes
+      fetchSettings();
+      fetchArticles();
+    }
+    initAI();
+  }, [fetchSettings, fetchArticles, showToast]);
 
   // Load tab-specific data on tab switch
   useEffect(() => {
@@ -360,6 +391,40 @@ export default function AISettingsPage() {
       fetchSettings();
     } catch {
       showToast("Failed to rollback version", "error");
+    }
+  };
+
+  const handleGenerateArticle = async () => {
+    if (!generateTopic.trim()) return;
+    setGeneratingArticle(true);
+    try {
+      const res = await fetch("/api/ai/generate-article", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: generateTopic }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        // Pre-fill the article form with generated content
+        setArticleForm({
+          title: data.title || "",
+          content: data.content || "",
+          category: data.category || "faq",
+          tags: data.tags || "",
+          priority: data.priority || 5,
+        });
+        setEditingArticle(null);
+        setShowArticleForm(true);
+        setShowGenerateForm(false);
+        showToast("Article generated — review and save it below");
+      } else {
+        const err = await res.json();
+        showToast(err.error || "Failed to generate article", "error");
+      }
+    } catch {
+      showToast("Failed to generate article", "error");
+    } finally {
+      setGeneratingArticle(false);
     }
   };
 
@@ -605,46 +670,46 @@ export default function AISettingsPage() {
             {activeVersion ? (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">Version</p>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">Version</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">v{activeVersion.version_number}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">Label</p>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">Label</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{activeVersion.label}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">Articles</p>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">Articles</p>
                   <p className="text-2xl font-bold text-gray-900 mt-1">{activeVersion.article_count}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide">Token Estimate</p>
+                  <p className="text-xs text-gray-600 uppercase tracking-wide">Token Estimate</p>
                   <p className="text-sm font-medium text-gray-900 mt-1">{activeVersion.total_token_estimate?.toLocaleString()}</p>
                 </div>
                 <div className="col-span-2 sm:col-span-4">
-                  <p className="text-xs text-gray-400">Activated: {formatDate(activeVersion.updated_at)}</p>
+                  <p className="text-xs text-gray-600">Activated: {formatDate(activeVersion.updated_at)}</p>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No active version. Create and activate a version to start.</p>
+              <p className="text-sm text-gray-600">No active version. Create and activate a version to start.</p>
             )}
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Total Articles</p>
+              <p className="text-xs text-gray-600 uppercase tracking-wide">Total Articles</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{totalArticles}</p>
-              <p className="text-xs text-gray-400 mt-1">{activeArticles} active</p>
+              <p className="text-xs text-gray-600 mt-1">{activeArticles} active</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Total Conversations</p>
+              <p className="text-xs text-gray-600 uppercase tracking-wide">Total Conversations</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{analytics?.total_conversations ?? "---"}</p>
-              <p className="text-xs text-gray-400 mt-1">{analytics ? `${analytics.conversations_today} today` : "Load analytics tab"}</p>
+              <p className="text-xs text-gray-600 mt-1">{analytics ? `${analytics.conversations_today} today` : "Load analytics tab"}</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 p-5">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Pending Suggestions</p>
+              <p className="text-xs text-gray-600 uppercase tracking-wide">Pending Suggestions</p>
               <p className="text-3xl font-bold text-gray-900 mt-2">{suggestions.length}</p>
-              <p className="text-xs text-gray-400 mt-1">from AI analysis</p>
+              <p className="text-xs text-gray-600 mt-1">from AI analysis</p>
             </div>
           </div>
 
@@ -673,7 +738,7 @@ export default function AISettingsPage() {
                   onChange={(e) => setTemperature(parseFloat(e.target.value))}
                   className="w-full mt-2"
                 />
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <div className="flex justify-between text-xs text-gray-600 mt-1">
                   <span>Precise (0)</span>
                   <span>Creative (1)</span>
                 </div>
@@ -778,6 +843,18 @@ export default function AISettingsPage() {
             />
             <button
               onClick={() => {
+                setShowGenerateForm(true);
+                setGenerateTopic("");
+              }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 transition-colors whitespace-nowrap"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+              </svg>
+              Generate Article
+            </button>
+            <button
+              onClick={() => {
                 setEditingArticle(null);
                 setArticleForm({ title: "", content: "", category: "faq", tags: "", priority: 0 });
                 setShowArticleForm(true);
@@ -790,6 +867,53 @@ export default function AISettingsPage() {
               Add Article
             </button>
           </div>
+
+          {/* AI Generate Article Form */}
+          {showGenerateForm && (
+            <div className="bg-white rounded-2xl border border-purple-200 p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
+                <h3 className="text-base font-semibold text-gray-900">Generate Article with AI</h3>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Describe the topic and AI will generate a complete knowledge base article with title, content, category, and tags.</p>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={generateTopic}
+                  onChange={(e) => setGenerateTopic(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && generateTopic.trim() && !generatingArticle) {
+                      handleGenerateArticle();
+                    }
+                  }}
+                  placeholder="e.g., Move-in checklist for new tenants, Parking policy, Guest policy..."
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-400"
+                />
+                <button
+                  onClick={handleGenerateArticle}
+                  disabled={generatingArticle || !generateTopic.trim()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-xl hover:bg-purple-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+                >
+                  {generatingArticle ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    "Generate"
+                  )}
+                </button>
+                <button
+                  onClick={() => setShowGenerateForm(false)}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Article Form (Inline) */}
           {showArticleForm && (
@@ -872,7 +996,7 @@ export default function AISettingsPage() {
             <div className="flex justify-center py-12"><Spinner /></div>
           ) : filteredArticles.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <p className="text-gray-400 text-sm">No articles found.</p>
+              <p className="text-gray-600 text-sm">No articles found.</p>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -893,7 +1017,7 @@ export default function AISettingsPage() {
                       <tr key={article.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                         <td className="px-5 py-3.5">
                           <p className="font-medium text-gray-900 truncate max-w-xs">{article.title}</p>
-                          <p className="text-xs text-gray-400 mt-0.5 truncate max-w-xs">
+                          <p className="text-xs text-gray-600 mt-0.5 truncate max-w-xs">
                             {article.content.slice(0, 80)}...
                           </p>
                         </td>
@@ -915,7 +1039,7 @@ export default function AISettingsPage() {
                             <button
                               onClick={() => editArticle(article)}
                               title="Edit"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded-lg text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -924,7 +1048,7 @@ export default function AISettingsPage() {
                             <button
                               onClick={() => deleteArticle(article.id)}
                               title="Deactivate"
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                              className="p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
                             >
                               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -937,7 +1061,7 @@ export default function AISettingsPage() {
                   </tbody>
                 </table>
               </div>
-              <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-400">
+              <div className="px-5 py-3 border-t border-gray-100 text-xs text-gray-600">
                 Showing {filteredArticles.length} of {articles.length} articles
               </div>
             </div>
@@ -965,7 +1089,7 @@ export default function AISettingsPage() {
             <div className="flex justify-center py-12"><Spinner /></div>
           ) : versions.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <p className="text-gray-400 text-sm">No versions yet. Create one from the Overview tab.</p>
+              <p className="text-gray-600 text-sm">No versions yet. Create one from the Overview tab.</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -1003,7 +1127,7 @@ export default function AISettingsPage() {
                         )}
                         <button
                           onClick={() => setExpandedVersion(expandedVersion === version.id ? null : version.id)}
-                          className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+                          className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
                         >
                           <svg className={`w-4 h-4 transition-transform ${expandedVersion === version.id ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -1011,7 +1135,7 @@ export default function AISettingsPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="mt-3 flex gap-6 text-xs text-gray-400">
+                    <div className="mt-3 flex gap-6 text-xs text-gray-600">
                       <span>{version.article_count} articles</span>
                       <span>{version.total_token_estimate?.toLocaleString()} tokens</span>
                       <span>Created {formatDate(version.created_at)}</span>
@@ -1026,11 +1150,11 @@ export default function AISettingsPage() {
                         {version.snapshot.articles.map((article: Article, idx: number) => (
                           <div key={article.id || idx} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 text-xs">
                             <div className="flex items-center gap-2">
-                              <span className="text-gray-400">{idx + 1}.</span>
+                              <span className="text-gray-600">{idx + 1}.</span>
                               <span className="font-medium text-gray-900">{article.title}</span>
                               <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{article.category}</span>
                             </div>
-                            <span className="text-gray-400">Priority: {article.priority}</span>
+                            <span className="text-gray-600">Priority: {article.priority}</span>
                           </div>
                         ))}
                       </div>
@@ -1060,7 +1184,7 @@ export default function AISettingsPage() {
                   { label: "Ticket Rate", value: `${analytics.ticket_conversion_rate}%` },
                 ].map((stat) => (
                   <div key={stat.label} className="bg-white rounded-2xl border border-gray-100 p-4">
-                    <p className="text-xs text-gray-400 uppercase tracking-wide">{stat.label}</p>
+                    <p className="text-xs text-gray-600 uppercase tracking-wide">{stat.label}</p>
                     <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
                   </div>
                 ))}
@@ -1070,10 +1194,10 @@ export default function AISettingsPage() {
                 {/* Top Topics */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h3 className="text-base font-semibold text-gray-900 mb-4">Top Topics</h3>
-                  {analytics.top_topics.length > 0 ? (
+                  {(analytics.top_topics ?? []).length > 0 ? (
                     <div className="space-y-3">
-                      {analytics.top_topics.map((t) => {
-                        const maxCount = analytics.top_topics[0]?.count || 1;
+                      {(analytics.top_topics ?? []).map((t) => {
+                        const maxCount = (analytics.top_topics ?? [])[0]?.count || 1;
                         const width = Math.max(10, (t.count / maxCount) * 100);
                         return (
                           <div key={t.topic} className="flex items-center gap-3">
@@ -1081,22 +1205,22 @@ export default function AISettingsPage() {
                             <div className="flex-1 bg-gray-100 rounded-full h-2.5">
                               <div className="bg-blue-500 h-2.5 rounded-full" style={{ width: `${width}%` }} />
                             </div>
-                            <span className="text-xs text-gray-400 w-8 text-right">{t.count}</span>
+                            <span className="text-xs text-gray-600 w-8 text-right">{t.count}</span>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400">No topic data yet.</p>
+                    <p className="text-sm text-gray-600">No topic data yet.</p>
                   )}
                 </div>
 
                 {/* Sentiment */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-6">
                   <h3 className="text-base font-semibold text-gray-900 mb-4">Sentiment Breakdown</h3>
-                  {Object.keys(analytics.sentiment_distribution).length > 0 ? (
+                  {Object.keys(analytics.sentiment_distribution ?? {}).length > 0 ? (
                     <div className="space-y-3">
-                      {Object.entries(analytics.sentiment_distribution).map(([sentiment, count]) => {
+                      {Object.entries(analytics.sentiment_distribution ?? {}).map(([sentiment, count]) => {
                         const colors: Record<string, string> = {
                           positive: "bg-green-500",
                           neutral: "bg-gray-400",
@@ -1112,13 +1236,13 @@ export default function AISettingsPage() {
                                 style={{ width: `${Math.max(10, (count / analytics.total_conversations) * 100)}%` }}
                               />
                             </div>
-                            <span className="text-xs text-gray-400 w-8 text-right">{count}</span>
+                            <span className="text-xs text-gray-600 w-8 text-right">{count}</span>
                           </div>
                         );
                       })}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400">No sentiment data yet.</p>
+                    <p className="text-sm text-gray-600">No sentiment data yet.</p>
                   )}
                 </div>
               </div>
@@ -1126,13 +1250,13 @@ export default function AISettingsPage() {
               {/* Unanswered Questions */}
               <div className="bg-white rounded-2xl border border-gray-100 p-6">
                 <h3 className="text-base font-semibold text-gray-900 mb-4">Unanswered Questions</h3>
-                {analytics.recent_unanswered.length > 0 ? (
+                {(analytics.recent_unanswered ?? []).length > 0 ? (
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {analytics.recent_unanswered.map((q, idx) => (
+                    {(analytics.recent_unanswered ?? []).map((q, idx) => (
                       <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3">
                         <div>
                           <p className="text-sm text-gray-900">{q.question}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{formatDate(q.created_at)}</p>
+                          <p className="text-xs text-gray-600 mt-0.5">{formatDate(q.created_at)}</p>
                         </div>
                         <button
                           onClick={() => createArticleFromQuestion(q.question)}
@@ -1144,7 +1268,7 @@ export default function AISettingsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400">No unanswered questions recorded.</p>
+                  <p className="text-sm text-gray-600">No unanswered questions recorded.</p>
                 )}
               </div>
 
@@ -1174,7 +1298,7 @@ export default function AISettingsPage() {
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="text-sm font-semibold text-gray-900">{s.title}</h4>
                               <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{s.category}</span>
-                              <span className="text-xs text-gray-400">Priority: {s.priority}</span>
+                              <span className="text-xs text-gray-600">Priority: {s.priority}</span>
                             </div>
                             <p className="text-xs text-gray-600 line-clamp-2">{s.suggested_content}</p>
                             <p className="text-xs text-blue-600 mt-1">{s.reasoning}</p>
@@ -1198,13 +1322,13 @@ export default function AISettingsPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-400">No suggestions yet. Click &quot;Analyze Recent Conversations&quot; to generate.</p>
+                  <p className="text-sm text-gray-600">No suggestions yet. Click &quot;Analyze Recent Conversations&quot; to generate.</p>
                 )}
               </div>
             </>
           ) : (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <p className="text-gray-400 text-sm">Failed to load analytics data.</p>
+              <p className="text-gray-600 text-sm">Failed to load analytics data.</p>
               <button onClick={fetchAnalytics} className="mt-4 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
                 Retry
               </button>
@@ -1247,7 +1371,7 @@ export default function AISettingsPage() {
                     </a>
                     <button
                       onClick={() => removeUrl(url)}
-                      className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors ml-2 flex-shrink-0"
+                      className="p-1 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors ml-2 flex-shrink-0"
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -1257,7 +1381,7 @@ export default function AISettingsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400 mb-4">No URLs configured yet.</p>
+              <p className="text-sm text-gray-600 mb-4">No URLs configured yet.</p>
             )}
 
             <div className="flex gap-3">
@@ -1282,7 +1406,7 @@ export default function AISettingsPage() {
             </div>
 
             {settings?.last_website_sync && (
-              <p className="text-xs text-gray-400 mt-3">Last sync: {formatDate(settings.last_website_sync)}</p>
+              <p className="text-xs text-gray-600 mt-3">Last sync: {formatDate(settings.last_website_sync)}</p>
             )}
           </div>
 
@@ -1304,7 +1428,7 @@ export default function AISettingsPage() {
                           </a>
                         )}
                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{article.content.slice(0, 200)}</p>
-                        <p className="text-xs text-gray-400 mt-1">Updated: {formatDate(article.updated_at)}</p>
+                        <p className="text-xs text-gray-600 mt-1">Updated: {formatDate(article.updated_at)}</p>
                       </div>
                       <button
                         onClick={() => toggleArticleActive(article)}
@@ -1317,7 +1441,7 @@ export default function AISettingsPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-400">No website-synced articles yet. Add URLs and click Sync Now.</p>
+              <p className="text-sm text-gray-600">No website-synced articles yet. Add URLs and click Sync Now.</p>
             )}
           </div>
         </div>

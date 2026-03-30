@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
 
 interface TourBooking {
   id: string;
@@ -25,8 +26,16 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-gray-50 text-gray-500 border-gray-200",
   no_show: "bg-red-50 text-red-700 border-red-200",
 };
+const STATUS_DOT_COLORS: Record<string, string> = {
+  confirmed: "bg-blue-500",
+  completed: "bg-emerald-500",
+  cancelled: "bg-gray-400",
+  no_show: "bg-red-500",
+};
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function ToursPage() {
+  const { toast, setToast, showToast } = useSonarToast();
   const [tours, setTours] = useState<TourBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -36,6 +45,14 @@ export default function ToursPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<TourBooking | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
   useEffect(() => {
     fetchTours();
@@ -65,6 +82,7 @@ export default function ToursPage() {
         const updated = await res.json();
         setTours((prev) => prev.map((t) => (t.id === id ? { ...t, ...updated } : t)));
         if (selected?.id === id) setSelected({ ...selected, ...updated });
+        showToast(`Tour status updated to ${status === "no_show" ? "No Show" : status}`);
       }
     } finally {
       setUpdating(null);
@@ -132,6 +150,46 @@ export default function ToursPage() {
 
   const sortedDates = Object.keys(groupedByDate).sort();
 
+  // ── Calendar helpers ──
+  const calendarDays = useMemo(() => {
+    const year = calendarMonth.getFullYear();
+    const month = calendarMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days: (number | null)[] = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let d = 1; d <= daysInMonth; d++) days.push(d);
+    return days;
+  }, [calendarMonth]);
+
+  const toursByDate = useMemo(() => {
+    const map: Record<string, TourBooking[]> = {};
+    for (const t of filtered) {
+      if (!map[t.tour_date]) map[t.tour_date] = [];
+      map[t.tour_date].push(t);
+    }
+    return map;
+  }, [filtered]);
+
+  const calMonthLabel = calendarMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const prevMonth = () => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1));
+  const nextMonth = () => setCalendarMonth(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1));
+  const goToToday = () => {
+    const now = new Date();
+    setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedDate(now.toISOString().split("T")[0]);
+  };
+
+  const dateKey = (day: number) => {
+    const y = calendarMonth.getFullYear();
+    const m = String(calendarMonth.getMonth() + 1).padStart(2, "0");
+    const d = String(day).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  };
+
+  const selectedDayTours = selectedDate ? (toursByDate[selectedDate] || []).sort((a, b) => a.tour_time.localeCompare(b.tour_time)) : [];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -142,9 +200,31 @@ export default function ToursPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Tour Bookings</h1>
-        <p className="text-sm text-gray-500 mt-1">{filtered.length} booking{filtered.length !== 1 ? "s" : ""} found</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Tour Bookings</h1>
+          <p className="text-sm text-gray-500 mt-1">{filtered.length} booking{filtered.length !== 1 ? "s" : ""} found</p>
+        </div>
+        <div className="flex bg-gray-100 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode("calendar")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === "calendar" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 inline-block mr-1.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            Calendar
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${viewMode === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 inline-block mr-1.5 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            List
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -177,10 +257,144 @@ export default function ToursPage() {
         </select>
       </div>
 
-      {/* Grouped by date */}
-      {sortedDates.length === 0 ? (
+      {/* ── Calendar View ── */}
+      {viewMode === "calendar" && (
+        <div className="space-y-4">
+          {/* Calendar header */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+              </button>
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold text-gray-900">{calMonthLabel}</h2>
+                <button onClick={goToToday} className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 transition-colors">Today</button>
+              </div>
+              <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-700">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+              </button>
+            </div>
+
+            {/* Weekday headers */}
+            <div className="grid grid-cols-7 border-b border-gray-100">
+              {WEEKDAYS.map((wd) => (
+                <div key={wd} className="py-2 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">{wd}</div>
+              ))}
+            </div>
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7">
+              {calendarDays.map((day, i) => {
+                if (day === null) return <div key={`empty-${i}`} className="min-h-[80px] border-b border-r border-gray-50 bg-gray-50/30" />;
+
+                const dk = dateKey(day);
+                const dayTours = toursByDate[dk] || [];
+                const isToday = dk === today;
+                const isSelected = dk === selectedDate;
+                const hasTours = dayTours.length > 0;
+
+                // Collect unique statuses for dots
+                const statuses = [...new Set(dayTours.map((t) => t.status))];
+
+                return (
+                  <button
+                    key={dk}
+                    onClick={() => setSelectedDate(dk)}
+                    className={`min-h-[80px] border-b border-r border-gray-50 p-2 text-left transition-all hover:bg-blue-50/50 relative group ${isSelected ? "bg-blue-50 ring-1 ring-inset ring-blue-200" : ""}`}
+                  >
+                    <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-medium ${
+                      isToday && isSelected ? "bg-blue-600 text-white" :
+                      isToday ? "ring-2 ring-blue-500 text-blue-600" :
+                      isSelected ? "bg-blue-100 text-blue-700" :
+                      "text-gray-700"
+                    }`}>
+                      {day}
+                    </span>
+                    {hasTours && (
+                      <div className="mt-1">
+                        <span className="text-xs font-semibold text-gray-500">{dayTours.length} tour{dayTours.length !== 1 ? "s" : ""}</span>
+                        <div className="flex gap-0.5 mt-0.5">
+                          {statuses.slice(0, 4).map((s) => (
+                            <span key={s} className={`w-2 h-2 rounded-full ${STATUS_DOT_COLORS[s] || "bg-gray-400"}`} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Selected day's tours */}
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-3 bg-blue-50">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-sm font-semibold text-gray-900">{formatDate(selectedDate)}</span>
+              {selectedDate === today && <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Today</span>}
+              <span className="text-xs text-gray-600 ml-auto">{selectedDayTours.length} tour{selectedDayTours.length !== 1 ? "s" : ""}</span>
+            </div>
+            {selectedDayTours.length === 0 ? (
+              <div className="text-center py-10">
+                <p className="text-gray-600 text-sm">No tours scheduled for this day.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {selectedDayTours.map((tour) => (
+                  <div key={tour.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                    <div className="w-16 text-center">
+                      <p className="text-sm font-bold text-gray-900">{formatTime(tour.tour_time)}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <button onClick={() => setSelected(tour)} className="text-left hover:text-blue-600 transition-colors">
+                        <p className="font-medium text-gray-900">{tour.first_name} {tour.last_name}</p>
+                        <p className="text-xs text-gray-600">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
+                      </button>
+                    </div>
+                    {tour.floor_plan && (
+                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hidden sm:inline-flex">{tour.floor_plan}</span>
+                    )}
+                    {tour.google_event_id && (
+                      <span className="text-xs text-emerald-600" title="Synced to Google Calendar">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </span>
+                    )}
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[tour.status] || "bg-gray-50 text-gray-500"}`}>
+                      {tour.status === "no_show" ? "No Show" : tour.status}
+                    </span>
+                    <select
+                      value={tour.status}
+                      onChange={(e) => updateStatus(tour.id, e.target.value)}
+                      disabled={updating === tour.id}
+                      className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none disabled:opacity-50"
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>{s === "no_show" ? "No Show" : s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setConfirmDelete(tour); }}
+                      title="Delete"
+                      className="p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── List View (Grouped by date) ── */}
+      {viewMode === "list" && (sortedDates.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <p className="text-gray-400 text-sm">No tour bookings found.</p>
+          <p className="text-gray-600 text-sm">No tour bookings found.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -193,7 +407,7 @@ export default function ToursPage() {
                   <div className={`w-2 h-2 rounded-full ${isToday ? "bg-blue-500" : isPast ? "bg-gray-300" : "bg-emerald-500"}`} />
                   <span className="text-sm font-semibold text-gray-900">{formatDate(date)}</span>
                   {isToday && <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">Today</span>}
-                  <span className="text-xs text-gray-400 ml-auto">{groupedByDate[date].length} tour{groupedByDate[date].length !== 1 ? "s" : ""}</span>
+                  <span className="text-xs text-gray-600 ml-auto">{groupedByDate[date].length} tour{groupedByDate[date].length !== 1 ? "s" : ""}</span>
                 </div>
                 <div className="divide-y divide-gray-50">
                   {groupedByDate[date]
@@ -206,7 +420,7 @@ export default function ToursPage() {
                         <div className="flex-1 min-w-0">
                           <button onClick={() => setSelected(tour)} className="text-left hover:text-blue-600 transition-colors">
                             <p className="font-medium text-gray-900">{tour.first_name} {tour.last_name}</p>
-                            <p className="text-xs text-gray-400">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
+                            <p className="text-xs text-gray-600">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
                           </button>
                         </div>
                         {tour.floor_plan && (
@@ -235,7 +449,7 @@ export default function ToursPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); setConfirmDelete(tour); }}
                           title="Delete"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -248,7 +462,7 @@ export default function ToursPage() {
             );
           })}
         </div>
-      )}
+      ))}
 
       {/* Detail Modal */}
       {selected && (
@@ -257,10 +471,10 @@ export default function ToursPage() {
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">{selected.first_name} {selected.last_name}</h3>
-                <p className="text-sm text-gray-400">{selected.email}</p>
+                <p className="text-sm text-gray-600">{selected.email}</p>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -268,39 +482,39 @@ export default function ToursPage() {
             <div className="px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Tour Date</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Tour Date</p>
                   <p className="text-sm font-medium text-gray-900">{formatDate(selected.tour_date)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Tour Time</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Tour Time</p>
                   <p className="text-sm font-medium text-gray-900">{formatTime(selected.tour_time)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Phone</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Phone</p>
                   <p className="text-sm font-medium text-gray-900">{selected.phone || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Status</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Status</p>
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[selected.status]}`}>
                     {selected.status === "no_show" ? "No Show" : selected.status}
                   </span>
                 </div>
                 {selected.floor_plan && (
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Floor Plan</p>
+                    <p className="text-xs text-gray-600 mb-0.5">Floor Plan</p>
                     <p className="text-sm font-medium text-gray-900">{selected.floor_plan}</p>
                   </div>
                 )}
                 {selected.google_event_id && (
                   <div>
-                    <p className="text-xs text-gray-400 mb-0.5">Google Calendar</p>
+                    <p className="text-xs text-gray-600 mb-0.5">Google Calendar</p>
                     <p className="text-sm font-medium text-emerald-600">Synced</p>
                   </div>
                 )}
               </div>
               {selected.notes && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Notes</p>
+                  <p className="text-xs text-gray-600 mb-1">Notes</p>
                   <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">{selected.notes}</p>
                 </div>
               )}
@@ -360,6 +574,7 @@ export default function ToursPage() {
           </div>
         </div>
       )}
+      <SonarToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

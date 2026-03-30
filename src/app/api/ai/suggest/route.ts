@@ -21,6 +21,11 @@ export async function POST() {
       .order("created_at", { ascending: false });
 
     if (convError) {
+      const msg = convError.message?.toLowerCase() || "";
+      const tableMissing = convError.code === "42P01" || convError.code === "PGRST204" || msg.includes("does not exist") || msg.includes("schema cache") || msg.includes("could not find");
+      if (tableMissing) {
+        return NextResponse.json({ suggestions: [], message: "AI tables not set up yet" });
+      }
       return NextResponse.json({ error: convError.message }, { status: 500 });
     }
 

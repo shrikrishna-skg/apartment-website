@@ -161,7 +161,7 @@ export default function DashboardOverview() {
               </div>
               <p className="text-3xl font-bold text-gray-900">{card.stat(stats)}</p>
               <p className="text-sm font-medium text-gray-900 mt-1">{card.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{card.sub(stats)}</p>
+              <p className="text-xs text-gray-600 mt-0.5">{card.sub(stats)}</p>
             </Link>
           );
         })}
@@ -176,7 +176,7 @@ export default function DashboardOverview() {
               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
               <div>
                 <p className="text-sm font-medium text-gray-900">{stats.applications.pending} pending application{stats.applications.pending !== 1 ? "s" : ""}</p>
-                <p className="text-xs text-gray-400">Waiting for review</p>
+                <p className="text-xs text-gray-600">Waiting for review</p>
               </div>
             </Link>
           )}
@@ -185,7 +185,7 @@ export default function DashboardOverview() {
               <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
               <div>
                 <p className="text-sm font-medium text-gray-900">{stats.inquiries.new} new inquir{stats.inquiries.new !== 1 ? "ies" : "y"}</p>
-                <p className="text-xs text-gray-400">Awaiting response</p>
+                <p className="text-xs text-gray-600">Awaiting response</p>
               </div>
             </Link>
           )}
@@ -194,7 +194,7 @@ export default function DashboardOverview() {
               <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
               <div>
                 <p className="text-sm font-medium text-gray-900">{stats.maintenance.open} open maintenance request{stats.maintenance.open !== 1 ? "s" : ""}</p>
-                <p className="text-xs text-gray-400">Needs attention</p>
+                <p className="text-xs text-gray-600">Needs attention</p>
               </div>
             </Link>
           )}
@@ -203,7 +203,7 @@ export default function DashboardOverview() {
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <div>
                 <p className="text-sm font-medium text-gray-900">{stats.tours.confirmed} upcoming tour{stats.tours.confirmed !== 1 ? "s" : ""}</p>
-                <p className="text-xs text-gray-400">Confirmed bookings</p>
+                <p className="text-xs text-gray-600">Confirmed bookings</p>
               </div>
             </Link>
           )}
@@ -212,7 +212,7 @@ export default function DashboardOverview() {
               <div className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
               <div>
                 <p className="text-sm font-medium text-gray-900">{stats.referrals.submitted} new referral{stats.referrals.submitted !== 1 ? "s" : ""}</p>
-                <p className="text-xs text-gray-400">Pending follow-up</p>
+                <p className="text-xs text-gray-600">Pending follow-up</p>
               </div>
             </Link>
           )}
@@ -225,7 +225,7 @@ export default function DashboardOverview() {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">All caught up!</p>
-                <p className="text-xs text-gray-400">No items need immediate attention</p>
+                <p className="text-xs text-gray-600">No items need immediate attention</p>
               </div>
             </div>
           )}

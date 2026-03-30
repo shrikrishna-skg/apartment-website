@@ -15,15 +15,15 @@ export async function GET() {
       .order("version_number", { ascending: false });
 
     if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      const tableMissing = error.code === "42P01" || error.code === "PGRST204" || msg.includes("does not exist") || msg.includes("schema cache") || msg.includes("could not find");
+      if (tableMissing) return NextResponse.json([]);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data ?? []);
   } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch versions" },
-      { status: 500 }
-    );
+    return NextResponse.json([]);
   }
 }
 

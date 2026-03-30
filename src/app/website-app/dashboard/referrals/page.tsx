@@ -173,7 +173,7 @@ export default function ReferralsPage() {
       {/* Table */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <p className="text-gray-400 text-sm">No referrals found.</p>
+          <p className="text-gray-600 text-sm">No referrals found.</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -196,13 +196,13 @@ export default function ReferralsPage() {
                     <td className="px-5 py-3.5">
                       <button onClick={() => setSelected(ref)} className="text-left hover:text-blue-600 transition-colors">
                         <p className="font-medium text-gray-900">{ref.referrer_name}</p>
-                        <p className="text-xs text-gray-400">{ref.referrer_email}</p>
+                        <p className="text-xs text-gray-600">{ref.referrer_email}</p>
                       </button>
                     </td>
                     <td className="px-5 py-3.5 text-gray-600">{ref.referrer_unit}</td>
                     <td className="px-5 py-3.5">
                       <p className="text-gray-900">{ref.friend_name}</p>
-                      <p className="text-xs text-gray-400">{ref.friend_email || ref.friend_phone || "—"}</p>
+                      <p className="text-xs text-gray-600">{ref.friend_email || ref.friend_phone || "—"}</p>
                     </td>
                     <td className="px-5 py-3.5 text-gray-500 text-xs">{ref.move_in_timeline || "—"}</td>
                     <td className="px-5 py-3.5">
@@ -210,7 +210,7 @@ export default function ReferralsPage() {
                         {ref.status}
                       </span>
                     </td>
-                    <td className="px-5 py-3.5 text-gray-400 text-xs">{formatDate(ref.created_at)}</td>
+                    <td className="px-5 py-3.5 text-gray-600 text-xs">{formatDate(ref.created_at)}</td>
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-2">
                       <select
@@ -226,7 +226,7 @@ export default function ReferralsPage() {
                       <button
                         onClick={(e) => { e.stopPropagation(); setConfirmDelete(ref); }}
                         title="Delete"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        className="p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -249,10 +249,10 @@ export default function ReferralsPage() {
             <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-gray-900">Referral Details</h3>
-                <p className="text-sm text-gray-400">Submitted {formatDate(selected.created_at)}</p>
+                <p className="text-sm text-gray-600">Submitted {formatDate(selected.created_at)}</p>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -260,33 +260,33 @@ export default function ReferralsPage() {
             <div className="px-6 py-5 space-y-5">
               {/* Referrer */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Referrer</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Referrer</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><p className="text-xs text-gray-400">Name</p><p className="text-sm font-medium text-gray-900">{selected.referrer_name}</p></div>
-                  <div><p className="text-xs text-gray-400">Unit</p><p className="text-sm font-medium text-gray-900">{selected.referrer_unit}</p></div>
-                  <div><p className="text-xs text-gray-400">Email</p><p className="text-sm font-medium text-gray-900">{selected.referrer_email}</p></div>
-                  <div><p className="text-xs text-gray-400">Phone</p><p className="text-sm font-medium text-gray-900">{selected.referrer_phone}</p></div>
-                  <div><p className="text-xs text-gray-400">Preferred Contact</p><p className="text-sm font-medium text-gray-900">{selected.preferred_contact}</p></div>
-                  <div><p className="text-xs text-gray-400">Relationship</p><p className="text-sm font-medium text-gray-900">{selected.relationship}</p></div>
+                  <div><p className="text-xs text-gray-600">Name</p><p className="text-sm font-medium text-gray-900">{selected.referrer_name}</p></div>
+                  <div><p className="text-xs text-gray-600">Unit</p><p className="text-sm font-medium text-gray-900">{selected.referrer_unit}</p></div>
+                  <div><p className="text-xs text-gray-600">Email</p><p className="text-sm font-medium text-gray-900">{selected.referrer_email}</p></div>
+                  <div><p className="text-xs text-gray-600">Phone</p><p className="text-sm font-medium text-gray-900">{selected.referrer_phone}</p></div>
+                  <div><p className="text-xs text-gray-600">Preferred Contact</p><p className="text-sm font-medium text-gray-900">{selected.preferred_contact}</p></div>
+                  <div><p className="text-xs text-gray-600">Relationship</p><p className="text-sm font-medium text-gray-900">{selected.relationship}</p></div>
                 </div>
               </div>
 
               {/* Friend */}
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Referred Friend</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-2">Referred Friend</p>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><p className="text-xs text-gray-400">Name</p><p className="text-sm font-medium text-gray-900">{selected.friend_name}</p></div>
-                  <div><p className="text-xs text-gray-400">Email</p><p className="text-sm font-medium text-gray-900">{selected.friend_email || "—"}</p></div>
-                  <div><p className="text-xs text-gray-400">Phone</p><p className="text-sm font-medium text-gray-900">{selected.friend_phone || "—"}</p></div>
-                  <div><p className="text-xs text-gray-400">Move-in Timeline</p><p className="text-sm font-medium text-gray-900">{selected.move_in_timeline || "—"}</p></div>
-                  <div><p className="text-xs text-gray-400">Budget</p><p className="text-sm font-medium text-gray-900">{selected.budget_range || "—"}</p></div>
-                  <div><p className="text-xs text-gray-400">Occupants</p><p className="text-sm font-medium text-gray-900">{selected.occupants || "—"}</p></div>
+                  <div><p className="text-xs text-gray-600">Name</p><p className="text-sm font-medium text-gray-900">{selected.friend_name}</p></div>
+                  <div><p className="text-xs text-gray-600">Email</p><p className="text-sm font-medium text-gray-900">{selected.friend_email || "—"}</p></div>
+                  <div><p className="text-xs text-gray-600">Phone</p><p className="text-sm font-medium text-gray-900">{selected.friend_phone || "—"}</p></div>
+                  <div><p className="text-xs text-gray-600">Move-in Timeline</p><p className="text-sm font-medium text-gray-900">{selected.move_in_timeline || "—"}</p></div>
+                  <div><p className="text-xs text-gray-600">Budget</p><p className="text-sm font-medium text-gray-900">{selected.budget_range || "—"}</p></div>
+                  <div><p className="text-xs text-gray-600">Occupants</p><p className="text-sm font-medium text-gray-900">{selected.occupants || "—"}</p></div>
                 </div>
               </div>
 
               {selected.notes && (
                 <div>
-                  <p className="text-xs text-gray-400 mb-1">Notes</p>
+                  <p className="text-xs text-gray-600 mb-1">Notes</p>
                   <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3 whitespace-pre-wrap">{selected.notes}</div>
                 </div>
               )}

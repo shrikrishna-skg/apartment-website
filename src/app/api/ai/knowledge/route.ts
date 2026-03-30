@@ -2,6 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSession } from "@/lib/auth";
 
+function isTableMissing(error: { message?: string; code?: string } | null): boolean {
+  if (!error) return false;
+  const msg = error.message?.toLowerCase() || "";
+  return (
+    error.code === "42P01" ||
+    error.code === "PGRST204" ||
+    msg.includes("does not exist") ||
+    msg.includes("schema cache") ||
+    msg.includes("could not find")
+  );
+}
+
 export async function GET(request: NextRequest) {
   const session = await getSession();
   if (!session) {
@@ -30,10 +42,14 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
+      // If table doesn't exist yet, return empty array instead of error
+      if (isTableMissing(error)) {
+        return NextResponse.json([]);
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data ?? []);
   } catch {
     return NextResponse.json(
       { error: "Failed to fetch knowledge articles" },

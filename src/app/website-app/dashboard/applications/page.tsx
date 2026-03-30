@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
 
 /* ─── Types ─── */
 interface Application {
@@ -235,7 +236,7 @@ function TrashIcon({ className = "w-4 h-4" }: { className?: string }) {
 function SortIcon({ active, dir }: { active: boolean; dir: SortDir }) {
   if (!active) {
     return (
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l4-4 4 4M16 15l-4 4-4-4" />
       </svg>
     );
@@ -279,7 +280,7 @@ function ChevronRightIcon() {
 function DetailField({ label, value }: { label: string; value: string | number | null | undefined }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs text-gray-400 mb-0.5 truncate">{label}</p>
+      <p className="text-xs text-gray-600 mb-0.5 truncate">{label}</p>
       <p className="text-sm font-medium text-gray-900 break-words">{value ?? "—"}</p>
     </div>
   );
@@ -288,7 +289,7 @@ function DetailField({ label, value }: { label: string; value: string | number |
 function SectionHeading({ title, icon }: { title: string; icon: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
-      <span className="text-gray-400">{icon}</span>
+      <span className="text-gray-600">{icon}</span>
       <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">{title}</h4>
     </div>
   );
@@ -313,6 +314,7 @@ function StatCard({ label, count, color, dotColor, onClick, active }: { label: s
 
 /* ─── Main Component ─── */
 export default function ApplicationsPage() {
+  const { toast, setToast, showToast } = useSonarToast();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
@@ -501,6 +503,7 @@ export default function ApplicationsPage() {
           : `${app.full_name}'s application approved!`;
         setApproveSuccess(msg);
         setTimeout(() => setApproveSuccess(null), 5000);
+        showToast(msg);
       } else {
         const err = await res.json();
         alert(`Failed to approve: ${err.error || "Unknown error"}`);
@@ -694,7 +697,7 @@ export default function ApplicationsPage() {
           <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mx-auto text-gray-200 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9.75m3 0h1.5m-1.5 3H9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-gray-400 text-sm">No applications found.</p>
+          <p className="text-gray-600 text-sm">No applications found.</p>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -722,7 +725,7 @@ export default function ApplicationsPage() {
                   >
                     <td className="px-4 py-3.5">
                       <p className="font-medium text-gray-900">{app.full_name}</p>
-                      <p className="text-xs text-gray-400">{app.email}</p>
+                      <p className="text-xs text-gray-600">{app.email}</p>
                     </td>
                     <td className="px-4 py-3.5">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${TYPE_COLORS[app.applicant_type] || "bg-gray-100 text-gray-700 border-gray-200"}`}>
@@ -738,7 +741,7 @@ export default function ApplicationsPage() {
                         {capitalize(app.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-gray-400 text-xs whitespace-nowrap">{formatDate(app.created_at)}</td>
+                    <td className="px-4 py-3.5 text-gray-600 text-xs whitespace-nowrap">{formatDate(app.created_at)}</td>
                     <td className="px-4 py-3.5 text-center">
                       {(docCounts[app.id] || 0) > 0 ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
@@ -746,7 +749,7 @@ export default function ApplicationsPage() {
                           {docCounts[app.id]}
                         </span>
                       ) : (
-                        <span className="text-gray-300 text-xs">—</span>
+                        <span className="text-gray-500 text-xs">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
@@ -785,7 +788,7 @@ export default function ApplicationsPage() {
                         <button
                           onClick={() => setConfirmDelete(app)}
                           title="Move to Recycle Bin"
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <TrashIcon />
                         </button>
@@ -817,7 +820,7 @@ export default function ApplicationsPage() {
                     {capitalize(selected.status)}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400 mt-0.5">{selected.email}</p>
+                <p className="text-sm text-gray-600 mt-0.5">{selected.email}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0 ml-4">
                 <button
@@ -1144,10 +1147,10 @@ export default function ApplicationsPage() {
                 {loadingDocs ? (
                   <div className="flex items-center gap-2 py-4">
                     <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs text-gray-400">Loading documents...</span>
+                    <span className="text-xs text-gray-600">Loading documents...</span>
                   </div>
                 ) : documents.length === 0 ? (
-                  <p className="text-sm text-gray-400 py-3">No documents uploaded with this application.</p>
+                  <p className="text-sm text-gray-600 py-3">No documents uploaded with this application.</p>
                 ) : (
                   <div className="space-y-4">
                     {documents.map((doc) => (
@@ -1156,7 +1159,7 @@ export default function ApplicationsPage() {
                         <div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</p>
-                            <p className="text-xs text-gray-400">{doc.file_name} · {formatFileSize(doc.file_size)}</p>
+                            <p className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</p>
                           </div>
                           <div className="flex gap-1.5">
                             <a
@@ -1192,7 +1195,7 @@ export default function ApplicationsPage() {
                               title={doc.file_name}
                             />
                           ) : (
-                            <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+                            <div className="flex items-center justify-center py-8 text-gray-600 text-sm">
                               Preview not available — click Open to view
                             </div>
                           )}
@@ -1255,7 +1258,7 @@ export default function ApplicationsPage() {
                       </svg>
                       Approve &amp; Send Email
                     </button>
-                    <p className="text-xs text-gray-400 mt-2">This will approve the application and send a congratulatory email to the applicant.</p>
+                    <p className="text-xs text-gray-600 mt-2">This will approve the application and send a congratulatory email to the applicant.</p>
                   </div>
                 )}
 
@@ -1285,13 +1288,13 @@ export default function ApplicationsPage() {
                     <div className="mt-3 p-3 bg-yellow-50 border border-yellow-100 rounded-xl">
                       <p className="text-xs font-semibold text-gray-500 mb-1">Saved Note</p>
                       <p className="text-sm text-gray-700 whitespace-pre-wrap">{noteText}</p>
-                      <p className="text-[10px] text-gray-400 mt-2">Last saved: {noteSavedAt}</p>
+                      <p className="text-[10px] text-gray-600 mt-2">Last saved: {noteSavedAt}</p>
                     </div>
                   )}
                 </div>
 
                 {/* Timestamps */}
-                <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-xs text-gray-400">
+                <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-xs text-gray-600">
                   <span>Submitted: {formatDate(selected.created_at)}</span>
                   <span>Last Updated: {formatDate(selected.updated_at)}</span>
                 </div>
@@ -1386,19 +1389,7 @@ export default function ApplicationsPage() {
       )}
 
       {/* Success Toast */}
-      {approveSuccess && (
-        <div className="fixed bottom-6 right-6 z-[70] animate-slide-in-right">
-          <div className="flex items-center gap-3 px-5 py-4 bg-green-600 text-white rounded-xl shadow-2xl max-w-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-sm font-medium">{approveSuccess}</p>
-            <button onClick={() => setApproveSuccess(null)} className="ml-2 text-white/70 hover:text-white">
-              <CloseIcon />
-            </button>
-          </div>
-        </div>
-      )}
+      <SonarToast toast={toast} onClose={() => setToast(null)} />
 
       {/* ── Print Preview Overlay ── */}
       {showPrintPreview && selected && (
@@ -1426,7 +1417,7 @@ export default function ApplicationsPage() {
               <h2 className="text-lg font-semibold text-blue-700 mt-3">
                 {selected.applicant_type === "student" ? "Student" : selected.applicant_type === "international" ? "International Student" : "Working Professional / General"} Rental Application
               </h2>
-              <p className="text-xs text-gray-400 mt-1">Submitted: {formatDate(selected.created_at)} | Status: {capitalize(selected.status)}</p>
+              <p className="text-xs text-gray-600 mt-1">Submitted: {formatDate(selected.created_at)} | Status: {capitalize(selected.status)}</p>
             </div>
 
             {/* Section helper */}
@@ -1648,7 +1639,7 @@ export default function ApplicationsPage() {
                           <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden">
                             <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
                               <span className="text-sm font-semibold text-gray-900">{doc.document_label || "Document"}</span>
-                              <span className="text-xs text-gray-400">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
+                              <span className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
                             </div>
                             {doc.file_type.startsWith("image/") ? (
                               // eslint-disable-next-line @next/next/no-img-element
@@ -1665,7 +1656,7 @@ export default function ApplicationsPage() {
                                 title={doc.file_name}
                               />
                             ) : (
-                              <div className="py-4 text-center text-sm text-gray-400">
+                              <div className="py-4 text-center text-sm text-gray-600">
                                 {doc.file_name} — open to view
                               </div>
                             )}
@@ -1679,7 +1670,7 @@ export default function ApplicationsPage() {
             })()}
 
             {/* Footer */}
-            <div className="mt-8 pt-4 border-t-2 border-gray-900 text-center text-xs text-gray-400">
+            <div className="mt-8 pt-4 border-t-2 border-gray-900 text-center text-xs text-gray-600">
               <p>College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130 &bull; (615) 200-0620</p>
               <p className="mt-1">This document is confidential and intended for authorized personnel only.</p>
             </div>

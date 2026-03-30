@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { getSession } from "@/lib/auth";
+import { sendMaintenanceCompleted } from "@/lib/email";
 
 const VALID_STATUSES = ["open", "in_progress", "resolved", "closed"];
 
@@ -53,6 +54,20 @@ export async function PATCH(
         { error: "Maintenance request not found" },
         { status: 404 }
       );
+    }
+
+    // Send completion email when status is resolved or closed
+    if ((body.status === "resolved" || body.status === "closed") && data.email) {
+      try {
+        await sendMaintenanceCompleted({
+          to: data.email,
+          name: data.full_name,
+          apartment: data.apartment,
+          description: data.description,
+        });
+      } catch {
+        // Email is best-effort
+      }
     }
 
     return NextResponse.json(data);

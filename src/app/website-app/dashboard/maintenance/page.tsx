@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
 
 interface MaintenanceRequest {
   id: string;
@@ -37,6 +38,7 @@ const URGENCY_COLORS: Record<string, string> = {
 };
 
 export default function MaintenancePage() {
+  const { toast, setToast, showToast } = useSonarToast();
   const [requests, setRequests] = useState<MaintenanceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -75,6 +77,11 @@ export default function MaintenancePage() {
         const updated = await res.json();
         setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
         if (selected?.id === id) setSelected({ ...selected, ...updated });
+        if (status === "resolved" || status === "closed") {
+          showToast(`Completion notice sent to tenant`);
+        } else {
+          showToast(`Status updated to ${status}`);
+        }
       }
     } finally {
       setUpdating(null);
@@ -183,7 +190,7 @@ export default function MaintenancePage() {
       {/* Request List */}
       {filtered.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-          <p className="text-gray-400 text-sm">No maintenance requests found.</p>
+          <p className="text-gray-600 text-sm">No maintenance requests found.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -203,7 +210,7 @@ export default function MaintenancePage() {
                       {req.urgency}
                     </span>
                     {req.category && (
-                      <span className="text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
                         {req.category}
                       </span>
                     )}
@@ -211,11 +218,11 @@ export default function MaintenancePage() {
                       {STATUS_LABELS[req.status]}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-400 mb-1">{req.full_name} &middot; {req.email}</p>
+                  <p className="text-xs text-gray-600 mb-1">{req.full_name} &middot; {req.email}</p>
                   <p className="text-sm text-gray-600 line-clamp-2">{req.description}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs text-gray-400">{timeAgo(req.created_at)}</p>
+                  <p className="text-xs text-gray-600">{timeAgo(req.created_at)}</p>
                   <select
                     value={req.status}
                     onChange={(e) => {
@@ -233,7 +240,7 @@ export default function MaintenancePage() {
                   <button
                     onClick={(e) => { e.stopPropagation(); setConfirmDelete(req); }}
                     title="Delete"
-                    className="mt-2 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="mt-2 p-1.5 rounded-lg text-gray-600 hover:text-red-500 hover:bg-red-50 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -258,10 +265,10 @@ export default function MaintenancePage() {
                     {selected.urgency}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400">{selected.full_name} &middot; {selected.email}</p>
+                <p className="text-sm text-gray-600">{selected.full_name} &middot; {selected.email}</p>
               </div>
               <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -269,26 +276,26 @@ export default function MaintenancePage() {
             <div className="px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Category</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Category</p>
                   <p className="text-sm font-medium text-gray-900">{selected.category || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Status</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Status</p>
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${STATUS_COLORS[selected.status]}`}>
                     {STATUS_LABELS[selected.status]}
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Phone</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Phone</p>
                   <p className="text-sm font-medium text-gray-900">{selected.phone || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Submitted</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Submitted</p>
                   <p className="text-sm font-medium text-gray-900">{formatDate(selected.created_at)}</p>
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1">Description</p>
+                <p className="text-xs text-gray-600 mb-1">Description</p>
                 <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-4 whitespace-pre-wrap">{selected.description}</div>
               </div>
               <div className="pt-4 border-t border-gray-100">
@@ -343,6 +350,7 @@ export default function MaintenancePage() {
           </div>
         </div>
       )}
+      <SonarToast toast={toast} onClose={() => setToast(null)} />
     </div>
   );
 }

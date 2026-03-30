@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sendStaffNotification } from "@/lib/email";
+import { sendStaffNotification, sendMaintenanceReceived } from "@/lib/email";
 import { getSession } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Send staff notification (best-effort)
+    // Send staff notification + tenant confirmation (best-effort)
     try {
       const details = [
         `Apartment: ${body.apartment}`,
@@ -48,12 +48,22 @@ export async function POST(request: NextRequest) {
         `\nDescription:\n${body.description}`,
       ].filter(Boolean).join("\n");
 
-      await sendStaffNotification({
-        type: "maintenance",
-        name: body.full_name,
-        email: body.email,
-        details,
-      });
+      await Promise.all([
+        sendStaffNotification({
+          type: "maintenance",
+          name: body.full_name,
+          email: body.email,
+          details,
+        }),
+        sendMaintenanceReceived({
+          to: body.email.trim(),
+          name: body.full_name.trim(),
+          apartment: body.apartment.trim(),
+          description: body.description.trim(),
+          category: body.category || null,
+          urgency: body.urgency || "medium",
+        }),
+      ]);
     } catch {
       // Email is best-effort
     }
