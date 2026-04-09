@@ -119,7 +119,7 @@ function LoginForm() {
                   setUsername(e.target.value);
                   setError("");
                 }}
-                placeholder="office@collegeplace.us"
+                placeholder="you@example.com"
                 required
                 autoComplete="email"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400 transition-all"

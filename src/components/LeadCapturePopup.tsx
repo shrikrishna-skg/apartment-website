@@ -94,7 +94,7 @@ export default function LeadCapturePopup() {
                 >
                   <X size={18} />
                 </button>
-                <h2 className="text-xl font-bold mb-1">
+                <h2 className="text-xl font-bold mb-1 text-white">
                   Find Your Perfect Apartment 🏠
                 </h2>
                 <p className="text-sm text-blue-100 leading-relaxed">
