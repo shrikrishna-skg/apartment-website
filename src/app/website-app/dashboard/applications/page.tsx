@@ -180,6 +180,26 @@ function formatDate(d: string | undefined | null) {
   }
 }
 
+function formatDateTime(d: string | undefined | null) {
+  if (!d) return "—";
+  if (typeof d === "string" && /[AP]M\s+[A-Z]{2,}/.test(d)) return d;
+  try {
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return String(d);
+    return date.toLocaleString("en-US", {
+      timeZone: "America/Chicago",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }) + " CT";
+  } catch {
+    return String(d);
+  }
+}
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -741,7 +761,7 @@ export default function ApplicationsPage() {
                         {capitalize(app.status)}
                       </span>
                     </td>
-                    <td className="px-4 py-3.5 text-gray-600 text-xs whitespace-nowrap">{formatDate(app.created_at)}</td>
+                    <td className="px-4 py-3.5 text-gray-600 text-xs whitespace-nowrap">{formatDateTime(app.created_at)}</td>
                     <td className="px-4 py-3.5 text-center">
                       {(docCounts[app.id] || 0) > 0 ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
@@ -918,7 +938,7 @@ export default function ApplicationsPage() {
                     <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />
                   )}
                   <DetailField label="Employer" value={selected.employer_name} />
-                  <DetailField label="Monthly Income" value={selected.monthly_income ? `$${Number(selected.monthly_income).toLocaleString()}` : "—"} />
+                  <DetailField label="Monthly Income" value={selected.monthly_income ? (isNaN(Number(selected.monthly_income)) ? String(selected.monthly_income) : `$${Number(selected.monthly_income).toLocaleString()}`) : "—"} />
                   {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
                     <DetailField label="Income Source" value={selected.income_source} />
                   )}
@@ -1295,8 +1315,8 @@ export default function ApplicationsPage() {
 
                 {/* Timestamps */}
                 <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6 text-xs text-gray-600">
-                  <span>Submitted: {formatDate(selected.created_at)}</span>
-                  <span>Last Updated: {formatDate(selected.updated_at)}</span>
+                  <span>Submitted: {formatDateTime(selected.created_at)}</span>
+                  <span>Last Updated: {formatDateTime(selected.updated_at)}</span>
                 </div>
 
                 {/* Delete */}
@@ -1417,7 +1437,7 @@ export default function ApplicationsPage() {
               <h2 className="text-lg font-semibold text-blue-700 mt-3">
                 {selected.applicant_type === "student" ? "Student" : selected.applicant_type === "international" ? "International Student" : "Working Professional / General"} Rental Application
               </h2>
-              <p className="text-xs text-gray-600 mt-1">Submitted: {formatDate(selected.created_at)} | Status: {capitalize(selected.status)}</p>
+              <p className="text-xs text-gray-600 mt-1">Submitted: {formatDateTime(selected.created_at)} | Status: {capitalize(selected.status)}</p>
             </div>
 
             {/* Section helper */}
