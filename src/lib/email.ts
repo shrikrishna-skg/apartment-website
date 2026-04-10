@@ -887,3 +887,63 @@ export async function sendOTPEmail(code: string): Promise<boolean> {
     return false;
   }
 }
+
+/** Send login notification with IP and device details to office email */
+export async function sendLoginNotification(params: {
+  username: string;
+  ip: string;
+  userAgent: string;
+}): Promise<boolean> {
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  const now = new Date().toLocaleString("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  }) + " CT";
+
+  try {
+    await transporter.sendMail({
+      from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+      to: "office@collegeplace.us",
+      subject: `Staff Login Alert — ${params.username}`,
+      html: `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:0 auto;padding:28px;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;">
+          <h2 style="margin:0 0 16px;font-size:18px;color:#1f2937;">Staff Dashboard Login</h2>
+          <p style="margin:0 0 16px;font-size:14px;color:#4b5563;">A staff member has successfully logged into the dashboard.</p>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <tr style="border-bottom:1px solid #f3f4f6;">
+              <td style="padding:10px 0;color:#6b7280;width:120px;">User</td>
+              <td style="padding:10px 0;color:#1f2937;font-weight:600;">${escapeHtml(params.username)}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;">
+              <td style="padding:10px 0;color:#6b7280;">Time</td>
+              <td style="padding:10px 0;color:#1f2937;">${now}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #f3f4f6;">
+              <td style="padding:10px 0;color:#6b7280;">IP Address</td>
+              <td style="padding:10px 0;color:#1f2937;font-family:monospace;">${escapeHtml(params.ip)}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;color:#6b7280;vertical-align:top;">Device</td>
+              <td style="padding:10px 0;color:#1f2937;font-size:13px;word-break:break-all;">${escapeHtml(params.userAgent)}</td>
+            </tr>
+          </table>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;" />
+          <p style="font-size:11px;color:#9ca3af;margin:0;">If this login was not authorized, please change your credentials immediately.</p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to send login notification:", err);
+    return false;
+  }
+}

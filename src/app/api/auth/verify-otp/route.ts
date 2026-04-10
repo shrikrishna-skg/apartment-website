@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSessionToken, createSessionCookie } from "@/lib/auth";
+import { sendLoginNotification } from "@/lib/email";
 import { otpStore } from "../send-otp/route";
 
 export async function POST(request: NextRequest) {
@@ -43,6 +44,16 @@ export async function POST(request: NextRequest) {
 
     const token = await createSessionToken(username);
     const cookie = createSessionCookie(token);
+
+    // Capture IP and device info
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "Unknown";
+    const userAgent = request.headers.get("user-agent") || "Unknown";
+
+    // Send login notification email (best-effort, don't block login)
+    sendLoginNotification({ username, ip, userAgent }).catch(() => {});
 
     const response = NextResponse.json(
       { success: true, username },
