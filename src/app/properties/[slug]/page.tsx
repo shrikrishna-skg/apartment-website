@@ -75,6 +75,7 @@ export default function PropertyDetailPage() {
   const [selectedFloorPlan, setSelectedFloorPlan] = useState(0);
   const [copied, setCopied] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const galleryRef = useRef<HTMLElement>(null);
 
   /* ── not found ── */
   if (!property) {
@@ -107,8 +108,6 @@ export default function PropertyDetailPage() {
   const activeFloorPlan = property.floorPlans[selectedFloorPlan];
   const currentPhotos = activeFloorPlan?.photos?.length ? activeFloorPlan.photos : property.photos;
   const totalPhotos = currentPhotos.length;
-
-  const galleryRef = useRef<HTMLElement>(null);
 
   const handleFloorPlanSelect = (idx: number) => {
     setSelectedFloorPlan(idx);

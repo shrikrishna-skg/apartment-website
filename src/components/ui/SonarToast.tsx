@@ -29,9 +29,11 @@ export default function SonarToast({
 
   useEffect(() => {
     if (toast) {
-      setExiting(false);
       // Small delay for enter animation
-      requestAnimationFrame(() => setVisible(true));
+      requestAnimationFrame(() => {
+        setExiting(false);
+        setVisible(true);
+      });
       const timer = setTimeout(() => {
         setExiting(true);
         setTimeout(() => {
@@ -41,7 +43,7 @@ export default function SonarToast({
       }, 4000);
       return () => clearTimeout(timer);
     } else {
-      setVisible(false);
+      requestAnimationFrame(() => setVisible(false));
     }
   }, [toast, onClose]);
 
