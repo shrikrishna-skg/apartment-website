@@ -3,37 +3,50 @@ import { supabase } from "@/lib/supabase";
 import { sendStaffNotification } from "@/lib/email";
 import { getSession } from "@/lib/auth";
 
-// Columns that definitely exist in the original schema
-const SAFE_COLUMNS = new Set([
-  "applicant_type", "full_name", "ssn", "marital_status",
+// ALL valid columns in the applications table
+const ALL_COLUMNS = new Set([
+  // Core
+  "applicant_type", "full_name", "ssn", "marital_status", "gender",
   "driving_license", "date_of_birth", "email", "mobile_number",
   "specific_request", "housing_requirement", "preferred_move_in", "lease_duration",
-  "current_address", "city", "state", "zip_code",
-  "university_name", "student_id", "expected_graduation",
-  "emergency_contact_name", "emergency_contact_phone", "emergency_relationship",
+  // Address
+  "current_address", "address_type", "city", "state", "zip_code",
+  // Education (student)
+  "university_name", "student_id", "course_name", "course_start_date",
+  "expected_graduation", "advisor_phone", "advisor_email",
+  // Emergency contacts
+  "emergency_contact_name", "emergency_contact_phone", "emergency_contact_email",
+  "emergency_relationship",
+  "emergency_contact2_name", "emergency_contact2_phone", "emergency_contact2_email",
+  "emergency_relationship2",
+  // Employment
   "employment_status", "employer_name", "monthly_income", "income_source",
+  "supervisor", "employer_address", "employer_phone", "position_held", "date_of_hire",
+  // Co-signer
   "has_cosigner", "cosigner_name", "cosigner_phone", "cosigner_email",
-  "previous_landlord_name", "landlord_phone", "landlord_address",
+  // Landlord / Residence
+  "previous_landlord_name", "landlord_phone", "landlord_address", "landlord_email",
   "reason_for_leaving", "length_of_stay",
+  "housing_status", "residence_from", "residence_to", "rent_amount",
+  "completed_residence_history",
+  // References
   "ref1_name", "ref1_phone", "ref1_relationship",
   "ref2_name", "ref2_phone", "ref2_relationship",
-  "consent", "notes",
-]);
-
-// New columns added by migration (may not exist yet)
-const NEW_COLUMNS = new Set([
-  "gender", "address_type", "course_name", "course_start_date",
-  "advisor_phone", "advisor_email",
-  "emergency_contact_email", "emergency_contact2_name", "emergency_contact2_phone",
-  "emergency_contact2_email", "emergency_relationship2",
-  "has_pets", "pets", "has_vehicle",
-  "vehicle1_make", "vehicle1_year", "vehicle1_color", "vehicle1_plate",
+  "references_info",
+  // Pets
+  "has_pets", "pets", "pet_type", "pet_weight", "pet_age", "is_esa",
+  // Vehicle
+  "has_vehicle", "vehicle1_make", "vehicle1_year", "vehicle1_color", "vehicle1_plate",
+  "has_second_vehicle", "vehicle2_make", "vehicle2_year", "vehicle2_color", "vehicle2_plate",
+  // Background check
   "filed_bankruptcy", "bankruptcy_details", "evicted_from_tenancy", "eviction_details",
   "convicted_felony", "felony_details", "arrested_or_convicted", "arrest_details",
+  // Authorization
   "agree_terms", "signature_name", "signature_date",
+  "consent", "consent_communications",
+  // Internal
+  "notes",
 ]);
-
-const ALL_COLUMNS = new Set([...SAFE_COLUMNS, ...NEW_COLUMNS]);
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +60,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Insert with all columns — if a column doesn't exist, retry without it
     let data;
     const { data: d1, error: e1 } = await supabase
       .from("applications")
@@ -55,23 +69,42 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (e1 && e1.message.includes("schema cache")) {
-      // Migration not run yet — fall back to safe columns + store extras in notes
-      const safeBody: Record<string, unknown> = {};
+      // A column doesn't exist — extract the bad column name and retry
+      const match = e1.message.match(/the '(\w+)' column/);
+      const badCol = match?.[1];
+      const retryBody = { ...fullBody };
       const extraData: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(body)) {
-        if (SAFE_COLUMNS.has(key)) {
-          safeBody[key] = value;
-        } else if (NEW_COLUMNS.has(key)) {
-          extraData[key] = value;
+
+      if (badCol) {
+        // Remove the bad column and any others that might fail
+        const potentialNewCols = ["gender", "address_type", "course_name", "course_start_date",
+          "advisor_phone", "advisor_email", "emergency_contact_email",
+          "emergency_contact2_name", "emergency_contact2_phone", "emergency_contact2_email",
+          "emergency_relationship2", "has_pets", "pets", "has_vehicle",
+          "vehicle1_make", "vehicle1_year", "vehicle1_color", "vehicle1_plate",
+          "has_second_vehicle", "vehicle2_make", "vehicle2_year", "vehicle2_color", "vehicle2_plate",
+          "filed_bankruptcy", "bankruptcy_details", "evicted_from_tenancy", "eviction_details",
+          "convicted_felony", "felony_details", "arrested_or_convicted", "arrest_details",
+          "agree_terms", "signature_name", "signature_date", "consent_communications",
+          "pet_type", "pet_weight", "pet_age", "is_esa", "references_info",
+          "supervisor", "employer_address", "employer_phone", "position_held", "date_of_hire",
+          "housing_status", "residence_from", "residence_to", "landlord_email", "rent_amount",
+          "completed_residence_history"];
+        for (const col of potentialNewCols) {
+          if (retryBody[col] !== undefined) {
+            extraData[col] = retryBody[col];
+            delete retryBody[col];
+          }
         }
       }
+
       if (Object.keys(extraData).length > 0) {
-        safeBody.notes = JSON.stringify(extraData);
+        retryBody.notes = JSON.stringify(extraData);
       }
 
       const { data: d2, error: e2 } = await supabase
         .from("applications")
-        .insert(safeBody)
+        .insert(retryBody)
         .select()
         .single();
 
