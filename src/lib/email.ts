@@ -854,3 +854,36 @@ function escapeHtml(text: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+
+/** Send OTP verification code to office email for admin login */
+export async function sendOTPEmail(code: string): Promise<boolean> {
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  try {
+    await transporter.sendMail({
+      from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+      to: "office@collegeplace.us",
+      subject: `Staff Login OTP: ${code}`,
+      html: `
+        <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;">
+          <div style="text-align:center;margin-bottom:24px;">
+            <h2 style="margin:0;font-size:20px;color:#1f2937;">Staff Login Verification</h2>
+            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">College Place Apartments</p>
+          </div>
+          <div style="text-align:center;background:#f0f7ff;border:2px dashed #3b82f6;border-radius:12px;padding:24px;margin:20px 0;">
+            <p style="margin:0 0 8px;font-size:13px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Your verification code</p>
+            <p style="margin:0;font-size:36px;font-weight:800;letter-spacing:8px;color:#1e40af;font-family:monospace;">${code}</p>
+          </div>
+          <p style="font-size:13px;color:#6b7280;text-align:center;margin:16px 0 0;">This code expires in <strong>5 minutes</strong>. Do not share it with anyone.</p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
+          <p style="font-size:11px;color:#9ca3af;text-align:center;margin:0;">If you did not request this code, please ignore this email.</p>
+        </div>
+      `,
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to send OTP email:", err);
+    return false;
+  }
+}

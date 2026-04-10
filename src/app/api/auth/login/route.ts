@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  verifyCredentials,
-  createSessionToken,
-  createSessionCookie,
-} from "@/lib/auth";
+import { verifyCredentials } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,23 +14,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (!verifyCredentials(username, password)) {
-      // Generic error message to prevent username enumeration
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    const token = await createSessionToken(username);
-    const cookie = createSessionCookie(token);
-
-    const response = NextResponse.json(
-      { success: true, username },
+    // Credentials valid — client should now request OTP
+    return NextResponse.json(
+      { success: true, requiresOtp: true, username },
       { status: 200 }
     );
-
-    response.cookies.set(cookie);
-    return response;
   } catch {
     return NextResponse.json(
       { error: "Authentication failed" },

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import crypto from "crypto";
 
 const COOKIE_NAME = "staff_session";
-const SESSION_DURATION = 60 * 60 * 24 * 7; // 7 days in seconds
+const SESSION_DURATION = 60 * 60 * 24; // 24 hours in seconds
 
 function getSecret() {
   const secret = process.env.AUTH_SECRET;
