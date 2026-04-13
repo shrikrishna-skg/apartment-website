@@ -344,5 +344,13 @@ h6:not([class*="text-"]) {
   }
   .print-preview .no-print { display: none !important; }
   .print-preview .sticky { position: relative; }
+  /* Ensure sections don't break mid-content */
+  .print-section { page-break-inside: avoid; }
+  /* Each document gets its own page */
+  .print-doc { page-break-inside: avoid; }
+  /* Images print in full */
+  .print-preview img { max-height: none !important; page-break-inside: avoid; }
+  /* Background colors print */
+  .print-preview { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   @page { margin: 1cm; size: A4; }
 }

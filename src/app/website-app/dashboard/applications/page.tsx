@@ -1415,19 +1415,34 @@ export default function ApplicationsPage() {
           {/* Print Content */}
           <div className="max-w-3xl mx-auto px-8 py-10">
             {/* Header */}
-            <div className="text-center mb-8 pb-6 border-b-2 border-gray-900">
-              <h1 className="text-2xl font-bold text-gray-900">College Place Apartments</h1>
-              <p className="text-sm text-gray-500 mt-1">1023 Old Lascassas Road | Murfreesboro, TN 37130 | (615) 200-0620</p>
-              <h2 className="text-lg font-semibold text-blue-700 mt-3">
-                {selected.applicant_type === "student" ? "Student" : selected.applicant_type === "international" ? "International Student" : "Working Professional / General"} Rental Application
-              </h2>
-              <p className="text-xs text-gray-600 mt-1">Submitted: {formatDateTime(selected.created_at)} | Status: {capitalize(selected.status)}</p>
+            <div className="mb-8 pb-6 border-b-2 border-gray-900">
+              <div className="flex items-center justify-between mb-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/9eae94968_CollegeplaceIcon.png"
+                  alt="College Place"
+                  className="w-14 h-14 object-contain"
+                />
+                <div className="text-right">
+                  <p className="text-xs text-gray-400">Printed: {new Date().toLocaleString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true })} CT</p>
+                </div>
+              </div>
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-gray-900">College Place Apartments</h1>
+                <p className="text-sm text-gray-500 mt-1">1023 Old Lascassas Road | Murfreesboro, TN 37130 | (615) 200-0620</p>
+                <h2 className="text-lg font-semibold text-blue-700 mt-3">
+                  {selected.applicant_type === "student" ? "Student" : selected.applicant_type === "international" ? "International Student" : "Working Professional / General"} Rental Application
+                </h2>
+                <p className="text-xs text-gray-600 mt-1">Submitted: {formatDateTime(selected.created_at)} | Status: {capitalize(selected.status)}</p>
+              </div>
             </div>
 
             {/* Section helper */}
             {(() => {
+              const isStudentPrint = selected.applicant_type === "student" || selected.applicant_type === "international";
+              const isProPrint = selected.applicant_type === "professional";
               const PrintSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
-                <div className="mb-6">
+                <div className="mb-6 print-section">
                   <h3 className="text-sm font-bold text-white bg-blue-600 px-4 py-2 rounded-t-lg uppercase tracking-wider">{title}</h3>
                   <div className="border border-gray-200 border-t-0 rounded-b-lg p-4">{children}</div>
                 </div>
@@ -1455,26 +1470,22 @@ export default function ApplicationsPage() {
                     </div>
                   </PrintSection>
 
-                  <PrintSection title={selected.applicant_type === "professional" ? "Address & Residence" : "Address & Education"}>
+                  <PrintSection title="Address & Education / Residence">
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-3"><Field label="Current Address" value={`${selected.current_address || ""}${selected.city ? `, ${selected.city}` : ""}${selected.state ? `, ${selected.state}` : ""} ${selected.zip_code || ""}`} /></div>
-                      {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
-                        <>
-                          <Field label="Address Type" value={selected.address_type} />
-                          <Field label="University" value={selected.university_name} />
-                          <Field label="Student ID" value={selected.student_id} />
-                          <Field label="Course Name" value={selected.course_name} />
-                          <Field label="Course Start" value={formatDate(selected.course_start_date)} />
-                          <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
-                          <Field label="Advisor Phone" value={selected.advisor_phone} />
-                          <Field label="Advisor Email" value={selected.advisor_email} />
-                        </>
-                      )}
+                      <div className="col-span-3"><Field label="Current Address" value={[selected.current_address, selected.city, selected.state, selected.zip_code].filter(Boolean).join(", ") || "—"} /></div>
+                      {(selected.address_type || isStudentPrint) && <Field label="Address Type" value={selected.address_type} />}
+                      {(selected.university_name || isStudentPrint) && <Field label="University" value={selected.university_name} />}
+                      {(selected.student_id || isStudentPrint) && <Field label="Student ID" value={selected.student_id} />}
+                      {(selected.course_name || isStudentPrint) && <Field label="Course Name" value={selected.course_name} />}
+                      {(selected.course_start_date || isStudentPrint) && <Field label="Course Start" value={formatDate(selected.course_start_date)} />}
+                      {(selected.expected_graduation || isStudentPrint) && <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />}
+                      {(selected.advisor_phone || isStudentPrint) && <Field label="Advisor Phone" value={selected.advisor_phone} />}
+                      {(selected.advisor_email || isStudentPrint) && <Field label="Advisor Email" value={selected.advisor_email} />}
                       <Field label="Emergency Contact" value={selected.emergency_contact_name} />
                       <Field label="Emergency Phone" value={selected.emergency_contact_phone} />
                       {selected.emergency_contact_email && <Field label="Emergency Email" value={selected.emergency_contact_email} />}
                       <Field label="Relationship" value={selected.emergency_relationship} />
-                      {selected.emergency_contact2_name && (
+                      {(selected.emergency_contact2_name || isStudentPrint) && (
                         <>
                           <Field label="Emergency Contact 2" value={selected.emergency_contact2_name} />
                           <Field label="Emergency Phone 2" value={selected.emergency_contact2_phone} />
@@ -1485,73 +1496,69 @@ export default function ApplicationsPage() {
                     </div>
                   </PrintSection>
 
-                  {selected.applicant_type === "professional" && (
+                  {(selected.housing_status || selected.residence_from || isProPrint) && (
                     <PrintSection title="Residence Details">
                       <div className="grid grid-cols-3 gap-4">
                         <Field label="Housing Status" value={selected.housing_status} />
                         <Field label="From" value={formatDate(selected.residence_from)} />
                         <Field label="To" value={formatDate(selected.residence_to)} />
-                        <Field label="Landlord Email" value={selected.landlord_email} />
-                        <Field label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : undefined} />
+                        <Field label="Completed Residence History" value={selected.completed_residence_history} />
                       </div>
                     </PrintSection>
                   )}
 
                   <PrintSection title="Employment & Income">
                     <div className="grid grid-cols-3 gap-4">
-                      {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
-                        <Field label="Employment Status" value={selected.employment_status} />
-                      )}
+                      {(selected.employment_status || isStudentPrint) && <Field label="Employment Status" value={selected.employment_status} />}
                       <Field label="Employer" value={selected.employer_name} />
-                      <Field label="Monthly Income" value={selected.monthly_income ? `$${selected.monthly_income}` : undefined} />
-                      {selected.applicant_type === "professional" && (
-                        <>
-                          <Field label="Supervisor" value={selected.supervisor} />
-                          <Field label="Employer Address" value={selected.employer_address} />
-                          <Field label="Employer Phone" value={selected.employer_phone} />
-                          <Field label="Position Held" value={selected.position_held} />
-                          <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />
-                        </>
-                      )}
-                      {(selected.applicant_type === "student" || selected.applicant_type === "international") && (
-                        <Field label="Income Source" value={selected.income_source} />
-                      )}
-                      {selected.has_cosigner && (
-                        <>
-                          <Field label="Co-signer Name" value={selected.cosigner_name} />
-                          <Field label="Co-signer Phone" value={selected.cosigner_phone} />
-                          <Field label="Co-signer Email" value={selected.cosigner_email} />
-                        </>
-                      )}
+                      <Field label="Monthly Income" value={selected.monthly_income || "—"} />
+                      {(selected.income_source || isStudentPrint) && <Field label="Income Source" value={selected.income_source} />}
+                      {(selected.supervisor || isProPrint) && <Field label="Supervisor" value={selected.supervisor} />}
+                      {(selected.employer_address || isProPrint) && <Field label="Employer Address" value={selected.employer_address} />}
+                      {(selected.employer_phone || isProPrint) && <Field label="Employer Phone" value={selected.employer_phone} />}
+                      {(selected.position_held || isProPrint) && <Field label="Position Held" value={selected.position_held} />}
+                      {(selected.date_of_hire || isProPrint) && <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
                     </div>
+                    {(selected.has_cosigner || selected.cosigner_name) && (
+                      <div className="border-t pt-3 mt-3 grid grid-cols-3 gap-4">
+                        <Field label="Has Co-signer" value={selected.has_cosigner} />
+                        <Field label="Co-signer Name" value={selected.cosigner_name} />
+                        <Field label="Co-signer Phone" value={selected.cosigner_phone} />
+                        <Field label="Co-signer Email" value={selected.cosigner_email} />
+                      </div>
+                    )}
                   </PrintSection>
 
                   <PrintSection title="References & Rental History">
                     <div className="grid grid-cols-3 gap-4 mb-3">
                       <Field label="Previous Landlord" value={selected.previous_landlord_name} />
                       <Field label="Landlord Phone" value={selected.landlord_phone} />
-                      <Field label="Landlord Address" value={selected.landlord_address} />
+                      {(selected.landlord_email || isProPrint) && <Field label="Landlord Email" value={selected.landlord_email} />}
+                      {(selected.landlord_address || isStudentPrint) && <Field label="Landlord Address" value={selected.landlord_address} />}
                       <Field label="Reason for Leaving" value={selected.reason_for_leaving} />
-                      <Field label="Length of Stay" value={selected.length_of_stay} />
+                      {(selected.length_of_stay || isStudentPrint) && <Field label="Length of Stay" value={selected.length_of_stay} />}
+                      {(selected.rent_amount || isProPrint) && <Field label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />}
                     </div>
-                    <div className="grid grid-cols-2 gap-4 border-t pt-3">
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">Reference 1</p>
-                        <Field label="Name" value={selected.ref1_name} />
-                        <Field label="Phone" value={selected.ref1_phone} />
-                        <Field label="Relationship" value={selected.ref1_relationship} />
+                    {(selected.ref1_name || selected.ref2_name || isStudentPrint) && (
+                      <div className="grid grid-cols-2 gap-4 border-t pt-3">
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Reference 1</p>
+                          <Field label="Name" value={selected.ref1_name} />
+                          <Field label="Phone" value={selected.ref1_phone} />
+                          <Field label="Relationship" value={selected.ref1_relationship} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Reference 2</p>
+                          <Field label="Name" value={selected.ref2_name} />
+                          <Field label="Phone" value={selected.ref2_phone} />
+                          <Field label="Relationship" value={selected.ref2_relationship} />
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-500 mb-1">Reference 2</p>
-                        <Field label="Name" value={selected.ref2_name} />
-                        <Field label="Phone" value={selected.ref2_phone} />
-                        <Field label="Relationship" value={selected.ref2_relationship} />
-                      </div>
-                    </div>
-                    {selected.references_info && (
+                    )}
+                    {(selected.references_info || isProPrint) && (
                       <div className="border-t pt-3 mt-3">
                         <p className="text-xs font-semibold text-gray-500 mb-1">Additional References</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selected.references_info}</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selected.references_info || "—"}</p>
                       </div>
                     )}
                   </PrintSection>
@@ -1561,59 +1568,54 @@ export default function ApplicationsPage() {
                       <Field label="Gender" value={selected.gender} />
                       <Field label="Has Pets" value={selected.has_pets} />
                       <Field label="Has Vehicle" value={selected.has_vehicle} />
-                      {selected.applicant_type === "professional" && (
-                        <Field label="Completed Residence History" value={selected.completed_residence_history} />
-                      )}
-                      {selected.has_pets && Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
-                        <div key={idx} className="col-span-3 border-t pt-2 mt-1">
-                          <p className="text-xs font-semibold text-gray-500 mb-1">Pet {idx + 1}</p>
-                          <div className="grid grid-cols-4 gap-3">
-                            <Field label="Type" value={pet.type} />
-                            <Field label="Weight" value={pet.weight} />
-                            <Field label="Age" value={pet.age} />
-                            <Field label="Category" value={pet.category} />
-                          </div>
-                        </div>
-                      ))}
+                      <Field label="Completed Residence History" value={selected.completed_residence_history} />
                     </div>
+                    {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
+                      <div key={idx} className="border-t pt-2 mt-2">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Pet {idx + 1}</p>
+                        <div className="grid grid-cols-4 gap-3">
+                          <Field label="Type" value={pet.type} />
+                          <Field label="Weight" value={pet.weight} />
+                          <Field label="Age" value={pet.age} />
+                          <Field label="Category" value={pet.category} />
+                        </div>
+                      </div>
+                    ))}
                   </PrintSection>
 
-                  {(selected.vehicle1_make || selected.has_vehicle) && (
-                    <PrintSection title="Vehicle Information">
-                      <div className="grid grid-cols-4 gap-4">
-                        <Field label="Make" value={selected.vehicle1_make} />
-                        <Field label="Year" value={selected.vehicle1_year} />
-                        <Field label="Color" value={selected.vehicle1_color} />
-                        <Field label="Plate" value={selected.vehicle1_plate} />
-                      </div>
-                      {selected.has_second_vehicle && (
-                        <div className="grid grid-cols-4 gap-4 border-t pt-3 mt-3">
-                          <Field label="Vehicle 2 Make" value={selected.vehicle2_make} />
-                          <Field label="Year" value={selected.vehicle2_year} />
-                          <Field label="Color" value={selected.vehicle2_color} />
-                          <Field label="Plate" value={selected.vehicle2_plate} />
-                        </div>
-                      )}
-                    </PrintSection>
-                  )}
+                  <PrintSection title="Vehicle Information">
+                    <div className="grid grid-cols-4 gap-4">
+                      <Field label="Vehicle 1 Make" value={selected.vehicle1_make} />
+                      <Field label="Year" value={selected.vehicle1_year} />
+                      <Field label="Color" value={selected.vehicle1_color} />
+                      <Field label="Plate" value={selected.vehicle1_plate} />
+                    </div>
+                    <div className="grid grid-cols-4 gap-4 border-t pt-3 mt-3">
+                      <Field label="Has 2nd Vehicle" value={selected.has_second_vehicle} />
+                      <Field label="Vehicle 2 Make" value={selected.vehicle2_make} />
+                      <Field label="Year" value={selected.vehicle2_year} />
+                      <Field label="Color" value={selected.vehicle2_color} />
+                      <Field label="Plate" value={selected.vehicle2_plate} />
+                    </div>
+                  </PrintSection>
 
                   <PrintSection title="Background Check">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Field label="Filed for Bankruptcy" value={selected.filed_bankruptcy} />
-                        {selected.bankruptcy_details && <p className="text-xs text-gray-600 italic">{String(selected.bankruptcy_details)}</p>}
+                        {selected.bankruptcy_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.bankruptcy_details)}</p>}
                       </div>
                       <div>
                         <Field label="Evicted from Tenancy" value={selected.evicted_from_tenancy} />
-                        {selected.eviction_details && <p className="text-xs text-gray-600 italic">{String(selected.eviction_details)}</p>}
+                        {selected.eviction_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.eviction_details)}</p>}
                       </div>
                       <div>
                         <Field label="Convicted of Felony" value={selected.convicted_felony} />
-                        {selected.felony_details && <p className="text-xs text-gray-600 italic">{String(selected.felony_details)}</p>}
+                        {selected.felony_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.felony_details)}</p>}
                       </div>
                       <div>
                         <Field label="Arrested/Convicted" value={selected.arrested_or_convicted} />
-                        {selected.arrest_details && <p className="text-xs text-gray-600 italic">{String(selected.arrest_details)}</p>}
+                        {selected.arrest_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.arrest_details)}</p>}
                       </div>
                     </div>
                   </PrintSection>
@@ -1631,16 +1633,18 @@ export default function ApplicationsPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <Field label="Agreed to Terms" value={selected.agree_terms} />
                       <Field label="Electronic Signature" value={selected.signature_name} />
-                      <Field label="Signature Date" value={formatDate(selected.signature_date)} />
+                      <Field label="Signature Date" value={selected.signature_date} />
                       <Field label="Consent" value={selected.consent} />
                     </div>
                   </PrintSection>
 
-                  {documents.length > 0 && (
-                    <PrintSection title={`Documents (${documents.length})`}>
+                  <PrintSection title={`Uploaded Documents (${documents.length})`}>
+                    {documents.length === 0 ? (
+                      <p className="text-sm text-gray-500">No documents uploaded.</p>
+                    ) : (
                       <div className="space-y-4">
                         {documents.map((doc) => (
-                          <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                          <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden print-doc">
                             <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
                               <span className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</span>
                               <span className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
@@ -1650,25 +1654,24 @@ export default function ApplicationsPage() {
                               <img
                                 src={`/api/documents/${doc.id}`}
                                 alt={doc.document_label || doc.file_name}
-                                className="w-full max-h-[600px] object-contain p-2"
-                                loading="lazy"
+                                className="w-full max-h-[700px] object-contain p-2"
                               />
                             ) : doc.file_type === "application/pdf" ? (
-                              <iframe
-                                src={`/api/documents/${doc.id}`}
-                                className="w-full h-[500px]"
-                                title={doc.file_name}
-                              />
+                              <div className="p-3">
+                                <p className="text-sm text-gray-700 mb-1">PDF Document: {doc.file_name}</p>
+                                <p className="text-xs text-gray-500">Open the application in the dashboard to view this PDF inline.</p>
+                              </div>
                             ) : (
-                              <div className="py-4 text-center text-sm text-gray-600">
-                                {doc.file_name} — open to view
+                              <div className="p-3">
+                                <p className="text-sm text-gray-700">{doc.file_name}</p>
+                                <p className="text-xs text-gray-500">Open the application in the dashboard to view/download.</p>
                               </div>
                             )}
                           </div>
                         ))}
                       </div>
-                    </PrintSection>
-                  )}
+                    )}
+                  </PrintSection>
                 </>
               );
             })()}
