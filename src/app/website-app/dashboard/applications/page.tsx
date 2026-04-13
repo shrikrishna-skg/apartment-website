@@ -364,9 +364,15 @@ export default function ApplicationsPage() {
     setLoadingDocs(true);
     try {
       const res = await fetch(`/api/documents?application_id=${applicationId}`);
+      if (!res.ok) {
+        console.error("Documents fetch failed:", res.status);
+        setDocuments([]);
+        return;
+      }
       const data = await res.json();
       setDocuments(Array.isArray(data) ? data : []);
-    } catch {
+    } catch (err) {
+      console.error("Documents fetch error:", err);
       setDocuments([]);
     } finally {
       setLoadingDocs(false);
@@ -823,7 +829,10 @@ export default function ApplicationsPage() {
       )}
 
       {/* ── Slide-over Detail Panel ── */}
-      {selected && (
+      {selected && (() => {
+        const isStudent = selected.applicant_type === "student" || selected.applicant_type === "international";
+        const isProfessional = selected.applicant_type === "professional";
+        return (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
           <div className="absolute inset-0 bg-black/30 transition-opacity" />
           <div
@@ -894,22 +903,27 @@ export default function ApplicationsPage() {
                   <div className="col-span-2 sm:col-span-3">
                     <DetailField label="Current Address" value={[selected.current_address, selected.city, selected.state, selected.zip_code].filter(Boolean).join(", ") || "—"} />
                   </div>
-                  <DetailField label="Address Type" value={selected.address_type || "—"} />
-                  <DetailField label="University" value={selected.university_name || "—"} />
-                  <DetailField label="Student ID" value={selected.student_id || "—"} />
-                  <DetailField label="Course Name" value={selected.course_name || "—"} />
-                  <DetailField label="Course Start" value={formatDate(selected.course_start_date)} />
-                  <DetailField label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
-                  <DetailField label="Advisor Phone" value={selected.advisor_phone || "—"} />
-                  <DetailField label="Advisor Email" value={selected.advisor_email || "—"} />
+                  {/* Show if has data OR is relevant to this type */}
+                  {(selected.address_type || isStudent) && <DetailField label="Address Type" value={selected.address_type || "—"} />}
+                  {(selected.university_name || isStudent) && <DetailField label="University" value={selected.university_name || "—"} />}
+                  {(selected.student_id || isStudent) && <DetailField label="Student ID" value={selected.student_id || "—"} />}
+                  {(selected.course_name || isStudent) && <DetailField label="Course Name" value={selected.course_name || "—"} />}
+                  {(selected.course_start_date || isStudent) && <DetailField label="Course Start" value={formatDate(selected.course_start_date)} />}
+                  {(selected.expected_graduation || isStudent) && <DetailField label="Expected Graduation" value={formatDate(selected.expected_graduation)} />}
+                  {(selected.advisor_phone || isStudent) && <DetailField label="Advisor Phone" value={selected.advisor_phone || "—"} />}
+                  {(selected.advisor_email || isStudent) && <DetailField label="Advisor Email" value={selected.advisor_email || "—"} />}
                   <DetailField label="Emergency Contact" value={selected.emergency_contact_name || "—"} />
                   <DetailField label="Emergency Phone" value={selected.emergency_contact_phone || "—"} />
-                  <DetailField label="Emergency Email" value={selected.emergency_contact_email || "—"} />
+                  {(selected.emergency_contact_email) && <DetailField label="Emergency Email" value={selected.emergency_contact_email} />}
                   <DetailField label="Relationship" value={selected.emergency_relationship || "—"} />
-                  <DetailField label="Emergency Contact 2" value={selected.emergency_contact2_name || "—"} />
-                  <DetailField label="Emergency Phone 2" value={selected.emergency_contact2_phone || "—"} />
-                  <DetailField label="Emergency Email 2" value={selected.emergency_contact2_email || "—"} />
-                  <DetailField label="Relationship 2" value={selected.emergency_relationship2 || "—"} />
+                  {(selected.emergency_contact2_name || isStudent) && (
+                    <>
+                      <DetailField label="Emergency Contact 2" value={selected.emergency_contact2_name || "—"} />
+                      <DetailField label="Emergency Phone 2" value={selected.emergency_contact2_phone || "—"} />
+                      {selected.emergency_contact2_email && <DetailField label="Emergency Email 2" value={selected.emergency_contact2_email} />}
+                      <DetailField label="Relationship 2" value={selected.emergency_relationship2 || "—"} />
+                    </>
+                  )}
                 </div>
               </section>
 
@@ -924,25 +938,27 @@ export default function ApplicationsPage() {
                   }
                 />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />
+                  {(selected.employment_status || isStudent) && <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />}
                   <DetailField label="Employer" value={selected.employer_name || "—"} />
                   <DetailField label="Monthly Income" value={selected.monthly_income ? (isNaN(Number(selected.monthly_income)) ? String(selected.monthly_income) : `$${Number(selected.monthly_income).toLocaleString()}`) : "—"} />
-                  <DetailField label="Income Source" value={selected.income_source || "—"} />
-                  <DetailField label="Supervisor" value={selected.supervisor || "—"} />
-                  <DetailField label="Employer Address" value={selected.employer_address || "—"} />
-                  <DetailField label="Employer Phone" value={selected.employer_phone || "—"} />
-                  <DetailField label="Position Held" value={selected.position_held || "—"} />
-                  <DetailField label="Date of Hire" value={formatDate(selected.date_of_hire)} />
+                  {(selected.income_source || isStudent) && <DetailField label="Income Source" value={selected.income_source || "—"} />}
+                  {(selected.supervisor || isProfessional) && <DetailField label="Supervisor" value={selected.supervisor || "—"} />}
+                  {(selected.employer_address || isProfessional) && <DetailField label="Employer Address" value={selected.employer_address || "—"} />}
+                  {(selected.employer_phone || isProfessional) && <DetailField label="Employer Phone" value={selected.employer_phone || "—"} />}
+                  {(selected.position_held || isProfessional) && <DetailField label="Position Held" value={selected.position_held || "—"} />}
+                  {(selected.date_of_hire || isProfessional) && <DetailField label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
                 </div>
-                <div className="mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
-                  <p className="text-xs font-semibold text-blue-700 mb-2">Co-signer Information</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <DetailField label="Has Co-signer" value={selected.has_cosigner ? "Yes" : selected.has_cosigner === false ? "No" : "—"} />
-                    <DetailField label="Co-signer Name" value={selected.cosigner_name || "—"} />
-                    <DetailField label="Co-signer Phone" value={selected.cosigner_phone || "—"} />
-                    <DetailField label="Co-signer Email" value={selected.cosigner_email || "—"} />
+                {(selected.has_cosigner || selected.cosigner_name || isStudent) && (
+                  <div className="mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                    <p className="text-xs font-semibold text-blue-700 mb-2">Co-signer Information</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <DetailField label="Has Co-signer" value={selected.has_cosigner ? "Yes" : selected.has_cosigner === false ? "No" : "—"} />
+                      <DetailField label="Co-signer Name" value={selected.cosigner_name || "—"} />
+                      <DetailField label="Co-signer Phone" value={selected.cosigner_phone || "—"} />
+                      <DetailField label="Co-signer Email" value={selected.cosigner_email || "—"} />
+                    </div>
                   </div>
-                </div>
+                )}
               </section>
 
               {/* Section 4: References & Rental History */}
@@ -961,35 +977,40 @@ export default function ApplicationsPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <DetailField label="Name" value={selected.previous_landlord_name || "—"} />
                     <DetailField label="Phone" value={selected.landlord_phone || "—"} />
-                    <DetailField label="Email" value={selected.landlord_email || "—"} />
-                    <DetailField label="Address" value={selected.landlord_address || "—"} />
+                    {(selected.landlord_email || isProfessional) && <DetailField label="Email" value={selected.landlord_email || "—"} />}
+                    {(selected.landlord_address || isStudent) && <DetailField label="Address" value={selected.landlord_address || "—"} />}
                     <DetailField label="Reason for Leaving" value={selected.reason_for_leaving || "—"} />
-                    <DetailField label="Length of Stay" value={selected.length_of_stay || "—"} />
-                    <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />
+                    {(selected.length_of_stay || isStudent) && <DetailField label="Length of Stay" value={selected.length_of_stay || "—"} />}
+                    {(selected.rent_amount || isProfessional) && <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />}
                   </div>
                 </div>
-                {/* References */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                {/* References - show structured refs for student, text for professional, both if data exists */}
+                {(selected.ref1_name || selected.ref2_name || isStudent) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Reference 1</p>
+                      <DetailField label="Name" value={selected.ref1_name || "—"} />
+                      <div className="mt-2"><DetailField label="Phone" value={selected.ref1_phone || "—"} /></div>
+                      <div className="mt-2"><DetailField label="Relationship" value={selected.ref1_relationship || "—"} /></div>
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Reference 2</p>
+                      <DetailField label="Name" value={selected.ref2_name || "—"} />
+                      <div className="mt-2"><DetailField label="Phone" value={selected.ref2_phone || "—"} /></div>
+                      <div className="mt-2"><DetailField label="Relationship" value={selected.ref2_relationship || "—"} /></div>
+                    </div>
+                  </div>
+                )}
+                {(selected.references_info || isProfessional) && (
                   <div className="p-3 bg-gray-50 rounded-xl">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">Reference 1</p>
-                    <DetailField label="Name" value={selected.ref1_name || "—"} />
-                    <div className="mt-2"><DetailField label="Phone" value={selected.ref1_phone || "—"} /></div>
-                    <div className="mt-2"><DetailField label="Relationship" value={selected.ref1_relationship || "—"} /></div>
+                    <p className="text-xs font-semibold text-gray-500 mb-2">References Info</p>
+                    <DetailField label="Additional References" value={selected.references_info || "—"} />
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-xl">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">Reference 2</p>
-                    <DetailField label="Name" value={selected.ref2_name || "—"} />
-                    <div className="mt-2"><DetailField label="Phone" value={selected.ref2_phone || "—"} /></div>
-                    <div className="mt-2"><DetailField label="Relationship" value={selected.ref2_relationship || "—"} /></div>
-                  </div>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-xl">
-                  <p className="text-xs font-semibold text-gray-500 mb-2">References Info</p>
-                  <DetailField label="Additional References" value={selected.references_info || "—"} />
-                </div>
+                )}
               </section>
 
               {/* Section 5: Residence Details */}
+              {(selected.housing_status || selected.residence_from || isProfessional) && (
               <section>
                 <SectionHeading
                   title="Residence Details"
@@ -1002,6 +1023,7 @@ export default function ApplicationsPage() {
                   <DetailField label="Completed Residence History" value={selected.completed_residence_history ? "Yes" : selected.completed_residence_history === false ? "No" : "—"} />
                 </div>
               </section>
+              )}
 
               {/* Section 5b: General Info */}
               <section>
@@ -1294,7 +1316,8 @@ export default function ApplicationsPage() {
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Confirm Delete Modal */}
       {confirmDelete && (
@@ -1619,7 +1642,7 @@ export default function ApplicationsPage() {
                         {documents.map((doc) => (
                           <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden">
                             <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
-                              <span className="text-sm font-semibold text-gray-900">{doc.document_label || "Document"}</span>
+                              <span className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</span>
                               <span className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
                             </div>
                             {doc.file_type.startsWith("image/") ? (
