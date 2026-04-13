@@ -157,6 +157,7 @@ const DOC_LABEL_MAP: Record<string, string> = {
   visa: "Visa / I-20",
   bankStatement: "Bank Statement",
   proofOfIncome: "Proof of Income",
+  admissionLetter: "Admission / Course Registration Letter",
   additional: "Additional Documents",
 };
 
@@ -948,7 +949,7 @@ export default function ApplicationsPage() {
                   {(selected.position_held || isProfessional) && <DetailField label="Position Held" value={selected.position_held || "—"} />}
                   {(selected.date_of_hire || isProfessional) && <DetailField label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
                 </div>
-                {(selected.has_cosigner || selected.cosigner_name || isStudent) && (
+                {(selected.has_cosigner || selected.cosigner_name) && (
                   <div className="mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                     <p className="text-xs font-semibold text-blue-700 mb-2">Co-signer Information</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

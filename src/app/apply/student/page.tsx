@@ -266,7 +266,7 @@ const initialFormData: FormData = {
   vehicle1Plate: "",
   agreeTerms: "",
   signatureName: "",
-  signatureDate: new Date().toLocaleString("en-US", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true }) + " CT",
+  signatureDate: new Date().toLocaleDateString("en-US", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit" }),
   consent: false,
 };
 
@@ -516,19 +516,26 @@ function StudentApplicationPage() {
       }
       const appData = await res.json();
 
-      // Upload documents by category (best-effort, don't block submission)
+      // Upload ALL documents — track failures
       if (appData.id) {
         const allDocs = Object.values(documentFiles).flat();
+        const failedUploads: string[] = [];
         for (const doc of allDocs) {
           try {
             const fileForm = new FormData();
             fileForm.append("file", doc.file);
             fileForm.append("application_id", appData.id);
             fileForm.append("document_label", doc.category);
-            await fetch("/api/documents/upload", { method: "POST", body: fileForm });
+            const uploadRes = await fetch("/api/documents/upload", { method: "POST", body: fileForm });
+            if (!uploadRes.ok) {
+              failedUploads.push(`${doc.file.name} (${doc.category})`);
+            }
           } catch {
-            // Document upload failure shouldn't block the application
+            failedUploads.push(`${doc.file.name} (${doc.category})`);
           }
+        }
+        if (failedUploads.length > 0) {
+          alert(`Application submitted! But ${failedUploads.length} document(s) failed to upload:\n${failedUploads.join("\n")}\n\nPlease contact the office to submit these documents.`);
         }
       }
 
