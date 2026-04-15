@@ -311,6 +311,73 @@ export default function GeneralApplicationPage() {
     return newErrors.length === 0;
   };
 
+  // Validate ALL steps before final submission
+  const validateAllSteps = (): boolean => {
+    const allErrors: string[] = [];
+
+    // Step 1: Personal Info
+    if (!formData.fullName.trim()) allErrors.push("Applicant's Name is required (Personal Info)");
+    if (!formData.ssn.trim()) allErrors.push("SSN / Passport No is required (Personal Info)");
+    if (!formData.maritalStatus) allErrors.push("Marital Status is required (Personal Info)");
+    if (!formData.gender) allErrors.push("Gender is required (Personal Info)");
+    if (!formData.dateOfBirth) allErrors.push("Date of Birth is required (Personal Info)");
+    if (!formData.email.trim()) allErrors.push("Email is required (Personal Info)");
+    if (!formData.phone.trim()) allErrors.push("Mobile No is required (Personal Info)");
+    if (!formData.housingRequirement) allErrors.push("Housing Requirement is required (Personal Info)");
+    if (!formData.leaseDuration) allErrors.push("Lease Duration is required (Personal Info)");
+    if (!formData.preferredMoveIn) allErrors.push("Date of Move In is required (Personal Info)");
+
+    // Step 2: Residence
+    if (!formData.currentAddress.trim()) allErrors.push("Current Address is required (Residence)");
+    if (!formData.housingStatus) allErrors.push("Housing Status is required (Residence)");
+    if (!formData.residenceFrom) allErrors.push("From date is required (Residence)");
+    if (!formData.residenceTo) allErrors.push("To date is required (Residence)");
+    if (!formData.landlordName.trim()) allErrors.push("Owner/Landlord Name is required (Residence)");
+    if (!formData.landlordEmail.trim()) allErrors.push("Owner/Landlord Email is required (Residence)");
+    if (!formData.landlordPhone.trim()) allErrors.push("Owner/Landlord Phone is required (Residence)");
+    if (!formData.rentAmount.trim()) allErrors.push("Rent Amount is required (Residence)");
+    if (!formData.reasonForMoving.trim()) allErrors.push("Reason for Moving is required (Residence)");
+
+    // Step 3: Employment
+    if (!formData.employerName.trim()) allErrors.push("Employer is required (Employment)");
+    if (!formData.supervisor.trim()) allErrors.push("Supervisor is required (Employment)");
+    if (!formData.employerAddress.trim()) allErrors.push("Employer Address is required (Employment)");
+    if (!formData.employerPhone.trim()) allErrors.push("Employer Phone is required (Employment)");
+    if (!formData.positionHeld.trim()) allErrors.push("Position Held is required (Employment)");
+    if (!formData.dateOfHire) allErrors.push("Date of Hire is required (Employment)");
+    if (!formData.salaryPerMonth.trim()) allErrors.push("Salary Per Month is required (Employment)");
+
+    // Step 4: General Info
+    if (!formData.completedResidenceHistory) allErrors.push("Residence history question is required (General Info)");
+    if (!formData.hasPets) allErrors.push("Pet question is required (General Info)");
+
+    // Step 5: Vehicle
+    if (!formData.hasSecondVehicle) allErrors.push("2nd vehicle question is required (Vehicle)");
+
+    // Step 6: Background
+    if (!formData.filedBankruptcy) allErrors.push("Bankruptcy question is required (Background)");
+    if (!formData.evictedFromTenancy) allErrors.push("Eviction question is required (Background)");
+    if (!formData.convictedFelony) allErrors.push("Felony question is required (Background)");
+    if (!formData.arrestedOrConvicted) allErrors.push("Arrest question is required (Background)");
+
+    // Step 7: Documents
+    for (const doc of REQUIRED_DOCS_PROFESSIONAL) {
+      if (doc.required && (!documentFiles[doc.key] || documentFiles[doc.key].length === 0)) {
+        allErrors.push(`${doc.label} is required (Documents)`);
+      }
+    }
+
+    // Step 8: Authorization
+    if (!formData.agreeTerms || formData.agreeTerms !== "Yes, I agree") allErrors.push("You must agree to the terms and conditions");
+    if (!formData.signatureName.trim()) allErrors.push("Electronic Signature is required");
+
+    // Step 9: Consent
+    if (!formData.consent) allErrors.push("You must check the consent checkbox");
+
+    setErrors(allErrors);
+    return allErrors.length === 0;
+  };
+
   const handleNext = () => {
     if (validateStep()) {
       setVisitedSteps((prev) => new Set(prev).add(currentStep));
@@ -360,7 +427,7 @@ export default function GeneralApplicationPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep()) return;
+    if (!validateAllSteps()) return;
     setSubmitting(true);
     setSubmitError("");
     // Set signature date/time to exact moment of submission
@@ -599,10 +666,12 @@ export default function GeneralApplicationPage() {
                 <div key={step.label} className="flex items-center">
                   <button
                     type="button"
-                    className="flex flex-col items-center group cursor-pointer"
+                    className={`flex flex-col items-center group ${visitedSteps.has(stepNum) || stepNum <= currentStep ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
                     onClick={() => {
-                      setCurrentStep(stepNum);
-                      setErrors([]);
+                      if (visitedSteps.has(stepNum) || stepNum <= currentStep) {
+                        setCurrentStep(stepNum);
+                        setErrors([]);
+                      }
                     }}
                   >
                     <div
