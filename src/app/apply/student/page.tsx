@@ -752,13 +752,10 @@ function StudentApplicationPage() {
                 <div key={step.label} className="flex items-center">
                   <button
                     type="button"
-                    className={`flex flex-col items-center group ${visitedSteps.has(stepNum) || stepNum <= currentStep ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
+                    className="flex flex-col items-center group cursor-pointer"
                     onClick={() => {
-                      // Only allow going back to visited steps or current/previous steps
-                      if (visitedSteps.has(stepNum) || stepNum <= currentStep) {
-                        setCurrentStep(stepNum);
-                        setErrors([]);
-                      }
+                      setCurrentStep(stepNum);
+                      setErrors([]);
                     }}
                   >
                     <div

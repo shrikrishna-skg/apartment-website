@@ -666,12 +666,10 @@ export default function GeneralApplicationPage() {
                 <div key={step.label} className="flex items-center">
                   <button
                     type="button"
-                    className={`flex flex-col items-center group ${visitedSteps.has(stepNum) || stepNum <= currentStep ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
+                    className="flex flex-col items-center group cursor-pointer"
                     onClick={() => {
-                      if (visitedSteps.has(stepNum) || stepNum <= currentStep) {
-                        setCurrentStep(stepNum);
-                        setErrors([]);
-                      }
+                      setCurrentStep(stepNum);
+                      setErrors([]);
                     }}
                   >
                     <div
