@@ -125,6 +125,7 @@ interface FormData {
   completedResidenceHistory: string;
   hasPets: string;
   // Step 5 - Vehicle Information
+  hasVehicle: string;
   vehicle1Make: string;
   vehicle1Year: string;
   vehicle1Color: string;
@@ -183,6 +184,7 @@ const initialFormData: FormData = {
   salaryPerMonth: "",
   completedResidenceHistory: "",
   hasPets: "",
+  hasVehicle: "",
   vehicle1Make: "",
   vehicle1Year: "",
   vehicle1Color: "",
@@ -278,7 +280,20 @@ export default function GeneralApplicationPage() {
     }
 
     if (currentStep === 5) {
-      if (!formData.hasSecondVehicle) newErrors.push("Please answer the 2nd vehicle question");
+      if (!formData.hasVehicle) newErrors.push("Please answer the vehicle question");
+      if (formData.hasVehicle === "Yes") {
+        if (!formData.vehicle1Make.trim()) newErrors.push("Vehicle 1 Make is required");
+        if (!formData.vehicle1Year.trim()) newErrors.push("Vehicle 1 Year is required");
+        if (!formData.vehicle1Color.trim()) newErrors.push("Vehicle 1 Color is required");
+        if (!formData.vehicle1Plate.trim()) newErrors.push("Vehicle 1 License Plate Number is required");
+        if (!formData.hasSecondVehicle) newErrors.push("Please answer the 2nd vehicle question");
+        if (formData.hasSecondVehicle === "Yes") {
+          if (!formData.vehicle2Make.trim()) newErrors.push("Vehicle 2 Make is required");
+          if (!formData.vehicle2Year.trim()) newErrors.push("Vehicle 2 Year is required");
+          if (!formData.vehicle2Color.trim()) newErrors.push("Vehicle 2 Color is required");
+          if (!formData.vehicle2Plate.trim()) newErrors.push("Vehicle 2 License Plate Number is required");
+        }
+      }
     }
 
     if (currentStep === 6) {
@@ -352,7 +367,20 @@ export default function GeneralApplicationPage() {
     if (!formData.hasPets) allErrors.push("Pet question is required (General Info)");
 
     // Step 5: Vehicle
-    if (!formData.hasSecondVehicle) allErrors.push("2nd vehicle question is required (Vehicle)");
+    if (!formData.hasVehicle) allErrors.push("Vehicle question is required (Vehicle)");
+    if (formData.hasVehicle === "Yes") {
+      if (!formData.vehicle1Make.trim()) allErrors.push("Vehicle 1 Make is required (Vehicle)");
+      if (!formData.vehicle1Year.trim()) allErrors.push("Vehicle 1 Year is required (Vehicle)");
+      if (!formData.vehicle1Color.trim()) allErrors.push("Vehicle 1 Color is required (Vehicle)");
+      if (!formData.vehicle1Plate.trim()) allErrors.push("Vehicle 1 License Plate Number is required (Vehicle)");
+      if (!formData.hasSecondVehicle) allErrors.push("2nd vehicle question is required (Vehicle)");
+      if (formData.hasSecondVehicle === "Yes") {
+        if (!formData.vehicle2Make.trim()) allErrors.push("Vehicle 2 Make is required (Vehicle)");
+        if (!formData.vehicle2Year.trim()) allErrors.push("Vehicle 2 Year is required (Vehicle)");
+        if (!formData.vehicle2Color.trim()) allErrors.push("Vehicle 2 Color is required (Vehicle)");
+        if (!formData.vehicle2Plate.trim()) allErrors.push("Vehicle 2 License Plate Number is required (Vehicle)");
+      }
+    }
 
     // Step 6: Background
     if (!formData.filedBankruptcy) allErrors.push("Bankruptcy question is required (Background)");
@@ -470,15 +498,16 @@ export default function GeneralApplicationPage() {
           completed_residence_history: formData.completedResidenceHistory === "Yes",
           has_pets: formData.hasPets === "Yes",
           pets: formData.hasPets === "Yes" ? pets : [],
-          vehicle1_make: formData.vehicle1Make || null,
-          vehicle1_year: formData.vehicle1Year || null,
-          vehicle1_color: formData.vehicle1Color || null,
-          vehicle1_plate: formData.vehicle1Plate || null,
-          has_second_vehicle: formData.hasSecondVehicle === "Yes",
-          vehicle2_make: formData.vehicle2Make || null,
-          vehicle2_year: formData.vehicle2Year || null,
-          vehicle2_color: formData.vehicle2Color || null,
-          vehicle2_plate: formData.vehicle2Plate || null,
+          has_vehicle: formData.hasVehicle === "Yes",
+          vehicle1_make: formData.hasVehicle === "Yes" ? (formData.vehicle1Make || null) : null,
+          vehicle1_year: formData.hasVehicle === "Yes" ? (formData.vehicle1Year || null) : null,
+          vehicle1_color: formData.hasVehicle === "Yes" ? (formData.vehicle1Color || null) : null,
+          vehicle1_plate: formData.hasVehicle === "Yes" ? (formData.vehicle1Plate || null) : null,
+          has_second_vehicle: formData.hasVehicle === "Yes" && formData.hasSecondVehicle === "Yes",
+          vehicle2_make: formData.hasVehicle === "Yes" && formData.hasSecondVehicle === "Yes" ? (formData.vehicle2Make || null) : null,
+          vehicle2_year: formData.hasVehicle === "Yes" && formData.hasSecondVehicle === "Yes" ? (formData.vehicle2Year || null) : null,
+          vehicle2_color: formData.hasVehicle === "Yes" && formData.hasSecondVehicle === "Yes" ? (formData.vehicle2Color || null) : null,
+          vehicle2_plate: formData.hasVehicle === "Yes" && formData.hasSecondVehicle === "Yes" ? (formData.vehicle2Plate || null) : null,
           filed_bankruptcy: formData.filedBankruptcy === "Yes",
           bankruptcy_details: formData.bankruptcyDetails || null,
           evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
@@ -757,14 +786,14 @@ export default function GeneralApplicationPage() {
                     {renderRadioGroup("Marital Status", "maritalStatus", [
                       "Single",
                       "Married",
-                    ])}
+                    ], true)}
 
                     {renderRadioGroup("Gender", "gender", [
                       "Female",
                       "Male",
                       "Other",
                       "Prefer not to say",
-                    ])}
+                    ], true)}
 
                     {renderInput("Driving License Number", "drivingLicense", "text", "License number (if applicable)")}
                     <div className="flex flex-col gap-1.5">
@@ -801,8 +830,9 @@ export default function GeneralApplicationPage() {
                       "2 Bed / 2 Bath",
                       "3 Bed / 3 Bath",
                       "4 Bed / 4 Bath",
+                      "Individual Bedroom Leasing",
                       "Other",
-                    ])}
+                    ], true)}
 
                     {renderRadioGroup("Lease Duration Preference", "leaseDuration", [
                       "Month to Month",
@@ -811,7 +841,7 @@ export default function GeneralApplicationPage() {
                       "6 Months and Above Flexible",
                       "12 Months",
                       "Other",
-                    ])}
+                    ], true)}
 
                     <div className="flex flex-col gap-1.5">
                       <label className="text-sm font-medium text-gray-700">
@@ -845,12 +875,13 @@ export default function GeneralApplicationPage() {
                   </h2>
 
                   <div className="space-y-5">
-                    {renderInput("Current Address (Include No, Street, City, State, Zip Code)", "currentAddress", "text", "Street address, City, State, Zip", true)}
+                    {renderInput("Current Address (Include Apt No, Street, City, State, Country, Zip Code)", "currentAddress", "text", "Street address, City, State, Country, Zip", true)}
 
                     {renderRadioGroup("Housing Status", "housingStatus", [
                       "Own",
                       "Rent",
                       "Living with Friends/Family",
+                      "Dorms",
                       "Other",
                     ])}
 
@@ -957,12 +988,12 @@ export default function GeneralApplicationPage() {
                     {renderRadioGroup("Did you complete the residence history?", "completedResidenceHistory", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
 
                     {renderRadioGroup("Do you have pets?", "hasPets", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
 
                     {formData.hasPets === "Yes" && (
                       <div className="space-y-4 pl-1 border-l-2 border-blue-200 ml-2 mt-3">
@@ -1056,23 +1087,34 @@ export default function GeneralApplicationPage() {
                   </h2>
 
                   <div className="space-y-5">
-                    {renderInput("Vehicle 1 Make (e.g. Honda, Toyota, BMW)", "vehicle1Make", "text", "Your answer")}
-                    {renderInput("Vehicle 1 Year", "vehicle1Year", "text", "Your answer")}
-                    {renderInput("Vehicle 1 Color", "vehicle1Color", "text", "Your answer")}
-                    {renderInput("Vehicle 1 License Plate Number", "vehicle1Plate", "text", "Your answer")}
-
-                    {renderRadioGroup("Do you have a 2nd vehicle?", "hasSecondVehicle", [
+                    {renderRadioGroup("Do you have a vehicle?", "hasVehicle", [
                       "Yes",
                       "No",
-                    ])}
+                    ], true)}
 
-                    {formData.hasSecondVehicle === "Yes" && (
+                    {formData.hasVehicle === "Yes" && (
                       <div className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2 mt-3">
                         <div className="pl-4 space-y-5">
-                          {renderInput("Vehicle 2 Make", "vehicle2Make", "text", "Your answer")}
-                          {renderInput("Vehicle 2 Year", "vehicle2Year", "text", "Your answer")}
-                          {renderInput("Vehicle 2 Color", "vehicle2Color", "text", "Your answer")}
-                          {renderInput("Vehicle 2 License Plate Number", "vehicle2Plate", "text", "Your answer")}
+                          {renderInput("Vehicle 1 Make (e.g. Honda, Toyota, BMW)", "vehicle1Make", "text", "e.g., Honda Civic", true)}
+                          {renderInput("Vehicle 1 Year", "vehicle1Year", "text", "e.g., 2021", true)}
+                          {renderInput("Vehicle 1 Color", "vehicle1Color", "text", "e.g., Silver", true)}
+                          {renderInput("Vehicle 1 License Plate Number", "vehicle1Plate", "text", "e.g., ABC-1234", true)}
+
+                          {renderRadioGroup("Do you have a 2nd vehicle?", "hasSecondVehicle", [
+                            "Yes",
+                            "No",
+                          ], true)}
+
+                          {formData.hasSecondVehicle === "Yes" && (
+                            <div className="space-y-5 pl-1 border-l-2 border-blue-200 ml-2 mt-3">
+                              <div className="pl-4 space-y-5">
+                                {renderInput("Vehicle 2 Make", "vehicle2Make", "text", "e.g., Toyota Camry", true)}
+                                {renderInput("Vehicle 2 Year", "vehicle2Year", "text", "e.g., 2019", true)}
+                                {renderInput("Vehicle 2 Color", "vehicle2Color", "text", "e.g., Black", true)}
+                                {renderInput("Vehicle 2 License Plate Number", "vehicle2Plate", "text", "e.g., XYZ-5678", true)}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1407,16 +1449,21 @@ export default function GeneralApplicationPage() {
                       <button onClick={() => setCurrentStep(5)} className="text-blue-600 text-sm hover:underline">Edit</button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                      <SummaryRow label="Vehicle 1 Make" value={formData.vehicle1Make || "None"} />
-                      <SummaryRow label="Year" value={formData.vehicle1Year || "N/A"} />
-                      <SummaryRow label="Color" value={formData.vehicle1Color || "N/A"} />
-                      <SummaryRow label="Plate" value={formData.vehicle1Plate || "N/A"} />
-                      {formData.hasSecondVehicle === "Yes" && (
+                      <SummaryRow label="Has Vehicle" value={formData.hasVehicle || "Not answered"} />
+                      {formData.hasVehicle === "Yes" && (
                         <>
-                          <SummaryRow label="Vehicle 2 Make" value={formData.vehicle2Make || "N/A"} />
-                          <SummaryRow label="Year" value={formData.vehicle2Year || "N/A"} />
-                          <SummaryRow label="Color" value={formData.vehicle2Color || "N/A"} />
-                          <SummaryRow label="Plate" value={formData.vehicle2Plate || "N/A"} />
+                          <SummaryRow label="Vehicle 1 Make" value={formData.vehicle1Make || "N/A"} />
+                          <SummaryRow label="Year" value={formData.vehicle1Year || "N/A"} />
+                          <SummaryRow label="Color" value={formData.vehicle1Color || "N/A"} />
+                          <SummaryRow label="Plate" value={formData.vehicle1Plate || "N/A"} />
+                          {formData.hasSecondVehicle === "Yes" && (
+                            <>
+                              <SummaryRow label="Vehicle 2 Make" value={formData.vehicle2Make || "N/A"} />
+                              <SummaryRow label="Year" value={formData.vehicle2Year || "N/A"} />
+                              <SummaryRow label="Color" value={formData.vehicle2Color || "N/A"} />
+                              <SummaryRow label="Plate" value={formData.vehicle2Plate || "N/A"} />
+                            </>
+                          )}
                         </>
                       )}
                     </div>

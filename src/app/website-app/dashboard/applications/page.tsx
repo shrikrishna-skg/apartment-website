@@ -26,13 +26,14 @@ interface Application {
   lease_duration: string;
   university_name: string;
   student_id: string;
+  school_address: string;
   expected_graduation: string;
   emergency_contact_name: string;
   emergency_contact_phone: string;
   emergency_contact_relationship: string;
   emergency_relationship: string;
   employment_status: string;
-  income_source: string;
+  employment_start_date: string;
   has_cosigner: boolean;
   cosigner_name: string;
   cosigner_phone: string;
@@ -42,6 +43,9 @@ interface Application {
   landlord_address: string;
   reason_for_leaving: string;
   length_of_stay: string;
+  prior_landlord_name: string;
+  prior_landlord_phone: string;
+  prior_reason_for_leaving: string;
   ref1_name: string;
   ref1_phone: string;
   ref1_relationship: string;
@@ -831,8 +835,97 @@ export default function ApplicationsPage() {
 
       {/* ── Slide-over Detail Panel ── */}
       {selected && (() => {
-        const isStudent = selected.applicant_type === "student" || selected.applicant_type === "international";
         const isProfessional = selected.applicant_type === "professional";
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const isStudent = !isProfessional;
+        const ICONS = {
+          person: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>,
+          home: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>,
+          school: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" /></svg>,
+          info: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>,
+          briefcase: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" /></svg>,
+          landlord: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" /></svg>,
+          car: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 00-.879-2.121l-3.007-3.007a3 3 0 00-2.12-.879H6.75A2.25 2.25 0 004.5 10.5v6" /></svg>,
+          shield: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>,
+          doc: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>,
+          pen: <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>,
+        };
+        const passportOrSSN = selected.applicant_type === "international" ? "Passport Number" : "SSN";
+        const idValue = selected.applicant_type === "international" ? (selected.ssn || "—") : formatSSN(selected.ssn);
+        const documentsSection = (
+          <section>
+            <SectionHeading title={`Documents${documents.length > 0 ? ` (${documents.length})` : ""}`} icon={ICONS.doc} />
+            {loadingDocs ? (
+              <div className="flex items-center gap-2 py-4">
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-gray-600">Loading documents...</span>
+              </div>
+            ) : documents.length === 0 ? (
+              <p className="text-sm text-gray-600 py-3">No documents uploaded with this application.</p>
+            ) : (
+              <div className="space-y-4">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</p>
+                        <p className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</p>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <a href={`/api/documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">Open</a>
+                        <a href={`/api/documents/${doc.id}?download=1`} className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">Download</a>
+                      </div>
+                    </div>
+                    <div className="bg-white">
+                      {doc.file_type.startsWith("image/") ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={`/api/documents/${doc.id}`} alt={doc.document_label || doc.file_name} className="w-full max-h-[500px] object-contain p-2" loading="lazy" />
+                      ) : doc.file_type === "application/pdf" ? (
+                        <iframe src={`/api/documents/${doc.id}`} className="w-full h-[500px]" title={doc.file_name} />
+                      ) : (
+                        <div className="flex items-center justify-center py-8 text-gray-600 text-sm">Preview not available — click Open to view</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        );
+        const bgCheckSection = (
+          <section>
+            <SectionHeading title="Background Check" icon={ICONS.shield} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className={`p-3 rounded-xl ${selected.filed_bankruptcy ? "bg-red-50" : "bg-green-50"}`}>
+                <DetailField label="Filed Bankruptcy" value={selected.filed_bankruptcy ? "Yes" : "No"} />
+                {selected.bankruptcy_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.bankruptcy_details)}</p>}
+              </div>
+              <div className={`p-3 rounded-xl ${selected.evicted_from_tenancy ? "bg-red-50" : "bg-green-50"}`}>
+                <DetailField label="Evicted from Tenancy" value={selected.evicted_from_tenancy ? "Yes" : "No"} />
+                {selected.eviction_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.eviction_details)}</p>}
+              </div>
+              <div className={`p-3 rounded-xl ${selected.convicted_felony ? "bg-red-50" : "bg-green-50"}`}>
+                <DetailField label="Convicted of Felony" value={selected.convicted_felony ? "Yes" : "No"} />
+                {selected.felony_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.felony_details)}</p>}
+              </div>
+              <div className={`p-3 rounded-xl ${selected.arrested_or_convicted ? "bg-red-50" : "bg-green-50"}`}>
+                <DetailField label="Arrested/Convicted" value={selected.arrested_or_convicted ? "Yes" : "No"} />
+                {selected.arrest_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.arrest_details)}</p>}
+              </div>
+            </div>
+          </section>
+        );
+        const authSection = (
+          <section>
+            <SectionHeading title="Authorization & Signature" icon={ICONS.pen} />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <DetailField label="Agreed to Terms" value={selected.agree_terms ? "Yes" : selected.agree_terms === false ? "No" : "—"} />
+              <DetailField label="Electronic Signature" value={selected.signature_name || "—"} />
+              <DetailField label="Signature Date" value={formatDate(selected.signature_date as string)} />
+              <DetailField label="Consent" value={selected.consent ? "Yes" : selected.consent === false ? "No" : "—"} />
+            </div>
+          </section>
+        );
         return (
         <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setSelected(null)}>
           <div className="absolute inset-0 bg-black/30 transition-opacity" />
@@ -867,93 +960,71 @@ export default function ApplicationsPage() {
             </div>
 
             <div className="px-6 py-6 space-y-8">
-              {/* Section 1: Personal Information */}
+              {isProfessional ? (
+              <>
+              {/* ═══ WORKING PROFESSIONAL LAYOUT ═══ */}
+
+              {/* §1 Personal Information */}
               <section>
-                <SectionHeading
-                  title="Personal Information"
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                    </svg>
-                  }
-                />
+                <SectionHeading title="Personal Information" icon={ICONS.person} />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <DetailField label="Full Name" value={selected.full_name} />
-                  <DetailField label="Email" value={selected.email} />
-                  <DetailField label="Phone" value={selected.mobile_number} />
-                  <DetailField label="Date of Birth" value={formatDate(selected.date_of_birth)} />
-                  <DetailField label="SSN" value={formatSSN(selected.ssn)} />
-                  <DetailField label="Driving License" value={selected.driving_license} />
+                  <DetailField label={passportOrSSN} value={idValue} />
                   <DetailField label="Marital Status" value={selected.marital_status ? capitalize(selected.marital_status) : "—"} />
                   <DetailField label="Gender" value={selected.gender ? capitalize(selected.gender) : "—"} />
+                  <DetailField label="Driving License" value={selected.driving_license || "—"} />
+                  <DetailField label="Date of Birth" value={formatDate(selected.date_of_birth)} />
+                  <DetailField label="Email" value={selected.email} />
+                  <DetailField label="Mobile No" value={selected.mobile_number} />
+                  <DetailField label="Housing Requirement" value={selected.housing_requirement || "—"} />
+                  <DetailField label="Lease Duration" value={selected.lease_duration || "—"} />
+                  <DetailField label="Date of Move In" value={formatDate(selected.preferred_move_in)} />
                   <DetailField label="Applicant Type" value={TYPE_LABELS[selected.applicant_type] || selected.applicant_type} />
-                </div>
-              </section>
-
-              {/* Section 2: Address & Education / Address & Residence */}
-              <section>
-                <SectionHeading
-                  title={selected.applicant_type === "professional" ? "Address & Residence" : "Address & Education"}
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-                    </svg>
-                  }
-                />
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <div className="col-span-2 sm:col-span-3">
-                    <DetailField label="Current Address" value={[selected.current_address, selected.city, selected.state, selected.zip_code].filter(Boolean).join(", ") || "—"} />
-                  </div>
-                  {/* Show if has data OR is relevant to this type */}
-                  {(selected.address_type || isStudent) && <DetailField label="Address Type" value={selected.address_type || "—"} />}
-                  {(selected.university_name || isStudent) && <DetailField label="University" value={selected.university_name || "—"} />}
-                  {(selected.student_id || isStudent) && <DetailField label="Student ID" value={selected.student_id || "—"} />}
-                  {(selected.course_name || isStudent) && <DetailField label="Course Name" value={selected.course_name || "—"} />}
-                  {(selected.course_start_date || isStudent) && <DetailField label="Course Start" value={formatDate(selected.course_start_date)} />}
-                  {(selected.expected_graduation || isStudent) && <DetailField label="Expected Graduation" value={formatDate(selected.expected_graduation)} />}
-                  {(selected.advisor_phone || isStudent) && <DetailField label="Advisor Phone" value={selected.advisor_phone || "—"} />}
-                  {(selected.advisor_email || isStudent) && <DetailField label="Advisor Email" value={selected.advisor_email || "—"} />}
-                  <DetailField label="Emergency Contact" value={selected.emergency_contact_name || "—"} />
-                  <DetailField label="Emergency Phone" value={selected.emergency_contact_phone || "—"} />
-                  {(selected.emergency_contact_email) && <DetailField label="Emergency Email" value={selected.emergency_contact_email} />}
-                  <DetailField label="Relationship" value={selected.emergency_relationship || "—"} />
-                  {(selected.emergency_contact2_name || isStudent) && (
-                    <>
-                      <DetailField label="Emergency Contact 2" value={selected.emergency_contact2_name || "—"} />
-                      <DetailField label="Emergency Phone 2" value={selected.emergency_contact2_phone || "—"} />
-                      {selected.emergency_contact2_email && <DetailField label="Emergency Email 2" value={selected.emergency_contact2_email} />}
-                      <DetailField label="Relationship 2" value={selected.emergency_relationship2 || "—"} />
-                    </>
+                  {selected.specific_request && (
+                    <div className="col-span-2 sm:col-span-3">
+                      <DetailField label="Specific Request" value={selected.specific_request} />
+                    </div>
                   )}
                 </div>
               </section>
 
-              {/* Section 3: Employment & Income */}
+              {/* §2 Residence */}
               <section>
-                <SectionHeading
-                  title="Employment & Income"
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
-                    </svg>
-                  }
-                />
+                <SectionHeading title="Residence" icon={ICONS.home} />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {(selected.employment_status || isStudent) && <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />}
-                  <DetailField label="Employer" value={selected.employer_name || "—"} />
-                  <DetailField label="Monthly Income" value={selected.monthly_income ? (isNaN(Number(selected.monthly_income)) ? String(selected.monthly_income) : `$${Number(selected.monthly_income).toLocaleString()}`) : "—"} />
-                  {(selected.income_source || isStudent) && <DetailField label="Income Source" value={selected.income_source || "—"} />}
-                  {(selected.supervisor || isProfessional) && <DetailField label="Supervisor" value={selected.supervisor || "—"} />}
-                  {(selected.employer_address || isProfessional) && <DetailField label="Employer Address" value={selected.employer_address || "—"} />}
-                  {(selected.employer_phone || isProfessional) && <DetailField label="Employer Phone" value={selected.employer_phone || "—"} />}
-                  {(selected.position_held || isProfessional) && <DetailField label="Position Held" value={selected.position_held || "—"} />}
-                  {(selected.date_of_hire || isProfessional) && <DetailField label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
+                  <div className="col-span-2 sm:col-span-3">
+                    <DetailField label="Current Address" value={selected.current_address || "—"} />
+                  </div>
+                  <DetailField label="Housing Status" value={selected.housing_status || "—"} />
+                  <DetailField label="From" value={formatDate(selected.residence_from as string)} />
+                  <DetailField label="To" value={formatDate(selected.residence_to as string)} />
+                  <DetailField label="Owner/Landlord Name" value={selected.previous_landlord_name || "—"} />
+                  <DetailField label="Owner/Landlord Email" value={selected.landlord_email || "—"} />
+                  <DetailField label="Owner/Landlord Phone" value={selected.landlord_phone || "—"} />
+                  <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />
+                  <div className="col-span-2 sm:col-span-3">
+                    <DetailField label="Reason for Moving" value={selected.reason_for_leaving || "—"} />
+                  </div>
+                </div>
+              </section>
+
+              {/* §3 Employment */}
+              <section>
+                <SectionHeading title="Employment" icon={ICONS.briefcase} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <DetailField label="Applicant's Employer" value={selected.employer_name || "—"} />
+                  <DetailField label="Supervisor" value={selected.supervisor || "—"} />
+                  <DetailField label="Employer's Address / Location" value={selected.employer_address || "—"} />
+                  <DetailField label="Employer Phone" value={selected.employer_phone || "—"} />
+                  <DetailField label="Position Held" value={selected.position_held || "—"} />
+                  <DetailField label="Date of Hire" value={formatDate(selected.date_of_hire)} />
+                  <DetailField label="Salary Per Month" value={selected.monthly_income ? (isNaN(Number(selected.monthly_income)) ? String(selected.monthly_income) : `$${Number(selected.monthly_income).toLocaleString()}`) : "—"} />
                 </div>
                 {(selected.has_cosigner || selected.cosigner_name) && (
                   <div className="mt-4 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
                     <p className="text-xs font-semibold text-blue-700 mb-2">Co-signer Information</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <DetailField label="Has Co-signer" value={selected.has_cosigner ? "Yes" : selected.has_cosigner === false ? "No" : "—"} />
+                      <DetailField label="Has Co-signer" value={selected.has_cosigner ? "Yes" : "No"} />
                       <DetailField label="Co-signer Name" value={selected.cosigner_name || "—"} />
                       <DetailField label="Co-signer Phone" value={selected.cosigner_phone || "—"} />
                       <DetailField label="Co-signer Email" value={selected.cosigner_email || "—"} />
@@ -962,82 +1033,13 @@ export default function ApplicationsPage() {
                 )}
               </section>
 
-              {/* Section 4: References & Rental History */}
+              {/* §4 General Information */}
               <section>
-                <SectionHeading
-                  title="References & Rental History"
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                    </svg>
-                  }
-                />
-                {/* Previous Landlord */}
-                <div className="mb-4 p-3 bg-gray-50 rounded-xl">
-                  <p className="text-xs font-semibold text-gray-500 mb-2">Previous Landlord</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <DetailField label="Name" value={selected.previous_landlord_name || "—"} />
-                    <DetailField label="Phone" value={selected.landlord_phone || "—"} />
-                    {(selected.landlord_email || isProfessional) && <DetailField label="Email" value={selected.landlord_email || "—"} />}
-                    {(selected.landlord_address || isStudent) && <DetailField label="Address" value={selected.landlord_address || "—"} />}
-                    <DetailField label="Reason for Leaving" value={selected.reason_for_leaving || "—"} />
-                    {(selected.length_of_stay || isStudent) && <DetailField label="Length of Stay" value={selected.length_of_stay || "—"} />}
-                    {(selected.rent_amount || isProfessional) && <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />}
-                  </div>
-                </div>
-                {/* References - show structured refs for student, text for professional, both if data exists */}
-                {(selected.ref1_name || selected.ref2_name || isStudent) && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                    <div className="p-3 bg-gray-50 rounded-xl">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">Reference 1</p>
-                      <DetailField label="Name" value={selected.ref1_name || "—"} />
-                      <div className="mt-2"><DetailField label="Phone" value={selected.ref1_phone || "—"} /></div>
-                      <div className="mt-2"><DetailField label="Relationship" value={selected.ref1_relationship || "—"} /></div>
-                    </div>
-                    <div className="p-3 bg-gray-50 rounded-xl">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">Reference 2</p>
-                      <DetailField label="Name" value={selected.ref2_name || "—"} />
-                      <div className="mt-2"><DetailField label="Phone" value={selected.ref2_phone || "—"} /></div>
-                      <div className="mt-2"><DetailField label="Relationship" value={selected.ref2_relationship || "—"} /></div>
-                    </div>
-                  </div>
-                )}
-                {(selected.references_info || isProfessional) && (
-                  <div className="p-3 bg-gray-50 rounded-xl">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">References Info</p>
-                    <DetailField label="Additional References" value={selected.references_info || "—"} />
-                  </div>
-                )}
-              </section>
-
-              {/* Section 5: Residence Details */}
-              {(selected.housing_status || selected.residence_from || isProfessional) && (
-              <section>
-                <SectionHeading
-                  title="Residence Details"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" /></svg>}
-                />
+                <SectionHeading title="General Information" icon={ICONS.info} />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <DetailField label="Housing Status" value={selected.housing_status || "—"} />
-                  <DetailField label="From" value={formatDate(selected.residence_from as string)} />
-                  <DetailField label="To" value={formatDate(selected.residence_to as string)} />
                   <DetailField label="Completed Residence History" value={selected.completed_residence_history ? "Yes" : selected.completed_residence_history === false ? "No" : "—"} />
-                </div>
-              </section>
-              )}
-
-              {/* Section 5b: General Info */}
-              <section>
-                <SectionHeading
-                  title="General Information"
-                  icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>}
-                />
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <DetailField label="Gender" value={selected.gender || "—"} />
                   <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : selected.has_pets === false ? "No" : "—"} />
-                  <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : selected.has_vehicle === false ? "No" : "—"} />
-                  <DetailField label="Completed Residence History" value={selected.completed_residence_history ? "Yes" : selected.completed_residence_history === false ? "No" : "—"} />
-                  {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
+                  {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet, idx) => (
                     <div key={idx} className="col-span-2 sm:col-span-3 p-3 bg-gray-50 rounded-xl">
                       <p className="text-xs font-semibold text-gray-500 mb-2">Pet {idx + 1}</p>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1051,164 +1053,178 @@ export default function ApplicationsPage() {
                 </div>
               </section>
 
-              {/* Section 5c: Vehicle Info */}
+              {/* §5 Vehicle Information */}
               <section>
-                  <SectionHeading
-                    title="Vehicle Information"
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 00-.879-2.121l-3.007-3.007a3 3 0 00-2.12-.879H6.75A2.25 2.25 0 004.5 10.5v6" /></svg>}
-                  />
-                  <div className="p-3 bg-gray-50 rounded-xl mb-3">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle 1</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <DetailField label="Make" value={selected.vehicle1_make || "—"} />
-                      <DetailField label="Year" value={selected.vehicle1_year || "—"} />
-                      <DetailField label="Color" value={selected.vehicle1_color || "—"} />
-                      <DetailField label="Plate" value={selected.vehicle1_plate || "—"} />
+                <SectionHeading title="Vehicle Information" icon={ICONS.car} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
+                  <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : selected.has_vehicle === false ? "No" : "—"} />
+                </div>
+                {selected.has_vehicle && (
+                  <>
+                    <div className="p-3 bg-gray-50 rounded-xl mb-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle 1</p>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <DetailField label="Make" value={selected.vehicle1_make || "—"} />
+                        <DetailField label="Year" value={selected.vehicle1_year || "—"} />
+                        <DetailField label="Color" value={selected.vehicle1_color || "—"} />
+                        <DetailField label="Plate" value={selected.vehicle1_plate || "—"} />
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-xl">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle 2</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
                       <DetailField label="Has 2nd Vehicle" value={selected.has_second_vehicle ? "Yes" : selected.has_second_vehicle === false ? "No" : "—"} />
-                      <DetailField label="Make" value={selected.vehicle2_make || "—"} />
-                      <DetailField label="Year" value={selected.vehicle2_year || "—"} />
-                      <DetailField label="Color" value={selected.vehicle2_color || "—"} />
-                      <DetailField label="Plate" value={selected.vehicle2_plate || "—"} />
                     </div>
-                  </div>
-                </section>
+                    {selected.has_second_vehicle && (
+                      <div className="p-3 bg-gray-50 rounded-xl">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle 2</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <DetailField label="Make" value={selected.vehicle2_make || "—"} />
+                          <DetailField label="Year" value={selected.vehicle2_year || "—"} />
+                          <DetailField label="Color" value={selected.vehicle2_color || "—"} />
+                          <DetailField label="Plate" value={selected.vehicle2_plate || "—"} />
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
 
-              {/* Section 5d: Background Check */}
-              <section>
-                  <SectionHeading
-                    title="Background Check"
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>}
-                  />
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className={`p-3 rounded-xl ${selected.filed_bankruptcy ? "bg-red-50" : "bg-green-50"}`}>
-                      <DetailField label="Filed Bankruptcy" value={selected.filed_bankruptcy ? "Yes" : "No"} />
-                      {selected.bankruptcy_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.bankruptcy_details)}</p>}
-                    </div>
-                    <div className={`p-3 rounded-xl ${selected.evicted_from_tenancy ? "bg-red-50" : "bg-green-50"}`}>
-                      <DetailField label="Evicted from Tenancy" value={selected.evicted_from_tenancy ? "Yes" : "No"} />
-                      {selected.eviction_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.eviction_details)}</p>}
-                    </div>
-                    <div className={`p-3 rounded-xl ${selected.convicted_felony ? "bg-red-50" : "bg-green-50"}`}>
-                      <DetailField label="Convicted of Felony" value={selected.convicted_felony ? "Yes" : "No"} />
-                      {selected.felony_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.felony_details)}</p>}
-                    </div>
-                    <div className={`p-3 rounded-xl ${selected.arrested_or_convicted ? "bg-red-50" : "bg-green-50"}`}>
-                      <DetailField label="Arrested/Convicted" value={selected.arrested_or_convicted ? "Yes" : "No"} />
-                      {selected.arrest_details && <p className="text-xs text-gray-600 mt-1 italic">{String(selected.arrest_details)}</p>}
-                    </div>
-                  </div>
-                </section>
+              {bgCheckSection}
+              {documentsSection}
+              {authSection}
+              </>
+              ) : (
+              <>
+              {/* ═══ STUDENT / INTERNATIONAL LAYOUT ═══ */}
 
-              {/* Section 5e: Authorization */}
+              {/* §1 Personal Info */}
               <section>
-                <SectionHeading
-                    title="Authorization & Signature"
-                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>}
-                  />
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <DetailField label="Agreed to Terms" value={selected.agree_terms ? "Yes" : selected.agree_terms === false ? "No" : "—"} />
-                    <DetailField label="Electronic Signature" value={selected.signature_name || "—"} />
-                    <DetailField label="Signature Date" value={formatDate(selected.signature_date as string)} />
-                    <DetailField label="Consent" value={selected.consent ? "Yes" : selected.consent === false ? "No" : "—"} />
-                  </div>
-                </section>
-
-              {/* Section 6: Housing Preferences */}
-              <section>
-                <SectionHeading
-                  title="Housing Preferences"
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5.5l-1.5-.5M6.75 7.364V3h-3v18m3-13.636l10.5-3.819" />
-                    </svg>
-                  }
-                />
+                <SectionHeading title="Personal Info" icon={ICONS.person} />
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  <DetailField label="Housing Requirement" value={selected.housing_requirement} />
-                  <DetailField label="Preferred Move-in" value={formatDate(selected.preferred_move_in)} />
-                  <DetailField label="Lease Duration" value={selected.lease_duration} />
+                  <DetailField label="Full Name" value={selected.full_name} />
+                  <DetailField label={passportOrSSN} value={idValue} />
+                  <DetailField label="Marital Status" value={selected.marital_status ? capitalize(selected.marital_status) : "—"} />
+                  <DetailField label="Gender" value={selected.gender ? capitalize(selected.gender) : "—"} />
+                  <DetailField label="Driving License" value={selected.driving_license || "—"} />
+                  <DetailField label="Date of Birth" value={formatDate(selected.date_of_birth)} />
+                  <DetailField label="Email" value={selected.email} />
+                  <DetailField label="Mobile Number" value={selected.mobile_number} />
+                  <DetailField label="Housing Requirement" value={selected.housing_requirement || "—"} />
+                  <DetailField label="Preferred Move-In" value={formatDate(selected.preferred_move_in)} />
+                  <DetailField label="Lease Duration" value={selected.lease_duration || "—"} />
+                  <DetailField label="Applicant Type" value={TYPE_LABELS[selected.applicant_type] || selected.applicant_type} />
+                  {selected.specific_request && (
+                    <div className="col-span-2 sm:col-span-3">
+                      <DetailField label="Specific Request" value={selected.specific_request} />
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* §2 Residence Details */}
+              <section>
+                <SectionHeading title="Residence Details" icon={ICONS.home} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="col-span-2 sm:col-span-3">
-                    <DetailField label="Special Requests" value={selected.specific_request} />
+                    <DetailField label="Current Address" value={selected.current_address || "—"} />
+                  </div>
+                  <DetailField label="Housing Status" value={selected.housing_status || selected.address_type || "—"} />
+                  <DetailField label="From" value={formatDate(selected.residence_from as string)} />
+                  <DetailField label="To" value={formatDate(selected.residence_to as string)} />
+                  <DetailField label="Owner/Landlord Name" value={selected.previous_landlord_name || "—"} />
+                  <DetailField label="Owner/Landlord Email" value={selected.landlord_email || "—"} />
+                  <DetailField label="Owner/Landlord Phone" value={selected.landlord_phone || "—"} />
+                  <DetailField label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />
+                  <div className="col-span-2 sm:col-span-3">
+                    <DetailField label="Reason for Moving" value={selected.reason_for_leaving || "—"} />
                   </div>
                 </div>
               </section>
 
-              {/* Section 6: Documents */}
+              {/* §3 Education Details */}
               <section>
-                <SectionHeading
-                  title={`Documents${documents.length > 0 ? ` (${documents.length})` : ""}`}
-                  icon={
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                    </svg>
-                  }
-                />
-                {loadingDocs ? (
-                  <div className="flex items-center gap-2 py-4">
-                    <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-xs text-gray-600">Loading documents...</span>
+                <SectionHeading title="Education Details" icon={ICONS.school} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <DetailField label="University Name" value={selected.university_name || "—"} />
+                  <div className="col-span-2">
+                    <DetailField label="School Address" value={selected.school_address || "—"} />
                   </div>
-                ) : documents.length === 0 ? (
-                  <p className="text-sm text-gray-600 py-3">No documents uploaded with this application.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {documents.map((doc) => (
-                      <div key={doc.id} className="border border-gray-200 rounded-xl overflow-hidden">
-                        {/* Document header */}
-                        <div className="flex items-center justify-between bg-gray-50 px-4 py-2.5 border-b border-gray-200">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</p>
-                            <p className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</p>
-                          </div>
-                          <div className="flex gap-1.5">
-                            <a
-                              href={`/api/documents/${doc.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-2.5 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                            >
-                              Open
-                            </a>
-                            <a
-                              href={`/api/documents/${doc.id}?download=1`}
-                              className="px-2.5 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                            >
-                              Download
-                            </a>
-                          </div>
-                        </div>
-                        {/* Inline document display */}
-                        <div className="bg-white">
-                          {doc.file_type.startsWith("image/") ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={`/api/documents/${doc.id}`}
-                              alt={doc.document_label || doc.file_name}
-                              className="w-full max-h-[500px] object-contain p-2"
-                              loading="lazy"
-                            />
-                          ) : doc.file_type === "application/pdf" ? (
-                            <iframe
-                              src={`/api/documents/${doc.id}`}
-                              className="w-full h-[500px]"
-                              title={doc.file_name}
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center py-8 text-gray-600 text-sm">
-                              Preview not available — click Open to view
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                  <DetailField label="Course Name" value={selected.course_name || "—"} />
+                  <DetailField label="Course Start Date" value={formatDate(selected.course_start_date)} />
+                  <DetailField label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
+                  <DetailField label="Advisor Phone" value={selected.advisor_phone || "—"} />
+                  <DetailField label="Advisor Email" value={selected.advisor_email || "—"} />
+                </div>
+              </section>
+
+              {/* §4 General Information */}
+              <section>
+                <SectionHeading title="General Information" icon={ICONS.info} />
+                <div className="p-3 bg-gray-50 rounded-xl mb-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 1</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <DetailField label="Name" value={selected.emergency_contact_name || "—"} />
+                    <DetailField label="Phone" value={selected.emergency_contact_phone || "—"} />
+                    <DetailField label="Email" value={selected.emergency_contact_email || "—"} />
+                    <DetailField label="Relationship" value={selected.emergency_relationship || "—"} />
+                  </div>
+                </div>
+                <div className="p-3 bg-gray-50 rounded-xl mb-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 2</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <DetailField label="Name" value={selected.emergency_contact2_name || "—"} />
+                    <DetailField label="Phone" value={selected.emergency_contact2_phone || "—"} />
+                    <DetailField label="Email" value={selected.emergency_contact2_email || "—"} />
+                    <DetailField label="Relationship" value={selected.emergency_relationship2 || "—"} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-3">
+                  <DetailField label="Has Pets" value={selected.has_pets ? "Yes" : selected.has_pets === false ? "No" : "—"} />
+                  <DetailField label="Has Vehicle" value={selected.has_vehicle ? "Yes" : selected.has_vehicle === false ? "No" : "—"} />
+                </div>
+                {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet, idx) => (
+                  <div key={idx} className="p-3 bg-gray-50 rounded-xl mb-2">
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Pet {idx + 1}</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <DetailField label="Type" value={pet.type || "—"} />
+                      <DetailField label="Weight" value={pet.weight || "—"} />
+                      <DetailField label="Age" value={pet.age || "—"} />
+                      <DetailField label="Category" value={pet.category || "—"} />
+                    </div>
+                  </div>
+                ))}
+                {selected.has_vehicle && (
+                  <div className="p-3 bg-gray-50 rounded-xl">
+                    <p className="text-xs font-semibold text-gray-500 mb-2">Vehicle</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <DetailField label="Make / Model" value={selected.vehicle1_make || "—"} />
+                      <DetailField label="Year" value={selected.vehicle1_year || "—"} />
+                      <DetailField label="Color" value={selected.vehicle1_color || "—"} />
+                      <DetailField label="License Plate" value={selected.vehicle1_plate || "—"} />
+                    </div>
                   </div>
                 )}
               </section>
+
+              {/* §5 Employment & Income */}
+              <section>
+                <SectionHeading title="Employment & Income" icon={ICONS.briefcase} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <DetailField label="Employment Status" value={selected.employment_status ? capitalize(selected.employment_status) : "—"} />
+                  <DetailField label="Employer Name" value={selected.employer_name || "—"} />
+                  <div className="col-span-2 sm:col-span-3">
+                    <DetailField label="Employer Address" value={selected.employer_address || "—"} />
+                  </div>
+                  <DetailField label="Employment Start Date" value={formatDate(selected.employment_start_date)} />
+                  <DetailField label="Monthly Income" value={selected.monthly_income ? (isNaN(Number(selected.monthly_income)) ? String(selected.monthly_income) : `$${Number(selected.monthly_income).toLocaleString()}`) : "—"} />
+                </div>
+              </section>
+
+              {bgCheckSection}
+              {documentsSection}
+              {authSection}
+              </>
+              )}
+
 
               {/* Section 7: Status & Actions */}
               <section>
@@ -1440,8 +1456,9 @@ export default function ApplicationsPage() {
 
             {/* Section helper */}
             {(() => {
-              const isStudentPrint = selected.applicant_type === "student" || selected.applicant_type === "international";
               const isProPrint = selected.applicant_type === "professional";
+              const passportOrSSNPrint = selected.applicant_type === "international" ? "Passport Number" : "SSN";
+              const idValuePrint: string = selected.applicant_type === "international" ? (selected.ssn || "—") : formatSSN(selected.ssn);
               const PrintSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
                 <div className="mb-6 print-section">
                   <h3 className="text-sm font-bold text-white bg-blue-600 px-4 py-2 rounded-t-lg uppercase tracking-wider">{title}</h3>
@@ -1455,123 +1472,249 @@ export default function ApplicationsPage() {
                 </div>
               );
 
-              return (
-                <>
-                  <PrintSection title="Personal Information">
-                    <div className="grid grid-cols-3 gap-4">
-                      <Field label="Full Name" value={selected.full_name} />
-                      <Field label="Email" value={selected.email} />
-                      <Field label="Phone" value={selected.mobile_number} />
-                      <Field label="Date of Birth" value={formatDate(selected.date_of_birth)} />
-                      <Field label="SSN / Passport" value={formatSSN(selected.ssn)} />
-                      <Field label="Driving License" value={selected.driving_license} />
-                      <Field label="Marital Status" value={selected.marital_status} />
-                      <Field label="Gender" value={selected.gender} />
-                      <Field label="Application Type" value={capitalize(selected.applicant_type)} />
+              const bgCheckPrint = (
+                <PrintSection title="Background Check">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Field label="Filed for Bankruptcy" value={selected.filed_bankruptcy} />
+                      {selected.bankruptcy_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.bankruptcy_details)}</p>}
                     </div>
-                  </PrintSection>
-
-                  <PrintSection title="Address & Education / Residence">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="col-span-3"><Field label="Current Address" value={[selected.current_address, selected.city, selected.state, selected.zip_code].filter(Boolean).join(", ") || "—"} /></div>
-                      {(selected.address_type || isStudentPrint) && <Field label="Address Type" value={selected.address_type} />}
-                      {(selected.university_name || isStudentPrint) && <Field label="University" value={selected.university_name} />}
-                      {(selected.student_id || isStudentPrint) && <Field label="Student ID" value={selected.student_id} />}
-                      {(selected.course_name || isStudentPrint) && <Field label="Course Name" value={selected.course_name} />}
-                      {(selected.course_start_date || isStudentPrint) && <Field label="Course Start" value={formatDate(selected.course_start_date)} />}
-                      {(selected.expected_graduation || isStudentPrint) && <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />}
-                      {(selected.advisor_phone || isStudentPrint) && <Field label="Advisor Phone" value={selected.advisor_phone} />}
-                      {(selected.advisor_email || isStudentPrint) && <Field label="Advisor Email" value={selected.advisor_email} />}
-                      <Field label="Emergency Contact" value={selected.emergency_contact_name} />
-                      <Field label="Emergency Phone" value={selected.emergency_contact_phone} />
-                      {selected.emergency_contact_email && <Field label="Emergency Email" value={selected.emergency_contact_email} />}
-                      <Field label="Relationship" value={selected.emergency_relationship} />
-                      {(selected.emergency_contact2_name || isStudentPrint) && (
-                        <>
-                          <Field label="Emergency Contact 2" value={selected.emergency_contact2_name} />
-                          <Field label="Emergency Phone 2" value={selected.emergency_contact2_phone} />
-                          {selected.emergency_contact2_email && <Field label="Emergency Email 2" value={selected.emergency_contact2_email} />}
-                          <Field label="Relationship 2" value={selected.emergency_relationship2} />
-                        </>
-                      )}
+                    <div>
+                      <Field label="Evicted from Tenancy" value={selected.evicted_from_tenancy} />
+                      {selected.eviction_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.eviction_details)}</p>}
                     </div>
-                  </PrintSection>
+                    <div>
+                      <Field label="Convicted of Felony" value={selected.convicted_felony} />
+                      {selected.felony_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.felony_details)}</p>}
+                    </div>
+                    <div>
+                      <Field label="Arrested/Convicted" value={selected.arrested_or_convicted} />
+                      {selected.arrest_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.arrest_details)}</p>}
+                    </div>
+                  </div>
+                </PrintSection>
+              );
+              const authPrint = (
+                <PrintSection title="Authorization & Signature">
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field label="Agreed to Terms" value={selected.agree_terms} />
+                    <Field label="Electronic Signature" value={selected.signature_name} />
+                    <Field label="Signature Date" value={selected.signature_date} />
+                    <Field label="Consent" value={selected.consent} />
+                  </div>
+                </PrintSection>
+              );
+              const docsPrint = (
+                <PrintSection title={`Uploaded Documents (${documents.length})`}>
+                  {documents.length === 0 ? (
+                    <p className="text-sm text-gray-500">No documents uploaded.</p>
+                  ) : (
+                    <div className="space-y-4">
+                      {documents.map((doc) => (
+                        <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden print-doc">
+                          <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+                            <span className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</span>
+                            <span className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
+                          </div>
+                          {doc.file_type.startsWith("image/") ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={`/api/documents/${doc.id}`} alt={doc.document_label || doc.file_name} className="w-full max-h-[700px] object-contain p-2" />
+                          ) : doc.file_type === "application/pdf" ? (
+                            <div className="p-3">
+                              <p className="text-sm text-gray-700 mb-1">PDF Document: {doc.file_name}</p>
+                              <p className="text-xs text-gray-500">Open the application in the dashboard to view this PDF inline.</p>
+                            </div>
+                          ) : (
+                            <div className="p-3">
+                              <p className="text-sm text-gray-700">{doc.file_name}</p>
+                              <p className="text-xs text-gray-500">Open the application in the dashboard to view/download.</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </PrintSection>
+              );
 
-                  {(selected.housing_status || selected.residence_from || isProPrint) && (
-                    <PrintSection title="Residence Details">
+              if (isProPrint) {
+                return (
+                  <>
+                    <PrintSection title="Personal Information">
                       <div className="grid grid-cols-3 gap-4">
+                        <Field label="Full Name" value={selected.full_name} />
+                        <Field label={passportOrSSNPrint} value={idValuePrint} />
+                        <Field label="Marital Status" value={selected.marital_status} />
+                        <Field label="Gender" value={selected.gender} />
+                        <Field label="Driving License" value={selected.driving_license} />
+                        <Field label="Date of Birth" value={formatDate(selected.date_of_birth)} />
+                        <Field label="Email" value={selected.email} />
+                        <Field label="Mobile No" value={selected.mobile_number} />
+                        <Field label="Housing Requirement" value={selected.housing_requirement} />
+                        <Field label="Lease Duration" value={selected.lease_duration} />
+                        <Field label="Date of Move In" value={formatDate(selected.preferred_move_in)} />
+                        <Field label="Application Type" value={capitalize(selected.applicant_type)} />
+                        {selected.specific_request && <div className="col-span-3"><Field label="Specific Request" value={selected.specific_request} /></div>}
+                      </div>
+                    </PrintSection>
+
+                    <PrintSection title="Residence">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="col-span-3"><Field label="Current Address" value={selected.current_address} /></div>
                         <Field label="Housing Status" value={selected.housing_status} />
                         <Field label="From" value={formatDate(selected.residence_from)} />
                         <Field label="To" value={formatDate(selected.residence_to)} />
-                        <Field label="Completed Residence History" value={selected.completed_residence_history} />
+                        <Field label="Owner/Landlord Name" value={selected.previous_landlord_name} />
+                        <Field label="Owner/Landlord Email" value={selected.landlord_email} />
+                        <Field label="Owner/Landlord Phone" value={selected.landlord_phone} />
+                        <Field label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />
+                        <div className="col-span-3"><Field label="Reason for Moving" value={selected.reason_for_leaving} /></div>
                       </div>
                     </PrintSection>
-                  )}
 
-                  <PrintSection title="Employment & Income">
-                    <div className="grid grid-cols-3 gap-4">
-                      {(selected.employment_status || isStudentPrint) && <Field label="Employment Status" value={selected.employment_status} />}
-                      <Field label="Employer" value={selected.employer_name} />
-                      <Field label="Monthly Income" value={selected.monthly_income || "—"} />
-                      {(selected.income_source || isStudentPrint) && <Field label="Income Source" value={selected.income_source} />}
-                      {(selected.supervisor || isProPrint) && <Field label="Supervisor" value={selected.supervisor} />}
-                      {(selected.employer_address || isProPrint) && <Field label="Employer Address" value={selected.employer_address} />}
-                      {(selected.employer_phone || isProPrint) && <Field label="Employer Phone" value={selected.employer_phone} />}
-                      {(selected.position_held || isProPrint) && <Field label="Position Held" value={selected.position_held} />}
-                      {(selected.date_of_hire || isProPrint) && <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />}
-                    </div>
-                    {(selected.has_cosigner || selected.cosigner_name) && (
-                      <div className="border-t pt-3 mt-3 grid grid-cols-3 gap-4">
-                        <Field label="Has Co-signer" value={selected.has_cosigner} />
-                        <Field label="Co-signer Name" value={selected.cosigner_name} />
-                        <Field label="Co-signer Phone" value={selected.cosigner_phone} />
-                        <Field label="Co-signer Email" value={selected.cosigner_email} />
+                    <PrintSection title="Employment">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Field label="Applicant's Employer" value={selected.employer_name} />
+                        <Field label="Supervisor" value={selected.supervisor} />
+                        <Field label="Employer's Address / Location" value={selected.employer_address} />
+                        <Field label="Employer Phone" value={selected.employer_phone} />
+                        <Field label="Position Held" value={selected.position_held} />
+                        <Field label="Date of Hire" value={formatDate(selected.date_of_hire)} />
+                        <Field label="Salary Per Month" value={selected.monthly_income || "—"} />
                       </div>
-                    )}
+                      {(selected.has_cosigner || selected.cosigner_name) && (
+                        <div className="border-t pt-3 mt-3 grid grid-cols-3 gap-4">
+                          <Field label="Has Co-signer" value={selected.has_cosigner} />
+                          <Field label="Co-signer Name" value={selected.cosigner_name} />
+                          <Field label="Co-signer Phone" value={selected.cosigner_phone} />
+                          <Field label="Co-signer Email" value={selected.cosigner_email} />
+                        </div>
+                      )}
+                    </PrintSection>
+
+                    <PrintSection title="General Information">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Field label="Completed Residence History" value={selected.completed_residence_history} />
+                        <Field label="Has Pets" value={selected.has_pets} />
+                      </div>
+                      {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet, idx) => (
+                        <div key={idx} className="border-t pt-2 mt-2">
+                          <p className="text-xs font-semibold text-gray-500 mb-1">Pet {idx + 1}</p>
+                          <div className="grid grid-cols-4 gap-3">
+                            <Field label="Type" value={pet.type} />
+                            <Field label="Weight" value={pet.weight} />
+                            <Field label="Age" value={pet.age} />
+                            <Field label="Category" value={pet.category} />
+                          </div>
+                        </div>
+                      ))}
+                    </PrintSection>
+
+                    <PrintSection title="Vehicle Information">
+                      <div className="grid grid-cols-3 gap-4 mb-3">
+                        <Field label="Has Vehicle" value={selected.has_vehicle} />
+                      </div>
+                      {selected.has_vehicle && (
+                        <>
+                          <div className="grid grid-cols-4 gap-4 border-t pt-3">
+                            <Field label="Vehicle 1 Make" value={selected.vehicle1_make} />
+                            <Field label="Year" value={selected.vehicle1_year} />
+                            <Field label="Color" value={selected.vehicle1_color} />
+                            <Field label="Plate" value={selected.vehicle1_plate} />
+                          </div>
+                          <div className="grid grid-cols-3 gap-4 border-t pt-3 mt-3">
+                            <Field label="Has 2nd Vehicle" value={selected.has_second_vehicle} />
+                          </div>
+                          {selected.has_second_vehicle && (
+                            <div className="grid grid-cols-4 gap-4 mt-2">
+                              <Field label="Vehicle 2 Make" value={selected.vehicle2_make} />
+                              <Field label="Year" value={selected.vehicle2_year} />
+                              <Field label="Color" value={selected.vehicle2_color} />
+                              <Field label="Plate" value={selected.vehicle2_plate} />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </PrintSection>
+
+                    {bgCheckPrint}
+                    {docsPrint}
+                    {authPrint}
+                  </>
+                );
+              }
+
+              // Student / International print layout
+              return (
+                <>
+                  <PrintSection title="Personal Info">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Full Name" value={selected.full_name} />
+                      <Field label={passportOrSSNPrint} value={idValuePrint} />
+                      <Field label="Marital Status" value={selected.marital_status} />
+                      <Field label="Gender" value={selected.gender} />
+                      <Field label="Driving License" value={selected.driving_license} />
+                      <Field label="Date of Birth" value={formatDate(selected.date_of_birth)} />
+                      <Field label="Email" value={selected.email} />
+                      <Field label="Mobile Number" value={selected.mobile_number} />
+                      <Field label="Housing Requirement" value={selected.housing_requirement} />
+                      <Field label="Preferred Move-In" value={formatDate(selected.preferred_move_in)} />
+                      <Field label="Lease Duration" value={selected.lease_duration} />
+                      <Field label="Application Type" value={capitalize(selected.applicant_type)} />
+                      {selected.specific_request && <div className="col-span-3"><Field label="Specific Request" value={selected.specific_request} /></div>}
+                    </div>
                   </PrintSection>
 
-                  <PrintSection title="References & Rental History">
-                    <div className="grid grid-cols-3 gap-4 mb-3">
-                      <Field label="Previous Landlord" value={selected.previous_landlord_name} />
-                      <Field label="Landlord Phone" value={selected.landlord_phone} />
-                      {(selected.landlord_email || isProPrint) && <Field label="Landlord Email" value={selected.landlord_email} />}
-                      {(selected.landlord_address || isStudentPrint) && <Field label="Landlord Address" value={selected.landlord_address} />}
-                      <Field label="Reason for Leaving" value={selected.reason_for_leaving} />
-                      {(selected.length_of_stay || isStudentPrint) && <Field label="Length of Stay" value={selected.length_of_stay} />}
-                      {(selected.rent_amount || isProPrint) && <Field label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />}
+                  <PrintSection title="Residence Details">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div className="col-span-3"><Field label="Current Address" value={selected.current_address} /></div>
+                      <Field label="Housing Status" value={selected.housing_status || selected.address_type} />
+                      <Field label="From" value={formatDate(selected.residence_from)} />
+                      <Field label="To" value={formatDate(selected.residence_to)} />
+                      <Field label="Owner/Landlord Name" value={selected.previous_landlord_name} />
+                      <Field label="Owner/Landlord Email" value={selected.landlord_email} />
+                      <Field label="Owner/Landlord Phone" value={selected.landlord_phone} />
+                      <Field label="Rent Amount" value={selected.rent_amount ? `$${selected.rent_amount}` : "—"} />
+                      <div className="col-span-3"><Field label="Reason for Moving" value={selected.reason_for_leaving} /></div>
                     </div>
-                    {(selected.ref1_name || selected.ref2_name || isStudentPrint) && (
-                      <div className="grid grid-cols-2 gap-4 border-t pt-3">
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-1">Reference 1</p>
-                          <Field label="Name" value={selected.ref1_name} />
-                          <Field label="Phone" value={selected.ref1_phone} />
-                          <Field label="Relationship" value={selected.ref1_relationship} />
-                        </div>
-                        <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-1">Reference 2</p>
-                          <Field label="Name" value={selected.ref2_name} />
-                          <Field label="Phone" value={selected.ref2_phone} />
-                          <Field label="Relationship" value={selected.ref2_relationship} />
-                        </div>
-                      </div>
-                    )}
-                    {(selected.references_info || isProPrint) && (
-                      <div className="border-t pt-3 mt-3">
-                        <p className="text-xs font-semibold text-gray-500 mb-1">Additional References</p>
-                        <p className="text-sm text-gray-900 whitespace-pre-wrap">{selected.references_info || "—"}</p>
-                      </div>
-                    )}
+                  </PrintSection>
+
+                  <PrintSection title="Education Details">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="University Name" value={selected.university_name} />
+                      <div className="col-span-2"><Field label="School Address" value={selected.school_address} /></div>
+                      <Field label="Course Name" value={selected.course_name} />
+                      <Field label="Course Start Date" value={formatDate(selected.course_start_date)} />
+                      <Field label="Expected Graduation" value={formatDate(selected.expected_graduation)} />
+                      <Field label="Advisor Phone" value={selected.advisor_phone} />
+                      <Field label="Advisor Email" value={selected.advisor_email} />
+                    </div>
                   </PrintSection>
 
                   <PrintSection title="General Information">
-                    <div className="grid grid-cols-3 gap-4">
-                      <Field label="Gender" value={selected.gender} />
+                    <div className="border-t pt-2 mb-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-1">Emergency Contact 1</p>
+                      <div className="grid grid-cols-4 gap-3">
+                        <Field label="Name" value={selected.emergency_contact_name} />
+                        <Field label="Phone" value={selected.emergency_contact_phone} />
+                        <Field label="Email" value={selected.emergency_contact_email} />
+                        <Field label="Relationship" value={selected.emergency_relationship} />
+                      </div>
+                    </div>
+                    <div className="border-t pt-2 mb-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-1">Emergency Contact 2</p>
+                      <div className="grid grid-cols-4 gap-3">
+                        <Field label="Name" value={selected.emergency_contact2_name} />
+                        <Field label="Phone" value={selected.emergency_contact2_phone} />
+                        <Field label="Email" value={selected.emergency_contact2_email} />
+                        <Field label="Relationship" value={selected.emergency_relationship2} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4 border-t pt-3">
                       <Field label="Has Pets" value={selected.has_pets} />
                       <Field label="Has Vehicle" value={selected.has_vehicle} />
-                      <Field label="Completed Residence History" value={selected.completed_residence_history} />
                     </div>
-                    {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet: {type?: string; weight?: string; age?: string; category?: string}, idx: number) => (
+                    {Array.isArray(selected.pets) && (selected.pets as Array<{type?: string; weight?: string; age?: string; category?: string}>).map((pet, idx) => (
                       <div key={idx} className="border-t pt-2 mt-2">
                         <p className="text-xs font-semibold text-gray-500 mb-1">Pet {idx + 1}</p>
                         <div className="grid grid-cols-4 gap-3">
@@ -1582,99 +1725,35 @@ export default function ApplicationsPage() {
                         </div>
                       </div>
                     ))}
-                  </PrintSection>
-
-                  <PrintSection title="Vehicle Information">
-                    <div className="grid grid-cols-4 gap-4">
-                      <Field label="Vehicle 1 Make" value={selected.vehicle1_make} />
-                      <Field label="Year" value={selected.vehicle1_year} />
-                      <Field label="Color" value={selected.vehicle1_color} />
-                      <Field label="Plate" value={selected.vehicle1_plate} />
-                    </div>
-                    <div className="grid grid-cols-4 gap-4 border-t pt-3 mt-3">
-                      <Field label="Has 2nd Vehicle" value={selected.has_second_vehicle} />
-                      <Field label="Vehicle 2 Make" value={selected.vehicle2_make} />
-                      <Field label="Year" value={selected.vehicle2_year} />
-                      <Field label="Color" value={selected.vehicle2_color} />
-                      <Field label="Plate" value={selected.vehicle2_plate} />
-                    </div>
-                  </PrintSection>
-
-                  <PrintSection title="Background Check">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Field label="Filed for Bankruptcy" value={selected.filed_bankruptcy} />
-                        {selected.bankruptcy_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.bankruptcy_details)}</p>}
-                      </div>
-                      <div>
-                        <Field label="Evicted from Tenancy" value={selected.evicted_from_tenancy} />
-                        {selected.eviction_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.eviction_details)}</p>}
-                      </div>
-                      <div>
-                        <Field label="Convicted of Felony" value={selected.convicted_felony} />
-                        {selected.felony_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.felony_details)}</p>}
-                      </div>
-                      <div>
-                        <Field label="Arrested/Convicted" value={selected.arrested_or_convicted} />
-                        {selected.arrest_details && <p className="text-xs text-gray-600 italic mt-1">{String(selected.arrest_details)}</p>}
-                      </div>
-                    </div>
-                  </PrintSection>
-
-                  <PrintSection title="Housing Preferences">
-                    <div className="grid grid-cols-3 gap-4">
-                      <Field label="Housing Requirement" value={selected.housing_requirement} />
-                      <Field label="Preferred Move-In" value={formatDate(selected.preferred_move_in)} />
-                      <Field label="Lease Duration" value={selected.lease_duration} />
-                      <div className="col-span-3"><Field label="Special Requests" value={selected.specific_request} /></div>
-                    </div>
-                  </PrintSection>
-
-                  <PrintSection title="Authorization & Signature">
-                    <div className="grid grid-cols-3 gap-4">
-                      <Field label="Agreed to Terms" value={selected.agree_terms} />
-                      <Field label="Electronic Signature" value={selected.signature_name} />
-                      <Field label="Signature Date" value={selected.signature_date} />
-                      <Field label="Consent" value={selected.consent} />
-                    </div>
-                  </PrintSection>
-
-                  <PrintSection title={`Uploaded Documents (${documents.length})`}>
-                    {documents.length === 0 ? (
-                      <p className="text-sm text-gray-500">No documents uploaded.</p>
-                    ) : (
-                      <div className="space-y-4">
-                        {documents.map((doc) => (
-                          <div key={doc.id} className="border border-gray-200 rounded-lg overflow-hidden print-doc">
-                            <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
-                              <span className="text-sm font-semibold text-gray-900">{formatDocLabel(doc.document_label)}</span>
-                              <span className="text-xs text-gray-600">{doc.file_name} · {formatFileSize(doc.file_size)}</span>
-                            </div>
-                            {doc.file_type.startsWith("image/") ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={`/api/documents/${doc.id}`}
-                                alt={doc.document_label || doc.file_name}
-                                className="w-full max-h-[700px] object-contain p-2"
-                              />
-                            ) : doc.file_type === "application/pdf" ? (
-                              <div className="p-3">
-                                <p className="text-sm text-gray-700 mb-1">PDF Document: {doc.file_name}</p>
-                                <p className="text-xs text-gray-500">Open the application in the dashboard to view this PDF inline.</p>
-                              </div>
-                            ) : (
-                              <div className="p-3">
-                                <p className="text-sm text-gray-700">{doc.file_name}</p>
-                                <p className="text-xs text-gray-500">Open the application in the dashboard to view/download.</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                    {selected.has_vehicle && (
+                      <div className="border-t pt-2 mt-2">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Vehicle</p>
+                        <div className="grid grid-cols-4 gap-3">
+                          <Field label="Make / Model" value={selected.vehicle1_make} />
+                          <Field label="Year" value={selected.vehicle1_year} />
+                          <Field label="Color" value={selected.vehicle1_color} />
+                          <Field label="License Plate" value={selected.vehicle1_plate} />
+                        </div>
                       </div>
                     )}
                   </PrintSection>
+
+                  <PrintSection title="Employment & Income">
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field label="Employment Status" value={selected.employment_status} />
+                      <Field label="Employer Name" value={selected.employer_name} />
+                      <div className="col-span-3"><Field label="Employer Address" value={selected.employer_address} /></div>
+                      <Field label="Employment Start Date" value={formatDate(selected.employment_start_date)} />
+                      <Field label="Monthly Income" value={selected.monthly_income || "—"} />
+                    </div>
+                  </PrintSection>
+
+                  {bgCheckPrint}
+                  {docsPrint}
+                  {authPrint}
                 </>
               );
+
             })()}
 
             {/* Footer */}

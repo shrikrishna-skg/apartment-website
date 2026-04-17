@@ -47,3 +47,29 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS consent_communications BOOLEAN
 
 -- Index on email for lookups
 CREATE INDEX IF NOT EXISTS idx_applications_email ON applications(email);
+
+-- Education: school address (replaces student_id on student application form)
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS school_address TEXT;
+
+-- Residence details (working app step 2 + student app step 2)
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS housing_status TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS residence_from DATE;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS residence_to DATE;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS landlord_email TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS rent_amount TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS reason_for_moving TEXT;
+
+-- Prior landlord (student app step 6, disambiguated from current landlord)
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS prior_landlord_name TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS prior_landlord_phone TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS prior_reason_for_leaving TEXT;
+
+-- Employment: student employment start date (replaces income_source)
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS employment_start_date DATE;
+
+-- Second vehicle (working app vehicle section)
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS has_second_vehicle BOOLEAN DEFAULT false;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_make TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_year TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_color TEXT;
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_plate TEXT;

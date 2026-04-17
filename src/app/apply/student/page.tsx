@@ -20,15 +20,16 @@ import {
   PenTool,
   Plus,
   Trash2,
+  GraduationCap,
 } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 
 const STEPS = [
   { label: "Personal Info", icon: User },
-  { label: "Address & Education", icon: MapPin },
+  { label: "Residence Details", icon: MapPin },
+  { label: "Education Details", icon: GraduationCap },
   { label: "General Info", icon: FileText },
   { label: "Employment & Income", icon: Briefcase },
-  { label: "References & History", icon: Users },
   { label: "Background", icon: ShieldCheck },
   { label: "Documents", icon: Upload },
   { label: "Authorization", icon: PenTool },
@@ -114,7 +115,7 @@ const housingOptions = [
   "2 Bed / 2 Bath",
   "3 Bed / 3 Bath",
   "4 Bed / 4 Bath",
-  "Shared Room",
+  "Individual Bedroom Leasing",
   "Other",
 ];
 
@@ -141,14 +142,22 @@ interface FormData {
   housingRequirement: string;
   preferredMoveIn: string;
   leaseDuration: string;
-  // Step 2
+  // Step 2 - Residence Details
   currentAddress: string;
   addressType: string;
   city: string;
   state: string;
   zipCode: string;
+  housingStatus: string;
+  residenceFrom: string;
+  residenceTo: string;
+  landlordName: string;
+  landlordEmail: string;
+  landlordPhone: string;
+  rentAmount: string;
+  reasonForMoving: string;
   universityName: string;
-  studentId: string;
+  schoolAddress: string;
   courseName: string;
   courseStartDate: string;
   expectedGraduation: string;
@@ -165,20 +174,9 @@ interface FormData {
   // Step 3
   employmentStatus: string;
   employerName: string;
+  employerAddress: string;
+  employmentStartDate: string;
   monthlyIncome: string;
-  incomeSource: string;
-  // Step 4
-  previousLandlordName: string;
-  landlordPhone: string;
-  landlordAddress: string;
-  reasonForLeaving: string;
-  lengthOfStay: string;
-  ref1Name: string;
-  ref1Phone: string;
-  ref1Relationship: string;
-  ref2Name: string;
-  ref2Phone: string;
-  ref2Relationship: string;
   // Step 5 - Background Check
   filedBankruptcy: string;
   bankruptcyDetails: string;
@@ -220,8 +218,16 @@ const initialFormData: FormData = {
   city: "",
   state: "",
   zipCode: "",
+  housingStatus: "",
+  residenceFrom: "",
+  residenceTo: "",
+  landlordName: "",
+  landlordEmail: "",
+  landlordPhone: "",
+  rentAmount: "",
+  reasonForMoving: "",
   universityName: "",
-  studentId: "",
+  schoolAddress: "",
   courseName: "",
   courseStartDate: "",
   expectedGraduation: "",
@@ -237,19 +243,9 @@ const initialFormData: FormData = {
   emergencyRelationship2: "",
   employmentStatus: "",
   employerName: "",
+  employerAddress: "",
+  employmentStartDate: "",
   monthlyIncome: "",
-  incomeSource: "",
-  previousLandlordName: "",
-  landlordPhone: "",
-  landlordAddress: "",
-  reasonForLeaving: "",
-  lengthOfStay: "",
-  ref1Name: "",
-  ref1Phone: "",
-  ref1Relationship: "",
-  ref2Name: "",
-  ref2Phone: "",
-  ref2Relationship: "",
   filedBankruptcy: "",
   bankruptcyDetails: "",
   evictedFromTenancy: "",
@@ -315,6 +311,7 @@ function StudentApplicationPage() {
       if (!formData.email.trim()) newErrors.push("Email is required");
       if (!formData.mobileNumber.trim()) newErrors.push("Mobile Number is required");
       if (!formData.dateOfBirth) newErrors.push("Date of Birth is required");
+      if (!formData.maritalStatus) newErrors.push("Marital Status is required");
       if (!formData.gender) newErrors.push("Gender is required");
       if (!formData.housingRequirement) newErrors.push("Housing Requirement is required");
       if (!formData.preferredMoveIn) newErrors.push("Preferred Move-In Date is required");
@@ -323,30 +320,29 @@ function StudentApplicationPage() {
 
     if (currentStep === 2) {
       if (!formData.currentAddress.trim()) newErrors.push("Current Address is required");
-      if (!formData.addressType) newErrors.push("Address Type is required");
-      if (!formData.city.trim()) newErrors.push("City is required");
-      if (!formData.state.trim()) newErrors.push("State is required");
-      if (!formData.zipCode.trim()) newErrors.push("Zip Code is required");
-      if (!formData.universityName.trim()) newErrors.push("University Name is required");
-      if (!formData.studentId.trim()) newErrors.push("Student ID is required");
-      if (!formData.courseName.trim()) newErrors.push("Course Name is required");
-      if (!formData.courseStartDate) newErrors.push("Course Start Date is required");
-      if (!formData.expectedGraduation) newErrors.push("Expected Graduation is required");
-      if (!formData.emergencyContactName.trim()) newErrors.push("Emergency Contact 1 Name is required");
-      if (!formData.emergencyContactPhone.trim()) newErrors.push("Emergency Contact 1 Phone is required");
+      if (!formData.housingStatus) newErrors.push("Housing Status is required");
+      if (!formData.residenceFrom) newErrors.push("From date is required");
+      if (!formData.residenceTo) newErrors.push("To date is required");
+      if (!formData.landlordName.trim()) newErrors.push("Owner/Landlord Name is required");
+      if (!formData.landlordEmail.trim()) newErrors.push("Owner/Landlord Email is required");
+      if (!formData.landlordPhone.trim()) newErrors.push("Owner/Landlord Phone is required");
+      if (!formData.rentAmount.trim()) newErrors.push("Rent Amount is required");
+      if (!formData.reasonForMoving.trim()) newErrors.push("Reason for Moving is required");
     }
 
     if (currentStep === 3) {
-      if (!formData.hasPets) newErrors.push("Pet question is required");
-      if (!formData.hasVehicle) newErrors.push("Vehicle question is required");
+      if (!formData.universityName.trim()) newErrors.push("University Name is required");
+      if (!formData.schoolAddress.trim()) newErrors.push("School Address is required");
+      if (!formData.courseName.trim()) newErrors.push("Course Name is required");
+      if (!formData.courseStartDate) newErrors.push("Course Start Date is required");
+      if (!formData.expectedGraduation) newErrors.push("Expected Graduation is required");
     }
 
-    if (currentStep === 5) {
-      if (!formData.previousLandlordName.trim()) newErrors.push("Landlord Name is required");
-      if (!formData.landlordPhone.trim()) newErrors.push("Landlord Phone is required");
-      if (!formData.landlordAddress.trim()) newErrors.push("Landlord Address is required");
-      if (!formData.reasonForLeaving.trim()) newErrors.push("Reason for Leaving is required");
-      if (!formData.lengthOfStay.trim()) newErrors.push("Length of Stay is required");
+    if (currentStep === 4) {
+      if (!formData.emergencyContactName.trim()) newErrors.push("Emergency Contact 1 Name is required");
+      if (!formData.emergencyContactPhone.trim()) newErrors.push("Emergency Contact 1 Phone is required");
+      if (!formData.hasPets) newErrors.push("Pet question is required");
+      if (!formData.hasVehicle) newErrors.push("Vehicle question is required");
     }
 
     if (currentStep === 6) {
@@ -390,35 +386,35 @@ function StudentApplicationPage() {
     if (!formData.email.trim()) allErrors.push("Email is required (Personal Info)");
     if (!formData.mobileNumber.trim()) allErrors.push("Mobile Number is required (Personal Info)");
     if (!formData.dateOfBirth) allErrors.push("Date of Birth is required (Personal Info)");
+    if (!formData.maritalStatus) allErrors.push("Marital Status is required (Personal Info)");
     if (!formData.gender) allErrors.push("Gender is required (Personal Info)");
     if (!formData.housingRequirement) allErrors.push("Housing Requirement is required (Personal Info)");
     if (!formData.preferredMoveIn) allErrors.push("Preferred Move-In Date is required (Personal Info)");
     if (!formData.leaseDuration) allErrors.push("Lease Duration is required (Personal Info)");
 
-    // Step 2: Address & Education
-    if (!formData.currentAddress.trim()) allErrors.push("Current Address is required (Address)");
-    if (!formData.addressType) allErrors.push("Address Type is required (Address)");
-    if (!formData.city.trim()) allErrors.push("City is required (Address)");
-    if (!formData.state.trim()) allErrors.push("State is required (Address)");
-    if (!formData.zipCode.trim()) allErrors.push("Zip Code is required (Address)");
+    // Step 2: Residence Details
+    if (!formData.currentAddress.trim()) allErrors.push("Current Address is required (Residence)");
+    if (!formData.housingStatus) allErrors.push("Housing Status is required (Residence)");
+    if (!formData.residenceFrom) allErrors.push("From date is required (Residence)");
+    if (!formData.residenceTo) allErrors.push("To date is required (Residence)");
+    if (!formData.landlordName.trim()) allErrors.push("Owner/Landlord Name is required (Residence)");
+    if (!formData.landlordEmail.trim()) allErrors.push("Owner/Landlord Email is required (Residence)");
+    if (!formData.landlordPhone.trim()) allErrors.push("Owner/Landlord Phone is required (Residence)");
+    if (!formData.rentAmount.trim()) allErrors.push("Rent Amount is required (Residence)");
+    if (!formData.reasonForMoving.trim()) allErrors.push("Reason for Moving is required (Residence)");
+
+    // Step 3: Education Details
     if (!formData.universityName.trim()) allErrors.push("University Name is required (Education)");
-    if (!formData.studentId.trim()) allErrors.push("Student ID is required (Education)");
+    if (!formData.schoolAddress.trim()) allErrors.push("School Address is required (Education)");
     if (!formData.courseName.trim()) allErrors.push("Course Name is required (Education)");
     if (!formData.courseStartDate) allErrors.push("Course Start Date is required (Education)");
     if (!formData.expectedGraduation) allErrors.push("Expected Graduation is required (Education)");
-    if (!formData.emergencyContactName.trim()) allErrors.push("Emergency Contact 1 Name is required");
-    if (!formData.emergencyContactPhone.trim()) allErrors.push("Emergency Contact 1 Phone is required");
 
-    // Step 3: General Info
+    // Step 4: General Info
+    if (!formData.emergencyContactName.trim()) allErrors.push("Emergency Contact 1 Name is required (General Info)");
+    if (!formData.emergencyContactPhone.trim()) allErrors.push("Emergency Contact 1 Phone is required (General Info)");
     if (!formData.hasPets) allErrors.push("Pet question is required (General Info)");
     if (!formData.hasVehicle) allErrors.push("Vehicle question is required (General Info)");
-
-    // Step 5: References & History
-    if (!formData.previousLandlordName.trim()) allErrors.push("Landlord Name is required (References)");
-    if (!formData.landlordPhone.trim()) allErrors.push("Landlord Phone is required (References)");
-    if (!formData.landlordAddress.trim()) allErrors.push("Landlord Address is required (References)");
-    if (!formData.reasonForLeaving.trim()) allErrors.push("Reason for Leaving is required (References)");
-    if (!formData.lengthOfStay.trim()) allErrors.push("Length of Stay is required (References)");
 
     // Step 6: Background
     if (!formData.filedBankruptcy) allErrors.push("Bankruptcy question is required (Background)");
@@ -523,8 +519,16 @@ function StudentApplicationPage() {
           city: formData.city || null,
           state: formData.state || null,
           zip_code: formData.zipCode || null,
+          housing_status: formData.housingStatus || null,
+          residence_from: formData.residenceFrom || null,
+          residence_to: formData.residenceTo || null,
+          previous_landlord_name: formData.landlordName || null,
+          landlord_email: formData.landlordEmail || null,
+          landlord_phone: formData.landlordPhone || null,
+          rent_amount: formData.rentAmount || null,
+          reason_for_leaving: formData.reasonForMoving || null,
           university_name: formData.universityName || null,
-          student_id: formData.studentId || null,
+          school_address: formData.schoolAddress || null,
           course_name: formData.courseName || null,
           course_start_date: formData.courseStartDate || null,
           expected_graduation: formData.expectedGraduation || null,
@@ -540,19 +544,9 @@ function StudentApplicationPage() {
           emergency_relationship2: formData.emergencyRelationship2 || null,
           employment_status: formData.employmentStatus || null,
           employer_name: formData.employerName || null,
+          employer_address: formData.employerAddress || null,
+          employment_start_date: formData.employmentStartDate || null,
           monthly_income: formData.monthlyIncome || null,
-          income_source: formData.incomeSource || null,
-          previous_landlord_name: formData.previousLandlordName || null,
-          landlord_phone: formData.landlordPhone || null,
-          landlord_address: formData.landlordAddress || null,
-          reason_for_leaving: formData.reasonForLeaving || null,
-          length_of_stay: formData.lengthOfStay || null,
-          ref1_name: formData.ref1Name || null,
-          ref1_phone: formData.ref1Phone || null,
-          ref1_relationship: formData.ref1Relationship || null,
-          ref2_name: formData.ref2Name || null,
-          ref2_phone: formData.ref2Phone || null,
-          ref2_relationship: formData.ref2Relationship || null,
           filed_bankruptcy: formData.filedBankruptcy === "Yes",
           bankruptcy_details: formData.bankruptcyDetails || null,
           evicted_from_tenancy: formData.evictedFromTenancy === "Yes",
@@ -866,7 +860,7 @@ function StudentApplicationPage() {
                       {renderRadioGroup("Marital Status", "maritalStatus", [
                         "Single",
                         "Married",
-                      ])}
+                      ], true)}
                     </div>
                     <div>
                       <label className="text-sm font-medium text-gray-700 block mb-1.5">
@@ -951,7 +945,7 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 2 - Address & Education */}
+              {/* Step 2 - Residence Details */}
               {currentStep === 2 && (
                 <motion.div
                   key="step2"
@@ -963,179 +957,144 @@ function StudentApplicationPage() {
                 >
                   <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                     <MapPin size={20} className="text-blue-600" />
-                    Address & Education
+                    Residence
                   </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    <div className="sm:col-span-2">
-                      {renderInput(
-                        "Current Address",
-                        "currentAddress",
-                        "text",
-                        "Street address",
-                        true
-                      )}
+                  <div className="space-y-5">
+                    {renderInput("Current Address (Include Apt No, Street, City, State, Country, Zip Code)", "currentAddress", "text", "Street address, City, State, Country, Zip", true)}
+
+                    {renderRadioGroup("Housing Status", "housingStatus", [
+                      "Own",
+                      "Rent",
+                      "Living with Friends/Family",
+                      "Dorms",
+                      "Other",
+                    ], true)}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                          From<span className="text-red-600 ml-1">*</span>
+                        </label>
+                        <DatePicker
+                          value={formData.residenceFrom}
+                          onChange={(val) => updateField("residenceFrom", val)}
+                          required
+                          maxDate={new Date()}
+                          placeholder="Select start date"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-gray-700">
+                          To<span className="text-red-600 ml-1">*</span>
+                        </label>
+                        <DatePicker
+                          value={formData.residenceTo}
+                          onChange={(val) => updateField("residenceTo", val)}
+                          required
+                          placeholder="Select end date"
+                        />
+                      </div>
                     </div>
+
+                    {renderInput("Owner/Landlord Name", "landlordName", "text", "Full name", true)}
+                    {renderInput("Owner/Landlord Email", "landlordEmail", "email", "landlord@example.com", true)}
+                    {renderInput("Owner/Landlord Phone Number", "landlordPhone", "tel", "(###) ###-####", true)}
+                    {renderInput("Rent Amount", "rentAmount", "text", "Amount in dollars", true)}
+
                     <div>
-                      <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                        Address Type <span className="text-red-500">*</span>
+                      <label className="text-sm font-medium text-gray-700">
+                        Reason for Moving <span className="text-red-500">*</span>
                       </label>
-                      <div className="flex flex-wrap gap-2">
-                        {["Own", "Rental", "Living with Friends/Family", "Other"].map((opt) => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => updateField("addressType", opt)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
-                              formData.addressType === opt
-                                ? "bg-[#1a73e8] text-white border-[#1a73e8]"
-                                : "bg-white text-gray-600 border-gray-200 hover:border-blue-300"
-                            }`}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {renderInput("City", "city", "text", "City", true)}
-                    {renderInput("State", "state", "text", "State", true)}
-                    {renderInput("Zip Code", "zipCode", "text", "Zip Code", true)}
-                  </div>
-
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Education Details
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      {renderInput(
-                        "University Name",
-                        "universityName",
-                        "text",
-                        "University name",
-                        true
-                      )}
-                      {renderInput(
-                        "Student ID",
-                        "studentId",
-                        "text",
-                        "Student ID number",
-                        true
-                      )}
-                      {renderInput(
-                        "Course Name",
-                        "courseName",
-                        "text",
-                        "e.g., Computer Science, Business Administration",
-                        true
-                      )}
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-gray-700">
-                          Course Start Date<span className="text-red-600 ml-1">*</span>
-                        </label>
-                        <DatePicker
-                          value={formData.courseStartDate}
-                          onChange={(val) => updateField("courseStartDate", val)}
-                          placeholder="Select course start date"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-medium text-gray-700">
-                          Expected Graduation<span className="text-red-600 ml-1">*</span>
-                        </label>
-                        <DatePicker
-                          value={formData.expectedGraduation}
-                          onChange={(val) => updateField("expectedGraduation", val)}
-                          minDate={new Date()}
-                          placeholder="Select graduation date"
-                        />
-                      </div>
-                      {renderInput(
-                        "Advisor Phone",
-                        "advisorPhone",
-                        "tel",
-                        "(000) 000-0000"
-                      )}
-                      {renderInput(
-                        "Advisor Email",
-                        "advisorEmail",
-                        "email",
-                        "advisor@university.edu"
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Emergency Contact 1
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      {renderInput(
-                        "Contact Name",
-                        "emergencyContactName",
-                        "text",
-                        "Full name",
-                        true
-                      )}
-                      {renderInput(
-                        "Contact Phone",
-                        "emergencyContactPhone",
-                        "tel",
-                        "(000) 000-0000",
-                        true
-                      )}
-                      {renderInput(
-                        "Contact Email",
-                        "emergencyContactEmail",
-                        "email",
-                        "contact@email.com"
-                      )}
-                      {renderInput(
-                        "Relationship",
-                        "emergencyRelationship",
-                        "text",
-                        "e.g., Parent, Sibling"
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Emergency Contact 2
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      {renderInput(
-                        "Contact Name",
-                        "emergencyContact2Name",
-                        "text",
-                        "Full name"
-                      )}
-                      {renderInput(
-                        "Contact Phone",
-                        "emergencyContact2Phone",
-                        "tel",
-                        "(000) 000-0000"
-                      )}
-                      {renderInput(
-                        "Contact Email",
-                        "emergencyContact2Email",
-                        "email",
-                        "contact@email.com"
-                      )}
-                      {renderInput(
-                        "Relationship",
-                        "emergencyRelationship2",
-                        "text",
-                        "e.g., Parent, Sibling"
-                      )}
+                      <textarea
+                        className="mt-1.5 w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[80px]"
+                        placeholder="Brief explanation"
+                        value={formData.reasonForMoving}
+                        onChange={(e) => updateField("reasonForMoving", e.target.value)}
+                      />
                     </div>
                   </div>
                 </motion.div>
               )}
 
-              {/* Step 3 - General Info (Pets & Vehicle) */}
+              {/* Step 3 - Education Details */}
               {currentStep === 3 && (
                 <motion.div
                   key="step3"
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{ duration: 0.3 }}
+                >
+                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    <GraduationCap size={20} className="text-blue-600" />
+                    Education Details
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {renderInput(
+                      "University Name",
+                      "universityName",
+                      "text",
+                      "University name",
+                      true
+                    )}
+                    {renderInput(
+                      "School Address (Street, City, State, County, Zip Code)",
+                      "schoolAddress",
+                      "text",
+                      "Street, City, State, County, Zip",
+                      true
+                    )}
+                    {renderInput(
+                      "Course Name",
+                      "courseName",
+                      "text",
+                      "e.g., Computer Science, Business Administration",
+                      true
+                    )}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Course Start Date<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.courseStartDate}
+                        onChange={(val) => updateField("courseStartDate", val)}
+                        placeholder="Select course start date"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Expected Graduation<span className="text-red-600 ml-1">*</span>
+                      </label>
+                      <DatePicker
+                        value={formData.expectedGraduation}
+                        onChange={(val) => updateField("expectedGraduation", val)}
+                        minDate={new Date()}
+                        placeholder="Select graduation date"
+                      />
+                    </div>
+                    {renderInput(
+                      "Advisor Phone",
+                      "advisorPhone",
+                      "tel",
+                      "(000) 000-0000"
+                    )}
+                    {renderInput(
+                      "Advisor Email",
+                      "advisorEmail",
+                      "email",
+                      "advisor@university.edu"
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Step 4 - General Info (Emergency Contacts, Pets & Vehicle) */}
+              {currentStep === 4 && (
+                <motion.div
+                  key="step4"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -1149,6 +1108,72 @@ function StudentApplicationPage() {
 
                   <div className="space-y-6">
                     <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        Emergency Contact 1
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {renderInput(
+                          "Contact Name",
+                          "emergencyContactName",
+                          "text",
+                          "Full name",
+                          true
+                        )}
+                        {renderInput(
+                          "Contact Phone",
+                          "emergencyContactPhone",
+                          "tel",
+                          "(000) 000-0000",
+                          true
+                        )}
+                        {renderInput(
+                          "Contact Email",
+                          "emergencyContactEmail",
+                          "email",
+                          "contact@email.com"
+                        )}
+                        {renderInput(
+                          "Relationship",
+                          "emergencyRelationship",
+                          "text",
+                          "e.g., Parent, Sibling"
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        Emergency Contact 2
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        {renderInput(
+                          "Contact Name",
+                          "emergencyContact2Name",
+                          "text",
+                          "Full name"
+                        )}
+                        {renderInput(
+                          "Contact Phone",
+                          "emergencyContact2Phone",
+                          "tel",
+                          "(000) 000-0000"
+                        )}
+                        {renderInput(
+                          "Contact Email",
+                          "emergencyContact2Email",
+                          "email",
+                          "contact@email.com"
+                        )}
+                        {renderInput(
+                          "Relationship",
+                          "emergencyRelationship2",
+                          "text",
+                          "e.g., Parent, Sibling"
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-100 pt-6">
                       <h3 className="text-lg font-semibold text-gray-900 mb-4">Pet Information</h3>
                       <div className="mb-5">
                         {renderRadioGroup("Do you have pets?", "hasPets", ["Yes", "No"], true)}
@@ -1257,10 +1282,10 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 4 - Employment & Income */}
-              {currentStep === 4 && (
+              {/* Step 5 - Employment & Income */}
+              {currentStep === 5 && (
                 <motion.div
-                  key="step4"
+                  key="step5"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -1288,112 +1313,33 @@ function StudentApplicationPage() {
                       "text",
                       "Employer name (if applicable)"
                     )}
+                    <div className="sm:col-span-2">
+                      {renderInput(
+                        "Employer Address (Street, City, State, Zip Code)",
+                        "employerAddress",
+                        "text",
+                        "Street, City, State, Zip"
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">
+                        Employment Start Date
+                      </label>
+                      <DatePicker
+                        value={formData.employmentStartDate}
+                        onChange={(val) => updateField("employmentStartDate", val)}
+                        maxDate={new Date()}
+                        placeholder="Select start date"
+                      />
+                    </div>
                     {renderInput(
                       "Monthly Income",
                       "monthlyIncome",
                       "text",
                       "$0.00"
                     )}
-                    {renderInput(
-                      "Income Source",
-                      "incomeSource",
-                      "text",
-                      "e.g., Job, Scholarship, Parents"
-                    )}
                   </div>
 
-                </motion.div>
-              )}
-
-              {/* Step 5 - References & History */}
-              {currentStep === 5 && (
-                <motion.div
-                  key="step5"
-                  variants={stepVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{ duration: 0.3 }}
-                >
-                  <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    <Users size={20} className="text-blue-600" />
-                    References & Rental History
-                  </h2>
-
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                    Previous Landlord <span className="text-red-500 text-sm">*</span>
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {renderInput(
-                      "Landlord Name",
-                      "previousLandlordName",
-                      "text",
-                      "Full name",
-                      true
-                    )}
-                    {renderInput(
-                      "Landlord Phone",
-                      "landlordPhone",
-                      "tel",
-                      "(000) 000-0000",
-                      true
-                    )}
-                    <div className="sm:col-span-2">
-                      {renderInput(
-                        "Landlord Address",
-                        "landlordAddress",
-                        "text",
-                        "Property address",
-                        true
-                      )}
-                    </div>
-                    {renderInput(
-                      "Reason for Leaving",
-                      "reasonForLeaving",
-                      "text",
-                      "e.g., End of lease, relocation",
-                      true
-                    )}
-                    {renderInput(
-                      "Length of Stay",
-                      "lengthOfStay",
-                      "text",
-                      "e.g., 12 months",
-                      true
-                    )}
-                  </div>
-
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Reference 1
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                      {renderInput("Name", "ref1Name", "text", "Full name")}
-                      {renderInput("Phone", "ref1Phone", "tel", "(000) 000-0000")}
-                      {renderInput(
-                        "Relationship",
-                        "ref1Relationship",
-                        "text",
-                        "e.g., Professor, Employer"
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="border-t border-gray-100 mt-8 pt-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Reference 2
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                      {renderInput("Name", "ref2Name", "text", "Full name")}
-                      {renderInput("Phone", "ref2Phone", "tel", "(000) 000-0000")}
-                      {renderInput(
-                        "Relationship",
-                        "ref2Relationship",
-                        "text",
-                        "e.g., Professor, Employer"
-                      )}
-                    </div>
-                  </div>
                 </motion.div>
               )}
 
@@ -1456,7 +1402,7 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 7 - Required Documents */}
+              {/* Step 8 - Required Documents */}
               {currentStep === 7 && (
                 <motion.div
                   key="step7docs"
@@ -1566,7 +1512,7 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 8 - Authorization & Signature */}
+              {/* Step 9 - Authorization & Signature */}
               {currentStep === 8 && (
                 <motion.div
                   key="step8auth"
@@ -1611,10 +1557,10 @@ function StudentApplicationPage() {
                 </motion.div>
               )}
 
-              {/* Step 9 - Review & Submit */}
+              {/* Step 10 - Review & Submit */}
               {currentStep === 9 && (
                 <motion.div
-                  key="step8review"
+                  key="step9review"
                   variants={stepVariants}
                   initial="enter"
                   animate="center"
@@ -1655,42 +1601,37 @@ function StudentApplicationPage() {
                     )}
                   </div>
 
-                  {/* Address & Education Summary */}
+                  {/* Residence Details Summary */}
                   <div className="glass-subtle p-5 mb-4">
                     <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      Address & Education
+                      Residence Details
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                      <SummaryRow label="Address" value={formData.currentAddress} />
-                      <SummaryRow label="Address Type" value={formData.addressType || "Not selected"} />
-                      <SummaryRow label="City" value={formData.city} />
-                      <SummaryRow label="State" value={formData.state} />
-                      <SummaryRow label="Zip Code" value={formData.zipCode} />
+                      <SummaryRow label="Current Address" value={formData.currentAddress} />
+                      <SummaryRow label="Housing Status" value={formData.housingStatus || "Not selected"} />
+                      <SummaryRow label="From" value={formData.residenceFrom} />
+                      <SummaryRow label="To" value={formData.residenceTo} />
+                      <SummaryRow label="Landlord Name" value={formData.landlordName} />
+                      <SummaryRow label="Landlord Email" value={formData.landlordEmail} />
+                      <SummaryRow label="Landlord Phone" value={formData.landlordPhone} />
+                      <SummaryRow label="Rent Amount" value={formData.rentAmount} />
+                      <SummaryRow label="Reason for Moving" value={formData.reasonForMoving} />
+                    </div>
+                  </div>
+
+                  {/* Education Details Summary */}
+                  <div className="glass-subtle p-5 mb-4">
+                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
+                      Education Details
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="University" value={formData.universityName} />
-                      <SummaryRow label="Student ID" value={formData.studentId} />
+                      <SummaryRow label="School Address" value={formData.schoolAddress} />
                       <SummaryRow label="Course Name" value={formData.courseName} />
                       <SummaryRow label="Course Start Date" value={formData.courseStartDate || "Not set"} />
                       <SummaryRow label="Expected Graduation" value={formData.expectedGraduation || "Not set"} />
                       <SummaryRow label="Advisor Phone" value={formData.advisorPhone || "Not provided"} />
                       <SummaryRow label="Advisor Email" value={formData.advisorEmail || "Not provided"} />
-                    </div>
-                    <div className="border-t border-gray-100 mt-3 pt-3">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 1</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                        <SummaryRow label="Name" value={formData.emergencyContactName} />
-                        <SummaryRow label="Phone" value={formData.emergencyContactPhone} />
-                        <SummaryRow label="Email" value={formData.emergencyContactEmail || "Not provided"} />
-                        <SummaryRow label="Relationship" value={formData.emergencyRelationship || "Not provided"} />
-                      </div>
-                    </div>
-                    <div className="border-t border-gray-100 mt-3 pt-3">
-                      <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 2</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                        <SummaryRow label="Name" value={formData.emergencyContact2Name} />
-                        <SummaryRow label="Phone" value={formData.emergencyContact2Phone} />
-                        <SummaryRow label="Email" value={formData.emergencyContact2Email || "Not provided"} />
-                        <SummaryRow label="Relationship" value={formData.emergencyRelationship2 || "Not provided"} />
-                      </div>
                     </div>
                   </div>
 
@@ -1702,24 +1643,9 @@ function StudentApplicationPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
                       <SummaryRow label="Employment Status" value={formData.employmentStatus} />
                       <SummaryRow label="Employer" value={formData.employerName || "N/A"} />
+                      <SummaryRow label="Employer Address" value={formData.employerAddress || "Not provided"} />
+                      <SummaryRow label="Employment Start Date" value={formData.employmentStartDate || "Not provided"} />
                       <SummaryRow label="Monthly Income" value={formData.monthlyIncome || "Not provided"} />
-                      <SummaryRow label="Income Source" value={formData.incomeSource || "Not provided"} />
-                    </div>
-                  </div>
-
-                  {/* References Summary */}
-                  <div className="glass-subtle p-5 mb-4">
-                    <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
-                      References & History
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
-                      <SummaryRow label="Previous Landlord" value={formData.previousLandlordName} />
-                      <SummaryRow label="Landlord Phone" value={formData.landlordPhone} />
-                      <SummaryRow label="Landlord Address" value={formData.landlordAddress} />
-                      <SummaryRow label="Reason for Leaving" value={formData.reasonForLeaving} />
-                      <SummaryRow label="Length of Stay" value={formData.lengthOfStay} />
-                      <SummaryRow label="Reference 1" value={formData.ref1Name ? `${formData.ref1Name} (${formData.ref1Relationship})` : "N/A"} />
-                      <SummaryRow label="Reference 2" value={formData.ref2Name ? `${formData.ref2Name} (${formData.ref2Relationship})` : "N/A"} />
                     </div>
                   </div>
 
@@ -1728,7 +1654,25 @@ function StudentApplicationPage() {
                     <h3 className="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-3">
                       General Information
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                    <div className="mb-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 1</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                        <SummaryRow label="Name" value={formData.emergencyContactName} />
+                        <SummaryRow label="Phone" value={formData.emergencyContactPhone} />
+                        <SummaryRow label="Email" value={formData.emergencyContactEmail || "Not provided"} />
+                        <SummaryRow label="Relationship" value={formData.emergencyRelationship || "Not provided"} />
+                      </div>
+                    </div>
+                    <div className="mb-3 border-t border-gray-100 pt-3">
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Emergency Contact 2</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm">
+                        <SummaryRow label="Name" value={formData.emergencyContact2Name || "Not provided"} />
+                        <SummaryRow label="Phone" value={formData.emergencyContact2Phone || "Not provided"} />
+                        <SummaryRow label="Email" value={formData.emergencyContact2Email || "Not provided"} />
+                        <SummaryRow label="Relationship" value={formData.emergencyRelationship2 || "Not provided"} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6 text-sm border-t border-gray-100 pt-3">
                       <SummaryRow label="Has Pets" value={formData.hasPets || "Not answered"} />
                       {formData.hasPets === "Yes" && pets.map((pet, idx) => (
                         <div key={idx} className="col-span-2 pl-2 border-l-2 border-blue-100 mb-1">

@@ -358,7 +358,7 @@ export const FAQS: FAQ[] = [
       },
       {
         q: "What utilities are included in rent?",
-        a: "Utilities are $100 per month extra per person and include water, sewer, trash, high-speed internet, and cable TV. Electric and gas are the tenant's responsibility.",
+        a: "Utilities are $100 per month extra per person and include water, electricity, wifi, garbage, parking, maintenance requests and pest control.",
       },
       {
         q: "Is there a security deposit?",
