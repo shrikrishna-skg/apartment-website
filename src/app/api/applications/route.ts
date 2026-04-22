@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sendStaffNotification } from "@/lib/email";
+import { sendStaffNotification, sendApplicationReceived } from "@/lib/email";
 import { getSession } from "@/lib/auth";
 
 // BLOCKLIST approach: reject only system/dangerous fields.
@@ -95,12 +95,24 @@ export async function POST(request: NextRequest) {
         body.has_cosigner ? `Co-signer: ${body.cosigner_name || "Yes"}` : null,
       ].filter(Boolean).join("\n");
 
-      await sendStaffNotification({
-        type: "application",
-        name: body.full_name || "Unknown",
-        email: body.email || "N/A",
-        details,
-      });
+      const emails: Promise<unknown>[] = [
+        sendStaffNotification({
+          type: "application",
+          name: body.full_name || "Unknown",
+          email: body.email || "N/A",
+          details,
+        }),
+      ];
+      if (body.email?.trim()) {
+        emails.push(
+          sendApplicationReceived({
+            to: body.email.trim(),
+            name: body.full_name?.trim() || "Applicant",
+            applicantType: body.applicant_type || null,
+          })
+        );
+      }
+      await Promise.all(emails);
     } catch {
       // Email is best-effort
     }

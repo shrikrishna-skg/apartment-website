@@ -49,7 +49,7 @@ const steps = [
     icon: Gift,
     title: "Earn Reward",
     description:
-      "When your friend signs a lease, you both receive a referral bonus. It's a win-win!",
+      "You will receive a credit of $100 for every new referral once they move in.",
     color: "from-cyan-500 to-blue-500",
   },
 ];
@@ -57,7 +57,7 @@ const steps = [
 const referralFAQs = [
   {
     q: "How much is the referral reward?",
-    a: "Current residents receive a $200 rent credit for each successful referral when the referred friend signs a lease and moves in. Your friend also gets a $100 move-in discount.",
+    a: "You will receive a credit of $100 for every new referral once they move in.",
   },
   {
     q: "Is there a limit to how many friends I can refer?",
@@ -91,8 +91,8 @@ export default function ReferralPage() {
     yourEmail: "",
     yourPhone: "",
     yourUnit: "",
-    preferredContact: "email",
-    relationship: "friend",
+    preferredContact: "",
+    relationship: "",
     friendName: "",
     friendEmail: "",
     friendPhone: "",
@@ -107,6 +107,11 @@ export default function ReferralPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [attempted, setAttempted] = useState(false);
+  const inputErrorClass = (v: string) =>
+    attempted && !v.trim()
+      ? "border-red-500/70 focus:border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]"
+      : "";
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -119,8 +124,21 @@ export default function ReferralPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!consentShare || !consentContact) {
-      setSubmitError("Please agree to both consent checkboxes before submitting.");
+    setAttempted(true);
+    if (
+      !formData.yourName.trim() ||
+      !formData.yourEmail.trim() ||
+      !formData.yourPhone.trim() ||
+      !formData.yourUnit.trim() ||
+      !formData.preferredContact.trim() ||
+      !formData.relationship.trim() ||
+      !formData.friendName.trim() ||
+      !formData.friendEmail.trim() ||
+      !formData.friendPhone.trim() ||
+      !consentShare ||
+      !consentContact
+    ) {
+      setSubmitError("Please fill in all required fields before submitting.");
       return;
     }
     setSubmitting(true);
@@ -158,6 +176,55 @@ export default function ReferralPage() {
     }
     setSubmitting(false);
   };
+
+  if (submitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="bg-ambient" />
+        <div className="glass p-12 text-center max-w-lg">
+          <div className="w-14 h-14 rounded-full bg-green-600 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={28} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gradient mb-3">Referral Submitted!</h1>
+          <p className="text-gray-600 mb-2">
+            Thank you, <span className="text-gray-900 font-medium">{formData.yourName}</span>! Our team will reach out to{" "}
+            <span className="text-gray-900 font-medium">{formData.friendName}</span> soon.
+          </p>
+          <p className="text-gray-500 text-sm mb-6">
+            You&apos;ll receive a credit of $100 once your friend moves in. A confirmation will be sent to{" "}
+            <span className="text-blue-600">{formData.yourEmail}</span>.
+          </p>
+          <button
+            onClick={() => {
+              setSubmitted(false);
+              setAttempted(false);
+              setFormData({
+                yourName: "",
+                yourEmail: "",
+                yourPhone: "",
+                yourUnit: "",
+                preferredContact: "",
+                relationship: "",
+                friendName: "",
+                friendEmail: "",
+                friendPhone: "",
+                moveInTimeline: "",
+                budgetRange: "",
+                occupants: "",
+                notes: "",
+              });
+              setConsentShare(false);
+              setConsentContact(false);
+              setSubmitError("");
+            }}
+            className="btn-outline text-sm"
+          >
+            Submit Another Referral
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -248,90 +315,106 @@ export default function ReferralPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Full Name *
+                      Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="yourName"
                       value={formData.yourName}
                       onChange={handleChange}
-                      required
                       placeholder="Your full name"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.yourName)}`}
                     />
+                    {attempted && !formData.yourName.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Full name is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Email *
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
                       name="yourEmail"
                       value={formData.yourEmail}
                       onChange={handleChange}
-                      required
                       placeholder="you@example.com"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.yourEmail)}`}
                     />
+                    {attempted && !formData.yourEmail.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Email is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Phone *
+                      Phone <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
                       name="yourPhone"
                       value={formData.yourPhone}
                       onChange={handleChange}
-                      required
                       placeholder="(555) 123-4567"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.yourPhone)}`}
                     />
+                    {attempted && !formData.yourPhone.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Phone is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Unit Number *
+                      Unit Number <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="yourUnit"
                       value={formData.yourUnit}
                       onChange={handleChange}
-                      required
                       placeholder="e.g., 204"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.yourUnit)}`}
                     />
+                    {attempted && !formData.yourUnit.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Unit number is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Preferred Contact Method
+                      Preferred Contact Method <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="preferredContact"
                       value={formData.preferredContact}
                       onChange={handleChange}
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.preferredContact)}`}
                     >
+                      <option value="">Select an option</option>
                       <option value="email">Email</option>
                       <option value="sms">SMS</option>
                       <option value="call">Call</option>
                     </select>
+                    {attempted && !formData.preferredContact.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Please select a contact method</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Relationship
+                      Relationship <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="relationship"
                       value={formData.relationship}
                       onChange={handleChange}
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.relationship)}`}
                     >
+                      <option value="">Select an option</option>
                       <option value="friend">Friend</option>
                       <option value="classmate">Classmate</option>
                       <option value="family">Family</option>
                       <option value="other">Other</option>
                     </select>
+                    {attempted && !formData.relationship.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Please select a relationship</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -345,21 +428,23 @@ export default function ReferralPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Full Name *
+                      Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       name="friendName"
                       value={formData.friendName}
                       onChange={handleChange}
-                      required
                       placeholder="Friend's full name"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.friendName)}`}
                     />
+                    {attempted && !formData.friendName.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Friend&apos;s name is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Email
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
@@ -367,12 +452,15 @@ export default function ReferralPage() {
                       value={formData.friendEmail}
                       onChange={handleChange}
                       placeholder="friend@example.com"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.friendEmail)}`}
                     />
+                    {attempted && !formData.friendEmail.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Friend&apos;s email is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Phone
+                      Phone <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="tel"
@@ -380,8 +468,11 @@ export default function ReferralPage() {
                       value={formData.friendPhone}
                       onChange={handleChange}
                       placeholder="(555) 123-4567"
-                      className="input-glass"
+                      className={`input-glass ${inputErrorClass(formData.friendPhone)}`}
                     />
+                    {attempted && !formData.friendPhone.trim() && (
+                      <p className="text-red-600 text-xs mt-1">Friend&apos;s phone is required</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -489,6 +580,12 @@ export default function ReferralPage() {
                     team regarding available apartments and tour scheduling via emails, phone calls, and text messages. Message & data rates may apply. Reply STOP to opt out.
                   </span>
                 </label>
+                {attempted && !consentShare && (
+                  <p className="text-red-600 text-xs">You must agree to share your contact info</p>
+                )}
+                {attempted && !consentContact && (
+                  <p className="text-red-600 text-xs">Your friend&apos;s contact consent is required</p>
+                )}
               </div>
 
               {/* Error */}
@@ -496,28 +593,14 @@ export default function ReferralPage() {
                 <p className="text-red-600 text-sm">{submitError}</p>
               )}
 
-              {/* Submit */}
-              {submitted ? (
-                <div className="text-center py-6">
-                  <div className="w-14 h-14 rounded-full bg-green-600 flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle size={28} className="text-white" />
-                  </div>
-                  <p className="text-xl font-bold text-gray-900 mb-2">Referral Submitted!</p>
-                  <p className="text-gray-600 text-sm">
-                    Thank you! Our team will reach out to your friend soon.
-                    You&apos;ll receive a confirmation email shortly.
-                  </p>
-                </div>
-              ) : (
-                <button
-                  type="submit"
-                  className="btn-glow w-full text-center flex items-center justify-center gap-2"
-                  disabled={submitting}
-                >
-                  {submitting ? "Submitting..." : "Submit Referral"}
-                  {!submitting && <ArrowRight size={18} />}
-                </button>
-              )}
+              <button
+                type="submit"
+                className="btn-glow w-full text-center flex items-center justify-center gap-2"
+                disabled={submitting}
+              >
+                {submitting ? "Submitting..." : "Submit Referral"}
+                {!submitting && <ArrowRight size={18} />}
+              </button>
             </form>
           </motion.section>
 

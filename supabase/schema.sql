@@ -175,13 +175,18 @@ CREATE TABLE IF NOT EXISTS maintenance_requests (
   deleted_at TIMESTAMPTZ DEFAULT null,
   status TEXT DEFAULT 'open' CHECK (status IN ('open', 'in_progress', 'resolved', 'closed')),
 
+  property_name TEXT,
   apartment TEXT NOT NULL,
   full_name TEXT NOT NULL,
   email TEXT NOT NULL,
   phone TEXT,
   category TEXT,
   urgency TEXT DEFAULT 'medium' CHECK (urgency IN ('low', 'medium', 'high', 'emergency')),
-  description TEXT NOT NULL
+  description TEXT NOT NULL,
+  preferred_date DATE,
+  preferred_time TEXT,
+  entry_notes TEXT,
+  photos JSONB DEFAULT '[]'::jsonb
 );
 
 -- 6. Referrals

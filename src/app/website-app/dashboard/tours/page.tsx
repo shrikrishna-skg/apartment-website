@@ -17,6 +17,11 @@ interface TourBooking {
   status: string;
   google_event_id: string | null;
   created_at: string;
+  title?: string | null;
+  location?: string | null;
+  is_virtual?: boolean;
+  meet_link?: string | null;
+  extra_guests?: string[] | null;
 }
 
 const STATUS_OPTIONS = ["confirmed", "completed", "cancelled", "no_show"];
@@ -53,6 +58,107 @@ export default function ToursPage() {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
+
+  // Book-appointment modal state
+  const [showBook, setShowBook] = useState(false);
+  const [booking, setBooking] = useState(false);
+  const [bookError, setBookError] = useState("");
+  const initialBook = {
+    title: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    property_slug: "",
+    floor_plan: "",
+    tour_date: "",
+    tour_time: "",
+    notes: "",
+    location: "",
+    is_virtual: false,
+    extra_guests_raw: "office@collegeplace.us",
+    meet_link: "",
+  };
+  const [defaultMeetLink, setDefaultMeetLink] = useState("");
+
+  useEffect(() => {
+    fetch("/api/tour-bookings/settings")
+      .then((r) => (r.ok ? r.json() : { meet_link: "" }))
+      .then((d) => setDefaultMeetLink(d.meet_link || ""))
+      .catch(() => {});
+  }, []);
+  const [newBooking, setNewBooking] = useState(initialBook);
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
+  useEffect(() => {
+    if (!newBooking.tour_date) {
+      setAvailableSlots([]);
+      return;
+    }
+    setLoadingSlots(true);
+    fetch(`/api/available-slots?date=${newBooking.tour_date}`)
+      .then((r) => r.json())
+      .then((d) => setAvailableSlots(d.availableSlots || []))
+      .catch(() => setAvailableSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }, [newBooking.tour_date]);
+
+  const handleBook = async () => {
+    setBookError("");
+    if (
+      !newBooking.first_name.trim() ||
+      !newBooking.last_name.trim() ||
+      !newBooking.email.trim() ||
+      !newBooking.phone.trim() ||
+      !newBooking.tour_date ||
+      !newBooking.tour_time
+    ) {
+      setBookError("Please fill in all required fields.");
+      return;
+    }
+    setBooking(true);
+    try {
+      const extraGuests = newBooking.extra_guests_raw
+        .split(/[,\s]+/)
+        .map((e) => e.trim())
+        .filter((e) => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+      const res = await fetch("/api/tour-bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newBooking.title || null,
+          first_name: newBooking.first_name,
+          last_name: newBooking.last_name,
+          email: newBooking.email,
+          phone: newBooking.phone,
+          property_slug: newBooking.property_slug || null,
+          floor_plan: newBooking.floor_plan || null,
+          tour_date: newBooking.tour_date,
+          tour_time: newBooking.tour_time,
+          notes: newBooking.notes || null,
+          location: newBooking.location || null,
+          is_virtual: newBooking.is_virtual,
+          meet_link: newBooking.is_virtual ? (newBooking.meet_link || defaultMeetLink || null) : null,
+          extra_guests: extraGuests,
+          consent_communications: true,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || "Failed to book appointment");
+      }
+      const created = await res.json();
+      setTours((prev) => [...prev, created].sort((a, b) => a.tour_date.localeCompare(b.tour_date)));
+      setShowBook(false);
+      setNewBooking(initialBook);
+      showToast("Appointment booked. Confirmation email sent.");
+    } catch (err: unknown) {
+      setBookError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBooking(false);
+    }
+  };
 
   useEffect(() => {
     fetchTours();
@@ -205,6 +311,16 @@ export default function ToursPage() {
           <h1 className="text-2xl font-bold text-gray-900">Tour Bookings</h1>
           <p className="text-sm text-gray-500 mt-1">{filtered.length} booking{filtered.length !== 1 ? "s" : ""} found</p>
         </div>
+        <div className="flex items-center gap-3">
+        <button
+          onClick={() => setShowBook(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Book Appointment
+        </button>
         <div className="flex bg-gray-100 rounded-xl p-1">
           <button
             onClick={() => setViewMode("calendar")}
@@ -224,6 +340,7 @@ export default function ToursPage() {
             </svg>
             List
           </button>
+        </div>
         </div>
       </div>
 
@@ -511,6 +628,27 @@ export default function ToursPage() {
                     <p className="text-sm font-medium text-emerald-600">Synced</p>
                   </div>
                 )}
+                {selected.is_virtual && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-600 mb-0.5">Virtual Tour</p>
+                    {selected.meet_link ? (
+                      <a href={selected.meet_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                        Join Google Meet
+                      </a>
+                    ) : (
+                      <p className="text-sm text-gray-500">Meet link pending (Calendar API not configured)</p>
+                    )}
+                  </div>
+                )}
+                {selected.extra_guests && selected.extra_guests.length > 0 && (
+                  <div className="col-span-2">
+                    <p className="text-xs text-gray-600 mb-0.5">Additional guests</p>
+                    <p className="text-sm text-gray-800">{selected.extra_guests.join(", ")}</p>
+                  </div>
+                )}
               </div>
               {selected.notes && (
                 <div>
@@ -570,6 +708,200 @@ export default function ToursPage() {
                   {deleting ? "Deleting..." : "Move to Recycle Bin"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showBook && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={() => !booking && setShowBook(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100">
+              <div className="w-6" />
+              <button onClick={() => !booking && setShowBook(false)} className="p-2 rounded-lg hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Title */}
+            <div className="px-5 pt-4">
+              <input
+                type="text"
+                value={newBooking.title}
+                onChange={(e) => setNewBooking({ ...newBooking, title: e.target.value })}
+                placeholder="Add title"
+                className="w-full text-2xl font-medium text-gray-900 placeholder-gray-400 border-0 border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 pb-1.5 bg-transparent"
+              />
+            </div>
+
+            {/* Date + Time row */}
+            <div className="px-5 py-4 flex items-start gap-4">
+              <div className="w-6 pt-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 grid grid-cols-2 gap-3">
+                <input
+                  type="date"
+                  value={newBooking.tour_date}
+                  onChange={(e) => setNewBooking({ ...newBooking, tour_date: e.target.value, tour_time: "" })}
+                  min={new Date().toISOString().split("T")[0]}
+                  className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <select
+                  value={newBooking.tour_time}
+                  onChange={(e) => setNewBooking({ ...newBooking, tour_time: e.target.value })}
+                  disabled={!newBooking.tour_date || loadingSlots}
+                  className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
+                >
+                  <option value="">{!newBooking.tour_date ? "Pick date first" : loadingSlots ? "Loading…" : availableSlots.length === 0 ? "No slots available" : "Add time"}</option>
+                  {availableSlots.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Guest (primary) */}
+            <div className="px-5 py-3 flex items-start gap-4 border-t border-gray-50">
+              <div className="w-6 pt-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                </svg>
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="text" placeholder="First name *" value={newBooking.first_name} onChange={(e) => setNewBooking({ ...newBooking, first_name: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                  <input type="text" placeholder="Last name *" value={newBooking.last_name} onChange={(e) => setNewBooking({ ...newBooking, last_name: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="email" placeholder="Guest email *" value={newBooking.email} onChange={(e) => setNewBooking({ ...newBooking, email: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                  <input type="tel" placeholder="Phone *" value={newBooking.phone} onChange={(e) => setNewBooking({ ...newBooking, phone: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                </div>
+              </div>
+            </div>
+
+            {/* Extra guests (staff invites) */}
+            <div className="px-5 py-3 flex items-start gap-4 border-t border-gray-50">
+              <div className="w-6 pt-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zM3 19.235v-.11a6.375 6.375 0 0112.75 0v.109A12.318 12.318 0 019.374 21c-2.331 0-4.512-.645-6.374-1.766z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={newBooking.extra_guests_raw}
+                  onChange={(e) => setNewBooking({ ...newBooking, extra_guests_raw: e.target.value })}
+                  placeholder="Add staff guests (comma-separated emails)"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">office@collegeplace.us is included by default so staff receive the invite.</p>
+              </div>
+            </div>
+
+            {/* Google Meet toggle */}
+            <div className="px-5 py-3 flex items-center gap-4 border-t border-gray-50">
+              <div className="w-6 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5l4.72-4.72a.75.75 0 011.28.53v11.38a.75.75 0 01-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25h-9A2.25 2.25 0 002.25 7.5v9a2.25 2.25 0 002.25 2.25z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-gray-900">Add Google Meet video conferencing</p>
+                <p className="text-[11px] text-gray-500">A secure one-time link will be emailed to the guest.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNewBooking({ ...newBooking, is_virtual: !newBooking.is_virtual })}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newBooking.is_virtual ? "bg-blue-600" : "bg-gray-300"}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newBooking.is_virtual ? "translate-x-6" : "translate-x-1"}`} />
+              </button>
+            </div>
+
+            {newBooking.is_virtual && (
+              <div className="px-5 py-3 flex items-start gap-4 border-t border-gray-50 bg-blue-50/30">
+                <div className="w-6 pt-2 text-blue-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Google Meet link</label>
+                  <input
+                    type="url"
+                    value={newBooking.meet_link}
+                    onChange={(e) => setNewBooking({ ...newBooking, meet_link: e.target.value })}
+                    placeholder={defaultMeetLink || "https://meet.google.com/xxx-yyyy-zzz"}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <p className="text-[11px] text-gray-500 mt-1">
+                    {defaultMeetLink
+                      ? `Leave blank to use the office default (${defaultMeetLink}).`
+                      : "No default set. Enter the persistent office Meet link (or configure OFFICE_MEET_LINK env var)."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Location */}
+            <div className="px-5 py-3 flex items-start gap-4 border-t border-gray-50">
+              <div className="w-6 pt-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                value={newBooking.location}
+                onChange={(e) => setNewBooking({ ...newBooking, location: e.target.value })}
+                placeholder={newBooking.is_virtual ? "Location (optional — virtual)" : "Add location"}
+                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+
+            {/* Property + floor plan */}
+            <div className="px-5 py-3 flex items-start gap-4 border-t border-gray-50">
+              <div className="w-6 pt-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+              </div>
+              <div className="flex-1 grid grid-cols-2 gap-2">
+                <select value={newBooking.property_slug} onChange={(e) => setNewBooking({ ...newBooking, property_slug: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                  <option value="">Select property</option>
+                  <option value="college-place-apartments">College Place Apartments</option>
+                  <option value="college-pointe-apartments">College Pointe Apartments</option>
+                  <option value="college-center-apartments">College Center Apartments</option>
+                  <option value="university-apartments">University Apartments</option>
+                </select>
+                <input type="text" value={newBooking.floor_plan} onChange={(e) => setNewBooking({ ...newBooking, floor_plan: e.target.value })} placeholder="Floor plan (optional)" className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="px-5 py-3 flex items-start gap-4 border-t border-gray-50">
+              <div className="w-6 pt-2 text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 6.75h13.5m-13.5 5h9m-9 5h6m4.5-5l3 3m0 0l3-3m-3 3V6.75" />
+                </svg>
+              </div>
+              <textarea value={newBooking.notes} onChange={(e) => setNewBooking({ ...newBooking, notes: e.target.value })} rows={2} placeholder="Add description" className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none" />
+            </div>
+
+            {bookError && <p className="px-5 pt-2 text-red-600 text-sm">{bookError}</p>}
+
+            {/* Footer */}
+            <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <button onClick={() => !booking && setShowBook(false)} disabled={booking} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50">Cancel</button>
+              <button onClick={handleBook} disabled={booking} className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                {booking ? "Saving..." : "Save"}
+              </button>
             </div>
           </div>
         </div>

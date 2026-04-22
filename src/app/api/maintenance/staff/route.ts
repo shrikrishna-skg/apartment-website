@@ -3,7 +3,15 @@ import { supabase } from "@/lib/supabase";
 import { sendStaffNotification, sendMaintenanceReceived } from "@/lib/email";
 import { getSession } from "@/lib/auth";
 
+const VALID_CATEGORIES = ["plumbing", "electrical", "hvac", "appliance", "pest control", "other"];
+const VALID_URGENCIES = ["low", "medium", "high", "emergency"];
+
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
 
@@ -17,9 +25,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const validCategories = ["plumbing", "electrical", "hvac", "appliance", "pest control", "other"];
-    const validUrgencies = ["low", "medium", "high", "emergency"];
-
     const { data, error } = await supabase
       .from("maintenance_requests")
       .insert({
@@ -28,12 +33,13 @@ export async function POST(request: NextRequest) {
         full_name: body.full_name.trim(),
         email: body.email.trim(),
         phone: body.phone?.trim() || null,
-        category: validCategories.includes(body.category) ? body.category : null,
-        urgency: validUrgencies.includes(body.urgency) ? body.urgency : "medium",
+        category: VALID_CATEGORIES.includes(body.category) ? body.category : null,
+        urgency: VALID_URGENCIES.includes(body.urgency) ? body.urgency : "medium",
         description: body.description.trim(),
         preferred_date: body.preferred_date || null,
         preferred_time: body.preferred_time?.trim() || null,
         entry_notes: body.entry_notes?.trim() || null,
+        status: "open",
       })
       .select()
       .single();
@@ -42,7 +48,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    // Send staff notification + tenant confirmation (best-effort)
+    // Send confirmation email to tenant + internal notice (best-effort)
     try {
       const details = [
         body.property_name ? `Property: ${body.property_name}` : null,
@@ -53,6 +59,7 @@ export async function POST(request: NextRequest) {
         body.preferred_date ? `Preferred Date: ${body.preferred_date}` : null,
         body.preferred_time ? `Preferred Time: ${body.preferred_time}` : null,
         body.entry_notes ? `Entry Notes: ${body.entry_notes}` : null,
+        `Created by staff: ${session.username || "staff"}`,
         `\nDescription:\n${body.description}`,
       ].filter(Boolean).join("\n");
 
@@ -79,33 +86,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data, { status: 201 });
   } catch {
     return NextResponse.json(
-      { error: "Failed to submit maintenance request" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET() {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("maintenance_requests")
-      .select("*")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json(data);
-  } catch {
-    return NextResponse.json(
-      { error: "Failed to fetch maintenance requests" },
+      { error: "Failed to create maintenance request" },
       { status: 500 }
     );
   }

@@ -4,32 +4,37 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { PROPERTIES, SITE } from "@/data/site-data";
 
-/* ── generate next 14 days ── */
-function getNextDays(count: number) {
-  const days: { label: string; date: string; dayName: string }[] = [];
-  const now = new Date();
-  for (let i = 0; i < count; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
-    const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-    const date = d.toISOString().split("T")[0];
-    days.push({ label, date, dayName });
-  }
-  return days;
+/* ── booking window: today through +60 days ── */
+const MAX_BOOKING_DAYS = 60;
+
+/* ── format ISO yyyy-mm-dd date for display ── */
+function formatIsoDate(iso: string, opts: Intl.DateTimeFormatOptions = { weekday: "long", month: "short", day: "numeric" }) {
+  if (!iso) return "";
+  // parse as local midnight to avoid timezone shift
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString("en-US", opts);
 }
 
-/* ── group slots by hour for display ── */
-function groupSlotsByHour(slots: string[]): { hour: string; slots: string[] }[] {
-  const groups: Map<string, string[]> = new Map();
-  for (const slot of slots) {
-    const [timePart, meridiem] = slot.split(" ");
-    const hourStr = timePart.split(":")[0];
-    const key = `${hourStr} ${meridiem}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(slot);
-  }
-  return Array.from(groups.entries()).map(([hour, slots]) => ({ hour, slots }));
+/* ── convert Date to yyyy-mm-dd (local) ── */
+function toIsoDate(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/* ── build calendar grid for a given month (year, zero-indexed month) ── */
+function buildMonthGrid(year: number, month: number): (Date | null)[] {
+  const firstOfMonth = new Date(year, month, 1);
+  const firstWeekday = firstOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+  // pad trailing so we always have full weeks (multiple of 7)
+  while (cells.length % 7 !== 0) cells.push(null);
+  return cells;
 }
 
 /* ── icons ── */
@@ -104,7 +109,30 @@ function ScheduleTourPage() {
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
-  const days = getNextDays(14);
+  /* calendar view state */
+  const [viewMonth, setViewMonth] = useState(() => {
+    const d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth() };
+  });
+
+  const today = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+  const maxBookingDate = (() => { const d = new Date(today); d.setDate(d.getDate() + MAX_BOOKING_DAYS); return d; })();
+
+  const calendarCells = buildMonthGrid(viewMonth.year, viewMonth.month);
+  const monthLabel = new Date(viewMonth.year, viewMonth.month, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+
+  const canGoPrevMonth = (() => {
+    const prev = new Date(viewMonth.year, viewMonth.month - 1, 1);
+    // allow going back only if prev month still contains today or future
+    const lastOfPrev = new Date(viewMonth.year, viewMonth.month, 0);
+    return lastOfPrev >= today;
+  })();
+  const canGoNextMonth = (() => {
+    const firstOfNext = new Date(viewMonth.year, viewMonth.month + 1, 1);
+    return firstOfNext <= maxBookingDate;
+  })();
+
+  const isDateSelectable = (d: Date) => d >= today && d <= maxBookingDate && d.getDay() !== 0;
 
   /* fetch available slots when date changes */
   const fetchSlots = useCallback(async (date: string) => {
@@ -174,8 +202,9 @@ function ScheduleTourPage() {
     setSubmitting(false);
   };
 
-  /* group available slots for display */
-  const groupedSlots = groupSlotsByHour(availableSlots);
+  /* split available slots by AM / PM */
+  const morningSlots = availableSlots.filter((s) => s.endsWith("AM"));
+  const afternoonSlots = availableSlots.filter((s) => s.endsWith("PM"));
 
   /* ── success state ── */
   if (submitted) {
@@ -190,7 +219,7 @@ function ScheduleTourPage() {
           <p className="text-gray-600 mb-2">
             Your appointment has been confirmed for{" "}
             <span className="text-gray-900 font-medium">
-              {days.find((d) => d.date === selectedDate)?.label}
+              {formatIsoDate(selectedDate)}
             </span>{" "}
             at{" "}
             <span className="text-gray-900 font-medium">{selectedTime}</span>.
@@ -417,99 +446,164 @@ function ScheduleTourPage() {
                   </p>
                 </div>
 
-                {/* date picker */}
-                <div>
-                  <label className="block text-sm text-gray-600 mb-3">Select a Date</label>
-                  <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
-                    {days.map((day) => {
-                      const isSunday = new Date(day.date + "T12:00:00").getDay() === 0;
-                      return (
+                {/* Calendar + time slots stacked vertically */}
+                <div className="space-y-6">
+                  {/* ── Calendar ── */}
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-3">Select a Date</label>
+                    <div className="glass-subtle rounded-xl p-4 sm:p-5 max-w-md mx-auto">
+                      {/* Month header with nav arrows */}
+                      <div className="flex items-center justify-between mb-4">
                         <button
-                          key={day.date}
-                          disabled={isSunday}
-                          onClick={() => setSelectedDate(day.date)}
-                          className={`flex flex-col items-center py-3 px-2 rounded-xl text-sm transition-all ${
-                            isSunday
-                              ? "opacity-30 cursor-not-allowed text-gray-400"
-                              : selectedDate === day.date
-                              ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-100"
-                              : "glass-subtle text-gray-500 hover:text-gray-900 hover:border-blue-200"
-                          }`}
+                          type="button"
+                          onClick={() => canGoPrevMonth && setViewMonth(v => {
+                            const d = new Date(v.year, v.month - 1, 1);
+                            return { year: d.getFullYear(), month: d.getMonth() };
+                          })}
+                          disabled={!canGoPrevMonth}
+                          aria-label="Previous month"
+                          className={`p-1.5 rounded-lg transition-colors ${canGoPrevMonth ? "text-gray-700 hover:bg-blue-50 hover:text-blue-600" : "text-gray-300 cursor-not-allowed"}`}
                         >
-                          <span className="text-xs font-medium">{day.dayName}</span>
-                          <span className="font-bold mt-0.5">{day.label.split(" ")[1]}</span>
-                          <span className="text-[11px] mt-0.5">{day.label.split(" ")[0]}</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                         </button>
-                      );
-                    })}
-                  </div>
-                  {attempted && !selectedDate && (
-                    <p className="text-red-600 text-xs mt-2">Please select a date</p>
-                  )}
-                </div>
+                        <span className="text-sm font-semibold text-gray-900">{monthLabel}</span>
+                        <button
+                          type="button"
+                          onClick={() => canGoNextMonth && setViewMonth(v => {
+                            const d = new Date(v.year, v.month + 1, 1);
+                            return { year: d.getFullYear(), month: d.getMonth() };
+                          })}
+                          disabled={!canGoNextMonth}
+                          aria-label="Next month"
+                          className={`p-1.5 rounded-lg transition-colors ${canGoNextMonth ? "text-gray-700 hover:bg-blue-50 hover:text-blue-600" : "text-gray-300 cursor-not-allowed"}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                        </button>
+                      </div>
 
-                {/* time slots — grouped by hour */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm text-gray-600">Select a Time</label>
-                    {!loadingSlots && selectedDate && (
-                      <span className="text-xs text-gray-500">
-                        {availableSlots.length} slot{availableSlots.length !== 1 ? "s" : ""} available
-                      </span>
+                      {/* Weekday header */}
+                      <div className="grid grid-cols-7 gap-1 mb-1">
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                          <div key={d} className="text-center text-[10px] font-semibold text-gray-400 uppercase tracking-wide py-1">{d}</div>
+                        ))}
+                      </div>
+
+                      {/* Day cells */}
+                      <div className="grid grid-cols-7 gap-1">
+                        {calendarCells.map((cell, i) => {
+                          if (!cell) return <div key={`blank-${i}`} />;
+                          const iso = toIsoDate(cell);
+                          const selectable = isDateSelectable(cell);
+                          const isToday = cell.getTime() === today.getTime();
+                          const isSelected = iso === selectedDate;
+                          return (
+                            <button
+                              key={iso}
+                              type="button"
+                              disabled={!selectable}
+                              onClick={() => selectable && setSelectedDate(iso)}
+                              className={`aspect-square flex items-center justify-center text-sm rounded-lg transition-all ${
+                                isSelected
+                                  ? "bg-[#1a73e8] text-white font-semibold shadow-md shadow-blue-100"
+                                  : !selectable
+                                  ? "text-gray-300 cursor-not-allowed"
+                                  : isToday
+                                  ? "bg-blue-50 text-blue-700 font-semibold hover:bg-blue-100"
+                                  : "text-gray-700 hover:bg-gray-100"
+                              }`}
+                              aria-label={formatIsoDate(iso)}
+                              aria-pressed={isSelected}
+                            >
+                              {cell.getDate()}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Hint */}
+                      <p className="text-[11px] text-gray-400 text-center mt-3">Tours run Mon–Sat. Sundays unavailable.</p>
+                    </div>
+                    {attempted && !selectedDate && (
+                      <p className="text-red-600 text-xs mt-2 text-center">Please select a date</p>
                     )}
                   </div>
 
-                  {!selectedDate ? (
-                    <p className="text-gray-500 text-sm py-4">Select a date first to see available times.</p>
-                  ) : loadingSlots ? (
-                    <div className="py-8 text-center">
-                      <div className="inline-flex items-center gap-2 text-gray-400 text-sm">
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Checking Google Calendar for available slots...
-                      </div>
-                    </div>
-                  ) : availableSlots.length === 0 ? (
-                    <div className="py-6 text-center">
-                      <p className="text-amber-600 text-sm font-medium mb-1">No available slots for this date.</p>
-                      <p className="text-gray-500 text-xs">Please pick another day or call us directly.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                      {groupedSlots.map((group) => (
-                        <div key={group.hour}>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                            {group.hour.replace(/^(\d+)/, (_, h) => {
-                              const num = parseInt(h);
-                              if (num === 12) return "12";
-                              return h;
-                            })}
-                            {parseInt(group.hour) < 12 || group.hour.includes("AM") ? " — Morning" : " — Afternoon"}
-                          </p>
-                          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                            {group.slots.map((slot) => (
-                              <button
-                                key={slot}
-                                onClick={() => setSelectedTime(slot)}
-                                className={`py-2.5 px-2 rounded-lg text-xs font-medium transition-all ${
-                                  selectedTime === slot
-                                    ? "bg-[#1a73e8] text-white shadow-lg shadow-blue-100"
-                                    : "glass-subtle text-gray-600 hover:text-gray-900 hover:border-blue-200"
-                                }`}
-                              >
-                                {slot}
-                              </button>
-                            ))}
+                  {/* ── Time slots ── */}
+                  <div>
+                    <label className="block text-sm text-gray-600 mb-3">
+                      {selectedDate ? `Available times — ${formatIsoDate(selectedDate, { weekday: "long", month: "short", day: "numeric" })}` : "Select a Time"}
+                    </label>
+                    <div className="glass-subtle rounded-xl p-4 sm:p-5">
+                      {!selectedDate ? (
+                        <div className="flex items-center justify-center py-8 text-center">
+                          <p className="text-gray-500 text-sm">Pick a date on the calendar to see available times.</p>
+                        </div>
+                      ) : loadingSlots ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="inline-flex items-center gap-2 text-gray-500 text-sm">
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            Checking availability…
                           </div>
                         </div>
-                      ))}
+                      ) : availableSlots.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-8 text-center">
+                          <p className="text-amber-600 text-sm font-medium mb-1">No slots available on this date.</p>
+                          <p className="text-gray-500 text-xs">Please pick a different day or call us directly.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {morningSlots.length > 0 && (
+                            <div>
+                              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Morning</p>
+                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                {morningSlots.map((slot) => (
+                                  <button
+                                    key={slot}
+                                    type="button"
+                                    onClick={() => setSelectedTime(slot)}
+                                    className={`py-2.5 px-2 rounded-lg text-sm font-medium transition-all ${
+                                      selectedTime === slot
+                                        ? "bg-[#1a73e8] text-white shadow-md shadow-blue-100"
+                                        : "bg-white border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600"
+                                    }`}
+                                  >
+                                    {slot}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {afternoonSlots.length > 0 && (
+                            <div>
+                              <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Afternoon</p>
+                              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                                {afternoonSlots.map((slot) => (
+                                  <button
+                                    key={slot}
+                                    type="button"
+                                    onClick={() => setSelectedTime(slot)}
+                                    className={`py-2.5 px-2 rounded-lg text-sm font-medium transition-all ${
+                                      selectedTime === slot
+                                        ? "bg-[#1a73e8] text-white shadow-md shadow-blue-100"
+                                        : "bg-white border border-gray-200 text-gray-700 hover:border-blue-300 hover:text-blue-600"
+                                    }`}
+                                  >
+                                    {slot}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {attempted && !selectedTime && selectedDate && (
-                    <p className="text-red-600 text-xs mt-2">Please select a time</p>
-                  )}
+                    {attempted && !selectedTime && selectedDate && (
+                      <p className="text-red-600 text-xs mt-2">Please select a time</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* selected summary */}
@@ -521,8 +615,7 @@ function ScheduleTourPage() {
                     <span className="text-gray-700">
                       Your appointment:{" "}
                       <span className="text-gray-900 font-semibold">
-                        {days.find((d) => d.date === selectedDate)?.dayName},{" "}
-                        {days.find((d) => d.date === selectedDate)?.label}
+                        {formatIsoDate(selectedDate)}
                       </span>{" "}
                       at <span className="text-gray-900 font-semibold">{selectedTime}</span>
                       <span className="text-gray-400 ml-1">(10 min)</span>

@@ -3,8 +3,17 @@
 import { useEffect, useState } from "react";
 import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
 
+interface MaintenancePhoto {
+  storage_path: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  uploaded_at?: string;
+}
+
 interface MaintenanceRequest {
   id: string;
+  property_name: string | null;
   apartment: string;
   full_name: string;
   email: string;
@@ -12,22 +21,31 @@ interface MaintenanceRequest {
   category: string | null;
   urgency: string;
   description: string;
+  preferred_date: string | null;
+  preferred_time: string | null;
+  entry_notes: string | null;
+  photos: MaintenancePhoto[] | null;
   status: string;
   created_at: string;
 }
 
-const STATUS_OPTIONS = ["open", "in_progress", "resolved", "closed"];
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+const PHOTO_BUCKET = "application-documents";
+function publicPhotoUrl(storage_path: string) {
+  if (!SUPABASE_URL) return "";
+  return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${storage_path}`;
+}
+
+const STATUS_OPTIONS = ["open", "in_progress", "resolved"];
 const STATUS_COLORS: Record<string, string> = {
   open: "bg-red-50 text-red-700 border-red-200",
   in_progress: "bg-yellow-50 text-yellow-700 border-yellow-200",
   resolved: "bg-green-50 text-green-700 border-green-200",
-  closed: "bg-gray-50 text-gray-500 border-gray-200",
 };
 const STATUS_LABELS: Record<string, string> = {
   open: "Open",
   in_progress: "In Progress",
-  resolved: "Resolved",
-  closed: "Closed",
+  resolved: "Completed",
 };
 
 const URGENCY_COLORS: Record<string, string> = {
@@ -48,6 +66,58 @@ export default function MaintenancePage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MaintenanceRequest | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmComplete, setConfirmComplete] = useState<MaintenanceRequest | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const initialNewRequest = {
+    property_name: "",
+    apartment: "",
+    full_name: "",
+    email: "",
+    phone: "",
+    category: "",
+    urgency: "medium",
+    description: "",
+    preferred_date: "",
+    preferred_time: "",
+    entry_notes: "",
+  };
+  const [newRequest, setNewRequest] = useState(initialNewRequest);
+
+  const handleCreate = async () => {
+    setCreateError("");
+    if (
+      !newRequest.apartment.trim() ||
+      !newRequest.full_name.trim() ||
+      !newRequest.email.trim() ||
+      !newRequest.description.trim()
+    ) {
+      setCreateError("Apartment, name, email, and description are required.");
+      return;
+    }
+    setCreating(true);
+    try {
+      const res = await fetch("/api/maintenance/staff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newRequest),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create request");
+      }
+      const created = await res.json();
+      setRequests((prev) => [created, ...prev]);
+      setShowCreate(false);
+      setNewRequest(initialNewRequest);
+      showToast("Request created. Confirmation email sent to tenant.");
+    } catch (err: unknown) {
+      setCreateError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -65,6 +135,14 @@ export default function MaintenancePage() {
     }
   };
 
+  const requestStatusChange = (req: MaintenanceRequest, status: string) => {
+    if (status === "resolved") {
+      setConfirmComplete(req);
+      return;
+    }
+    updateStatus(req.id, status);
+  };
+
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
     try {
@@ -77,14 +155,15 @@ export default function MaintenancePage() {
         const updated = await res.json();
         setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
         if (selected?.id === id) setSelected({ ...selected, ...updated });
-        if (status === "resolved" || status === "closed") {
+        if (status === "resolved") {
           showToast(`Completion notice sent to tenant`);
         } else {
-          showToast(`Status updated to ${status}`);
+          showToast(`Status updated to ${STATUS_LABELS[status] || status}`);
         }
       }
     } finally {
       setUpdating(null);
+      setConfirmComplete(null);
     }
   };
 
@@ -150,9 +229,20 @@ export default function MaintenancePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Maintenance Requests</h1>
-        <p className="text-sm text-gray-500 mt-1">{filtered.length} request{filtered.length !== 1 ? "s" : ""} found</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Maintenance Requests</h1>
+          <p className="text-sm text-gray-500 mt-1">{filtered.length} request{filtered.length !== 1 ? "s" : ""} found</p>
+        </div>
+        <button
+          onClick={() => setShowCreate(true)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          New Request
+        </button>
       </div>
 
       {/* Filters */}
@@ -227,7 +317,7 @@ export default function MaintenancePage() {
                     value={req.status}
                     onChange={(e) => {
                       e.stopPropagation();
-                      updateStatus(req.id, e.target.value);
+                      requestStatusChange(req, e.target.value);
                     }}
                     onClick={(e) => e.stopPropagation()}
                     disabled={updating === req.id}
@@ -276,8 +366,8 @@ export default function MaintenancePage() {
             <div className="px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Category</p>
-                  <p className="text-sm font-medium text-gray-900">{selected.category || "—"}</p>
+                  <p className="text-xs text-gray-600 mb-0.5">Property</p>
+                  <p className="text-sm font-medium text-gray-900">{selected.property_name || "—"}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-600 mb-0.5">Status</p>
@@ -286,10 +376,22 @@ export default function MaintenancePage() {
                   </span>
                 </div>
                 <div>
+                  <p className="text-xs text-gray-600 mb-0.5">Category</p>
+                  <p className="text-sm font-medium text-gray-900">{selected.category || "—"}</p>
+                </div>
+                <div>
                   <p className="text-xs text-gray-600 mb-0.5">Phone</p>
                   <p className="text-sm font-medium text-gray-900">{selected.phone || "—"}</p>
                 </div>
                 <div>
+                  <p className="text-xs text-gray-600 mb-0.5">Preferred Date</p>
+                  <p className="text-sm font-medium text-gray-900">{selected.preferred_date ? formatDate(selected.preferred_date) : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-600 mb-0.5">Preferred Time</p>
+                  <p className="text-sm font-medium text-gray-900">{selected.preferred_time || "—"}</p>
+                </div>
+                <div className="col-span-2">
                   <p className="text-xs text-gray-600 mb-0.5">Submitted</p>
                   <p className="text-sm font-medium text-gray-900">{formatDate(selected.created_at)}</p>
                 </div>
@@ -298,13 +400,50 @@ export default function MaintenancePage() {
                 <p className="text-xs text-gray-600 mb-1">Description</p>
                 <div className="text-sm text-gray-700 bg-gray-50 rounded-xl p-4 whitespace-pre-wrap">{selected.description}</div>
               </div>
+              {selected.entry_notes && (
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">Anything to know before entering?</p>
+                  <div className="text-sm text-gray-700 bg-amber-50 border border-amber-100 rounded-xl p-4 whitespace-pre-wrap">{selected.entry_notes}</div>
+                </div>
+              )}
+              {Array.isArray(selected.photos) && selected.photos.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-600 mb-2">Attachments ({selected.photos.length})</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {selected.photos.map((p, idx) => {
+                      const url = publicPhotoUrl(p.storage_path);
+                      const isImage = (p.file_type || "").startsWith("image/");
+                      return (
+                        <a
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block rounded-lg overflow-hidden border border-gray-200 hover:border-blue-300 transition-colors"
+                          title={p.file_name}
+                        >
+                          {isImage ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={url} alt={p.file_name} className="w-full h-24 object-cover" loading="lazy" />
+                          ) : (
+                            <div className="w-full h-24 flex flex-col items-center justify-center bg-gray-50 text-gray-500 p-2">
+                              <span className="text-[10px] font-semibold uppercase tracking-wide">{(p.file_type || "file").split("/").pop()}</span>
+                              <span className="text-[10px] mt-1 truncate w-full text-center">{p.file_name}</span>
+                            </div>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="pt-4 border-t border-gray-100">
                 <p className="text-xs font-medium text-gray-500 mb-2">Update Status</p>
                 <div className="flex flex-wrap gap-2">
                   {STATUS_OPTIONS.map((s) => (
                     <button
                       key={s}
-                      onClick={() => updateStatus(selected.id, s)}
+                      onClick={() => requestStatusChange(selected, s)}
                       disabled={updating === selected.id || selected.status === s}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-40 ${
                         selected.status === s ? STATUS_COLORS[s] : "border-gray-200 text-gray-500 hover:border-gray-300"
@@ -346,6 +485,200 @@ export default function MaintenancePage() {
                 <button onClick={() => setConfirmDelete(null)} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors">Cancel</button>
                 <button onClick={() => softDelete(confirmDelete)} disabled={deleting === confirmDelete.id} className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50">{deleting ? "Deleting..." : "Move to Recycle Bin"}</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {confirmComplete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => setConfirmComplete(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-5 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Mark as Completed?</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                This will mark <strong>Apt {confirmComplete.apartment}</strong> as completed and email a completion notice to <strong>{confirmComplete.email}</strong>.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={() => setConfirmComplete(null)}
+                  disabled={updating === confirmComplete.id}
+                  className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => updateStatus(confirmComplete.id, "resolved")}
+                  disabled={updating === confirmComplete.id}
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {updating === confirmComplete.id ? "Sending..." : "Mark Completed & Email"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCreate && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={() => !creating && setShowCreate(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">New Maintenance Request</h3>
+              <button onClick={() => !creating && setShowCreate(false)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Property</label>
+                  <select
+                    value={newRequest.property_name}
+                    onChange={(e) => setNewRequest({ ...newRequest, property_name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="">Select property</option>
+                    <option value="College Place Apartments">College Place Apartments</option>
+                    <option value="College Pointe Apartments">College Pointe Apartments</option>
+                    <option value="College Center Apartments">College Center Apartments</option>
+                    <option value="University Apartments">University Apartments</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Apartment <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={newRequest.apartment}
+                    onChange={(e) => setNewRequest({ ...newRequest, apartment: e.target.value })}
+                    placeholder="e.g., 204"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Tenant Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={newRequest.full_name}
+                    onChange={(e) => setNewRequest({ ...newRequest, full_name: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Tenant Email <span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    value={newRequest.email}
+                    onChange={(e) => setNewRequest({ ...newRequest, email: e.target.value })}
+                    placeholder="tenant@example.com"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={newRequest.phone}
+                    onChange={(e) => setNewRequest({ ...newRequest, phone: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                  <select
+                    value={newRequest.category}
+                    onChange={(e) => setNewRequest({ ...newRequest, category: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="">Select category</option>
+                    <option value="plumbing">Plumbing</option>
+                    <option value="electrical">Electrical</option>
+                    <option value="hvac">HVAC</option>
+                    <option value="appliance">Appliance</option>
+                    <option value="pest control">Pest Control</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Urgency</label>
+                  <select
+                    value={newRequest.urgency}
+                    onChange={(e) => setNewRequest({ ...newRequest, urgency: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="emergency">Emergency</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Preferred Date</label>
+                  <input
+                    type="date"
+                    value={newRequest.preferred_date}
+                    onChange={(e) => setNewRequest({ ...newRequest, preferred_date: e.target.value })}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Preferred Time</label>
+                  <select
+                    value={newRequest.preferred_time}
+                    onChange={(e) => setNewRequest({ ...newRequest, preferred_time: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="">Any time during business hours</option>
+                    <option value="9 AM – 11 AM">9 AM – 11 AM</option>
+                    <option value="11 AM – 1 PM">11 AM – 1 PM</option>
+                    <option value="1 PM – 3 PM">1 PM – 3 PM</option>
+                    <option value="3 PM – 5 PM">3 PM – 5 PM</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Description <span className="text-red-500">*</span></label>
+                <textarea
+                  value={newRequest.description}
+                  onChange={(e) => setNewRequest({ ...newRequest, description: e.target.value })}
+                  rows={3}
+                  placeholder="Describe the issue..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Entry Notes</label>
+                <textarea
+                  value={newRequest.entry_notes}
+                  onChange={(e) => setNewRequest({ ...newRequest, entry_notes: e.target.value })}
+                  rows={2}
+                  placeholder="e.g., Pet indoors, ring doorbell..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                />
+              </div>
+              {createError && <p className="text-red-600 text-sm">{createError}</p>}
+              <p className="text-xs text-gray-500">A confirmation email will be sent to the tenant when this request is created.</p>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <button
+                onClick={() => !creating && setShowCreate(false)}
+                disabled={creating}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={creating}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {creating ? "Creating..." : "Create & Send Email"}
+              </button>
             </div>
           </div>
         </div>

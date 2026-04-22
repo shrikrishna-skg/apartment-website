@@ -23,6 +23,8 @@ export async function sendTourConfirmation(params: {
   tourDate: string;
   tourTime: string;
   propertyName?: string;
+  isVirtual?: boolean;
+  joinUrl?: string | null;
 }) {
   const transporter = getTransporter();
   if (!transporter) return null;
@@ -95,6 +97,18 @@ export async function sendTourConfirmation(params: {
               <li>Discuss lease terms and move-in dates</li>
               <li>Ask questions about the community</li>
             </ul>
+
+            ${params.isVirtual && params.joinUrl ? `
+            <!-- Virtual Tour Join -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:20px;text-align:center;">
+                <p style="margin:0 0 12px;color:#1e3a8a;font-size:14px;font-weight:600;">This is a virtual tour via Google Meet</p>
+                <p style="margin:0 0 16px;color:#374151;font-size:13px;line-height:1.6;">Use the secure link below to join at your scheduled time. The link is unique to you and expires shortly after the tour.</p>
+                <a href="${params.joinUrl}" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Join Virtual Tour</a>
+                <p style="margin:12px 0 0;color:#6b7280;font-size:11px;">Do not share this link — it's tied to your booking only.</p>
+              </td></tr>
+            </table>
+            ` : ""}
 
             <!-- CTA -->
             <table width="100%" cellpadding="0" cellspacing="0">
@@ -669,6 +683,98 @@ export async function sendInquiryReply(params: {
 }
 
 // Auto-sent when a maintenance request is received
+export async function sendApplicationReceived(params: {
+  to: string;
+  name: string;
+  applicantType?: string | null;
+}) {
+  const transporter = getTransporter();
+  if (!transporter) return null;
+
+  const typeLabel =
+    params.applicantType === "student" ? "Student"
+    : params.applicantType === "international" ? "International Student"
+    : params.applicantType === "working" ? "Working Professional"
+    : "General";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <tr>
+          <td style="background:#1a73e8;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">College Place</h1>
+            <p style="margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;">Apartments</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="margin:0 0 8px;color:#1a1a1a;font-size:22px;">Application Received</h2>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Dear ${escapeHtml(params.name)},
+            </p>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Thank you for submitting your rental application with College Place Apartments. We have received your application and our leasing team will review the details shortly. You can expect to hear back from us within <strong>1&ndash;2 business days</strong>.
+            </p>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              If we need any additional information to complete your review, we'll reach out using the contact details you provided.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:24px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;font-size:14px;width:160px;">Applicant</td>
+                    <td style="padding:6px 0;color:#1a1a1a;font-size:14px;font-weight:600;">${escapeHtml(params.name)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;font-size:14px;">Application Type</td>
+                    <td style="padding:6px 0;color:#1a1a1a;font-size:14px;font-weight:600;">${escapeHtml(typeLabel)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;font-size:14px;">Status</td>
+                    <td style="padding:6px 0;color:#1a73e8;font-size:14px;font-weight:700;">Under Review</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+
+            <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
+              Questions in the meantime?<br/>
+              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:28px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 6px;color:#374151;font-size:13px;font-weight:600;">Thanks &amp; Regards,</p>
+            <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">Leasing Office</p>
+            <p style="margin:0;color:#9ca3af;font-size:12px;">College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const fromAddress = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const info = await transporter.sendMail({
+    from: `"College Place Apartments" <${fromAddress}>`,
+    to: params.to,
+    cc: "office@collegeplace.us",
+    subject: "Application Received — College Place Apartments",
+    html,
+  });
+
+  return info.messageId;
+}
+
 export async function sendMaintenanceReceived(params: {
   to: string;
   name: string;
@@ -785,9 +891,6 @@ export async function sendMaintenanceCompleted(params: {
         </tr>
         <tr>
           <td style="padding:40px;">
-            <div style="text-align:center;margin-bottom:24px;">
-              <span style="display:inline-block;background:#f0fdf4;border:1px solid #bbf7d0;color:#16a34a;font-size:13px;font-weight:700;padding:8px 20px;border-radius:20px;">Completed</span>
-            </div>
             <h2 style="margin:0 0 8px;color:#1a1a1a;font-size:22px;">Maintenance Completion Notice</h2>
             <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
               Dear ${escapeHtml(params.name)},

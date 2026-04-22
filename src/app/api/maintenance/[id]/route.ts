@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { getSession } from "@/lib/auth";
 import { sendMaintenanceCompleted } from "@/lib/email";
 
-const VALID_STATUSES = ["open", "in_progress", "resolved", "closed"];
+const VALID_STATUSES = ["open", "in_progress", "resolved"];
 
 export async function PATCH(
   request: NextRequest,
@@ -56,8 +56,8 @@ export async function PATCH(
       );
     }
 
-    // Send completion email when status is resolved or closed
-    if ((body.status === "resolved" || body.status === "closed") && data.email) {
+    // Send completion email when status is resolved
+    if (body.status === "resolved" && data.email) {
       try {
         await sendMaintenanceCompleted({
           to: data.email,

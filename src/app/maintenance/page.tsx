@@ -15,6 +15,9 @@ import {
   ChevronRight,
   Bot,
   User,
+  X,
+  Image as ImageIcon,
+  FileText as FileIcon,
 } from "lucide-react";
 import { SITE } from "@/data/site-data";
 
@@ -80,6 +83,7 @@ NEVER DO:
 - Never submit without apartment number
 - Never submit without a clear issue description
 - Never submit without asking about entry permission
+- Never submit without a valid tenant email address (this is required — we send status updates by email)
 - Never guess apartment numbers
 - Never promise specific repair times ("we'll fix it today") — say "our team will review and reach out within 24 hours"
 - Never give pricing, lease, or tour info — redirect: "I'm your maintenance assistant! For leasing questions, visit collegeplace.us or call (615) 200-0620."
@@ -145,6 +149,7 @@ export default function MaintenancePage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const [formData, setFormData] = useState({
+    propertyName: "",
     apartment: "",
     fullName: "",
     email: "",
@@ -152,12 +157,30 @@ export default function MaintenancePage() {
     category: "",
     urgency: "",
     description: "",
+    preferredDate: "",
+    preferredTime: "",
+    entryNotes: "",
   });
 
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState("");
   const [formConsent, setFormConsent] = useState(false);
+  const [formAttempted, setFormAttempted] = useState(false);
+
+  const inputErrorClass = (value: string) =>
+    formAttempted && !value.trim()
+      ? "border-red-500/70 focus:border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]"
+      : "";
+
+  /* Traditional form file upload state */
+  const MAX_FORM_FILES = 5;
+  const MAX_FORM_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const ACCEPTED_FORM_FILE_TYPES = "image/png,image/jpeg,image/jpg,image/heic,image/heif,image/webp,application/pdf";
+  const [formFiles, setFormFiles] = useState<File[]>([]);
+  const [formFilePreviews, setFormFilePreviews] = useState<string[]>([]);
+  const [formIsDragging, setFormIsDragging] = useState(false);
+  const formFileInputRef = useRef<HTMLInputElement>(null);
 
   const [chatFiles, setChatFiles] = useState<File[]>([]);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -313,7 +336,7 @@ export default function MaintenancePage() {
             body: JSON.stringify({
               apartment,
               full_name: tenantName,
-              email: tenantEmail || "chat@collegeplace.us",
+              email: tenantEmail,
               category,
               description: description +
                 `\n\nEntry Permission: ${entryPermission}` +
@@ -468,10 +491,81 @@ export default function MaintenancePage() {
     setFormError("");
   };
 
+  /* File upload helpers for the traditional form */
+  const addFormFiles = async (files: File[]) => {
+    const allowedMime = ACCEPTED_FORM_FILE_TYPES.split(",");
+    const valid: File[] = [];
+    const rejected: string[] = [];
+    for (const f of files) {
+      if (formFiles.length + valid.length >= MAX_FORM_FILES) {
+        rejected.push(`${f.name} (max ${MAX_FORM_FILES} files)`);
+        continue;
+      }
+      if (!allowedMime.includes(f.type) && !/\.(png|jpe?g|heic|heif|webp|pdf)$/i.test(f.name)) {
+        rejected.push(`${f.name} (unsupported type)`);
+        continue;
+      }
+      if (f.size > MAX_FORM_FILE_SIZE) {
+        rejected.push(`${f.name} (exceeds 10 MB)`);
+        continue;
+      }
+      valid.push(f);
+    }
+    if (rejected.length > 0) {
+      setFormError(`Skipped: ${rejected.join(", ")}`);
+    } else {
+      setFormError("");
+    }
+    // Build previews (data URLs for images; name for others)
+    const newPreviews: string[] = await Promise.all(
+      valid.map((f) => {
+        if (f.type.startsWith("image/")) {
+          return new Promise<string>((resolve) => {
+            const r = new FileReader();
+            r.onload = () => resolve(typeof r.result === "string" ? r.result : "");
+            r.onerror = () => resolve("");
+            r.readAsDataURL(f);
+          });
+        }
+        return Promise.resolve("");
+      })
+    );
+    setFormFiles((prev) => [...prev, ...valid]);
+    setFormFilePreviews((prev) => [...prev, ...newPreviews]);
+  };
+
+  const removeFormFile = (idx: number) => {
+    setFormFiles((prev) => prev.filter((_, i) => i !== idx));
+    setFormFilePreviews((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleFormFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) await addFormFiles(files);
+    if (formFileInputRef.current) formFileInputRef.current.value = "";
+  };
+
+  const handleFormDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setFormIsDragging(false);
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length > 0) await addFormFiles(files);
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formConsent) {
-      setFormError("You must consent to communications before submitting.");
+    setFormAttempted(true);
+    if (
+      !formData.propertyName.trim() ||
+      !formData.apartment.trim() ||
+      !formData.fullName.trim() ||
+      !formData.email.trim() ||
+      !formData.category.trim() ||
+      !formData.urgency.trim() ||
+      !formData.description.trim() ||
+      !formConsent
+    ) {
+      setFormError("Please fill in all required fields before submitting.");
       return;
     }
     setFormSubmitting(true);
@@ -481,13 +575,17 @@ export default function MaintenancePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          property_name: formData.propertyName,
           apartment: formData.apartment,
           full_name: formData.fullName,
           email: formData.email,
           phone: formData.phone || null,
-          category: formData.category || null,
-          urgency: formData.urgency || "medium",
+          category: formData.category,
+          urgency: formData.urgency,
           description: formData.description,
+          preferred_date: formData.preferredDate || null,
+          preferred_time: formData.preferredTime || null,
+          entry_notes: formData.entryNotes || null,
           consent_communications: formConsent,
         }),
       });
@@ -495,12 +593,69 @@ export default function MaintenancePage() {
         const data = await res.json();
         throw new Error(data.error || "Failed to submit request");
       }
+      const ticket = await res.json();
+      // Upload any attached files to the new maintenance ticket (best-effort)
+      if (formFiles.length > 0 && ticket?.id) {
+        for (const file of formFiles) {
+          const fd = new FormData();
+          fd.append("file", file);
+          fd.append("maintenance_id", ticket.id);
+          await fetch("/api/maintenance/upload-photo", { method: "POST", body: fd }).catch(() => {});
+        }
+      }
       setFormSubmitted(true);
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     }
     setFormSubmitting(false);
   };
+
+  if (formSubmitted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="bg-ambient" />
+        <div className="glass p-12 text-center max-w-lg">
+          <div className="w-14 h-14 rounded-full bg-emerald-600 flex items-center justify-center mx-auto mb-4">
+            <Send size={22} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold text-gradient mb-3">Request Submitted!</h1>
+          <p className="text-gray-600 mb-2">
+            Your maintenance request for{" "}
+            <span className="text-gray-900 font-medium">Apartment {formData.apartment}</span> has been received.
+          </p>
+          <p className="text-gray-500 text-sm mb-6">
+            We sent a confirmation to <span className="text-blue-600">{formData.email}</span>. Our team will reach out within 24 hours.
+          </p>
+          <button
+            onClick={() => {
+              setFormSubmitted(false);
+              setFormAttempted(false);
+              setFormData({
+                propertyName: "",
+                apartment: "",
+                fullName: "",
+                email: "",
+                phone: "",
+                category: "",
+                urgency: "",
+                description: "",
+                preferredDate: "",
+                preferredTime: "",
+                entryNotes: "",
+              });
+              setFormConsent(false);
+              setFormFiles([]);
+              setFormFilePreviews([]);
+              setFormError("");
+            }}
+            className="btn-outline text-sm"
+          >
+            Submit Another Request
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -742,49 +897,75 @@ export default function MaintenancePage() {
                   className="glass p-6 sm:p-8"
                 >
                   <form onSubmit={handleFormSubmit} className="space-y-6">
-                    {/* Contact Info */}
+                    {/* Property & Contact Info */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Property Name <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          name="propertyName"
+                          value={formData.propertyName}
+                          onChange={handleFormChange}
+                          className={`input-glass ${inputErrorClass(formData.propertyName)}`}
+                        >
+                          <option value="">Select your property</option>
+                          <option value="College Place Apartments">College Place Apartments</option>
+                          <option value="College Pointe Apartments">College Pointe Apartments</option>
+                          <option value="College Center Apartments">College Center Apartments</option>
+                          <option value="University Apartments">University Apartments</option>
+                        </select>
+                        {formAttempted && !formData.propertyName.trim() && (
+                          <p className="text-red-600 text-xs mt-1">Property is required</p>
+                        )}
+                      </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Apartment Number *
+                          Apartment Number <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           name="apartment"
                           value={formData.apartment}
                           onChange={handleFormChange}
-                          required
                           placeholder="e.g., 204"
-                          className="input-glass"
+                          className={`input-glass ${inputErrorClass(formData.apartment)}`}
                         />
+                        {formAttempted && !formData.apartment.trim() && (
+                          <p className="text-red-600 text-xs mt-1">Apartment number is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Full Name *
+                          Full Name <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
                           name="fullName"
                           value={formData.fullName}
                           onChange={handleFormChange}
-                          required
                           placeholder="Your full name"
-                          className="input-glass"
+                          className={`input-glass ${inputErrorClass(formData.fullName)}`}
                         />
+                        {formAttempted && !formData.fullName.trim() && (
+                          <p className="text-red-600 text-xs mt-1">Full name is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Email *
+                          Email <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="email"
                           name="email"
                           value={formData.email}
                           onChange={handleFormChange}
-                          required
                           placeholder="you@example.com"
-                          className="input-glass"
+                          className={`input-glass ${inputErrorClass(formData.email)}`}
                         />
+                        {formAttempted && !formData.email.trim() && (
+                          <p className="text-red-600 text-xs mt-1">Email is required</p>
+                        )}
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -804,13 +985,13 @@ export default function MaintenancePage() {
                     {/* Issue Category */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Issue Category
+                        Issue Category <span className="text-red-500">*</span>
                       </label>
                       <select
                         name="category"
                         value={formData.category}
                         onChange={handleFormChange}
-                        className="input-glass"
+                        className={`input-glass ${inputErrorClass(formData.category)}`}
                       >
                         <option value="">Select a category</option>
                         {issueCategories.map((cat) => (
@@ -819,14 +1000,17 @@ export default function MaintenancePage() {
                           </option>
                         ))}
                       </select>
+                      {formAttempted && !formData.category.trim() && (
+                        <p className="text-red-600 text-xs mt-1">Issue category is required</p>
+                      )}
                     </div>
 
                     {/* Urgency */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-3">
-                        Urgency
+                        Urgency <span className="text-red-500">*</span>
                       </label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${formAttempted && !formData.urgency ? "ring-1 ring-red-500/40 rounded-xl p-1" : ""}`}>
                         {urgencyLevels.map((level) => (
                           <label
                             key={level.value}
@@ -859,41 +1043,140 @@ export default function MaintenancePage() {
                           </label>
                         ))}
                       </div>
+                      {formAttempted && !formData.urgency && (
+                        <p className="text-red-600 text-xs mt-2">Please select an urgency level</p>
+                      )}
                     </div>
 
                     {/* Description */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Description *
+                        Description <span className="text-red-500">*</span>
                       </label>
                       <textarea
                         name="description"
                         value={formData.description}
                         onChange={handleFormChange}
-                        required
                         rows={4}
                         placeholder="Please describe the issue in detail..."
+                        className={`input-glass resize-none ${inputErrorClass(formData.description)}`}
+                      />
+                      {formAttempted && !formData.description.trim() && (
+                        <p className="text-red-600 text-xs mt-1">Description is required</p>
+                      )}
+                    </div>
+
+                    {/* Preferred Date & Time */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Preferred Date <span className="text-gray-400 text-xs font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="date"
+                          name="preferredDate"
+                          value={formData.preferredDate}
+                          onChange={handleFormChange}
+                          min={new Date().toISOString().split("T")[0]}
+                          className="input-glass"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                          Preferred Time <span className="text-gray-400 text-xs font-normal">(optional)</span>
+                        </label>
+                        <select
+                          name="preferredTime"
+                          value={formData.preferredTime}
+                          onChange={handleFormChange}
+                          className="input-glass"
+                        >
+                          <option value="">Any time during business hours</option>
+                          <option value="9 AM – 11 AM">9 AM – 11 AM</option>
+                          <option value="11 AM – 1 PM">11 AM – 1 PM</option>
+                          <option value="1 PM – 3 PM">1 PM – 3 PM</option>
+                          <option value="3 PM – 5 PM">3 PM – 5 PM</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Entry Notes */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Anything we need to know before coming to your unit? <span className="text-gray-400 text-xs font-normal">(optional)</span>
+                      </label>
+                      <textarea
+                        name="entryNotes"
+                        value={formData.entryNotes}
+                        onChange={handleFormChange}
+                        rows={3}
+                        placeholder="e.g., Please ring the doorbell, pet indoors, key is under the mat, etc."
                         className="input-glass resize-none"
                       />
                     </div>
 
-                    {/* File Upload */}
+                    {/* File Upload (functional) */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Attach Photos
+                        Attach Photos <span className="text-gray-400 text-xs font-normal">(optional, up to {MAX_FORM_FILES})</span>
                       </label>
-                      <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-blue-200 transition-colors duration-300 cursor-pointer">
-                        <Upload
-                          size={32}
-                          className="text-gray-400 mx-auto mb-3"
-                        />
+                      <div
+                        onClick={() => formFileInputRef.current?.click()}
+                        onDragOver={(e) => { e.preventDefault(); setFormIsDragging(true); }}
+                        onDragLeave={() => setFormIsDragging(false)}
+                        onDrop={handleFormDrop}
+                        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors duration-300 ${
+                          formIsDragging ? "border-blue-400 bg-blue-50/50" : "border-gray-200 hover:border-blue-200"
+                        }`}
+                      >
+                        <Upload size={32} className="text-gray-400 mx-auto mb-3" />
                         <p className="text-sm text-gray-600 mb-1">
-                          Drag & drop files here or click to browse
+                          Drag &amp; drop files here or click to browse
                         </p>
                         <p className="text-xs text-gray-400">
-                          PNG, JPG, or PDF up to 10MB
+                          PNG, JPG, HEIC, or PDF &bull; up to 10MB each &bull; max {MAX_FORM_FILES} files
                         </p>
+                        <input
+                          ref={formFileInputRef}
+                          type="file"
+                          accept={ACCEPTED_FORM_FILE_TYPES}
+                          multiple
+                          onChange={handleFormFileInput}
+                          className="hidden"
+                        />
                       </div>
+                      {/* File list */}
+                      {formFiles.length > 0 && (
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {formFiles.map((file, idx) => (
+                            <div
+                              key={`${file.name}-${idx}`}
+                              className="relative flex items-center gap-2 p-2 rounded-lg border border-gray-200 bg-white"
+                            >
+                              {file.type.startsWith("image/") && formFilePreviews[idx] ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={formFilePreviews[idx]} alt={file.name} className="w-10 h-10 rounded object-cover" />
+                              ) : (
+                                <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center text-gray-500">
+                                  {file.type === "application/pdf" ? <FileIcon size={18} /> : <ImageIcon size={18} />}
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-gray-800 truncate">{file.name}</p>
+                                <p className="text-[10px] text-gray-500">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); removeFormFile(idx); }}
+                                className="p-1 rounded-full hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
+                                aria-label={`Remove ${file.name}`}
+                              >
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Consent & Communications */}
@@ -904,7 +1187,6 @@ export default function MaintenancePage() {
                           checked={formConsent}
                           onChange={(e) => setFormConsent(e.target.checked)}
                           className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          required
                         />
                         <span className="text-xs text-gray-600 leading-relaxed">
                           By submitting this form, I consent to receive communications from College Place Apartments including emails, phone calls, and text messages at the number provided. I understand that message & data rates may apply, message frequency varies, and I can opt out at any time by replying STOP. Consent is not a condition of purchase or tenancy. View our{" "}
@@ -913,6 +1195,9 @@ export default function MaintenancePage() {
                           <a href="/terms" className="text-blue-600 underline hover:text-blue-800">Terms & Conditions</a>.
                         </span>
                       </label>
+                      {formAttempted && !formConsent && (
+                        <p className="text-red-600 text-xs">You must consent to communications</p>
+                      )}
                     </div>
 
                     {/* Error */}

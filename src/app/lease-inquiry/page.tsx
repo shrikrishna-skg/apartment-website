@@ -302,13 +302,15 @@ export default function LeaseInquiryPage() {
                       false,
                       "Select a property..."
                     )}
-                    <DatePicker
-                      label="Move-In Date"
-                      value={formData.moveInDate}
-                      onChange={(val) => updateField("moveInDate", val)}
-                      minDate={new Date()}
-                      placeholder="Select move-in date"
-                    />
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-sm font-medium text-gray-700">Move-In Date</label>
+                      <DatePicker
+                        value={formData.moveInDate}
+                        onChange={(val) => updateField("moveInDate", val)}
+                        minDate={new Date()}
+                        placeholder="Select move-in date"
+                      />
+                    </div>
                     {renderSelect("Bedrooms", "bedrooms", bedroomOptions, true, "Select bedrooms...")}
                     {renderSelect("Lease Term", "leaseTerm", leaseTermOptions, true, "Select term...")}
                     {renderSelect("Budget", "budget", budgetOptions, true, "Select budget range...")}

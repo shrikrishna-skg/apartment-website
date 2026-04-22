@@ -41,8 +41,13 @@ export async function createTourEvent(params: {
   phone: string;
   propertySlug?: string;
   floorPlan?: string;
-}): Promise<string | null> {
-  if (!isConfigured()) return null;
+  title?: string;
+  location?: string;
+  notes?: string;
+  isVirtual?: boolean;
+  extraGuests?: string[];
+}): Promise<{ eventId: string | null; meetLink: string | null }> {
+  if (!isConfigured()) return { eventId: null, meetLink: null };
 
   const { hour, minute } = parseTime(params.time);
   const startDate = new Date(`${params.date}T00:00:00`);
@@ -54,36 +59,62 @@ export async function createTourEvent(params: {
     ? params.propertySlug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
     : "Property Tour";
 
+  const attendees = [
+    { email: params.email },
+    ...(params.extraGuests || []).filter(Boolean).map((e) => ({ email: e })),
+  ];
+
   try {
     const calendar = await getGoogleCalendar();
     const res = await calendar.events.insert({
       calendarId: getCalendarId(),
+      conferenceDataVersion: params.isVirtual ? 1 : 0,
       requestBody: {
-        summary: `Tour: ${params.firstName} ${params.lastName} - ${propertyName}`,
+        summary: params.title || `Tour: ${params.firstName} ${params.lastName} - ${propertyName}`,
+        location: params.location || undefined,
         description: [
           `Name: ${params.firstName} ${params.lastName}`,
           `Email: ${params.email}`,
           `Phone: ${params.phone}`,
           params.propertySlug ? `Property: ${propertyName}` : "",
           params.floorPlan ? `Floor Plan: ${params.floorPlan}` : "",
+          params.isVirtual ? "Virtual tour via Google Meet" : "",
+          params.notes ? `\nNotes: ${params.notes}` : "",
         ].filter(Boolean).join("\n"),
         start: { dateTime: startDate.toISOString(), timeZone: "America/Chicago" },
         end: { dateTime: endDate.toISOString(), timeZone: "America/Chicago" },
-        attendees: [{ email: params.email }],
+        attendees,
+        guestsCanInviteOthers: false,
+        guestsCanModify: false,
         reminders: {
           useDefault: false,
           overrides: [
             { method: "email" as const, minutes: 60 },
+            { method: "email" as const, minutes: 10 },
             { method: "popup" as const, minutes: 10 },
           ],
         },
+        ...(params.isVirtual
+          ? {
+              conferenceData: {
+                createRequest: {
+                  requestId: `tour-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+                  conferenceSolutionKey: { type: "hangoutsMeet" },
+                },
+              },
+            }
+          : {}),
       },
       sendUpdates: "all",
     });
-    return res.data.id || null;
+    const meetLink =
+      res.data.hangoutLink ||
+      res.data.conferenceData?.entryPoints?.find((e) => e.entryPointType === "video")?.uri ||
+      null;
+    return { eventId: res.data.id || null, meetLink };
   } catch (error) {
     console.error("Failed to create Google Calendar event:", error);
-    return null;
+    return { eventId: null, meetLink: null };
   }
 }
 

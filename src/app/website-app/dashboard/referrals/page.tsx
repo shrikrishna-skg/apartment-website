@@ -192,12 +192,14 @@ export default function ReferralsPage() {
               </thead>
               <tbody>
                 {filtered.map((ref) => (
-                  <tr key={ref.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                  <tr
+                    key={ref.id}
+                    onClick={() => setSelected(ref)}
+                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  >
                     <td className="px-5 py-3.5">
-                      <button onClick={() => setSelected(ref)} className="text-left hover:text-blue-600 transition-colors">
-                        <p className="font-medium text-gray-900">{ref.referrer_name}</p>
-                        <p className="text-xs text-gray-600">{ref.referrer_email}</p>
-                      </button>
+                      <p className="font-medium text-gray-900">{ref.referrer_name}</p>
+                      <p className="text-xs text-gray-600">{ref.referrer_email}</p>
                     </td>
                     <td className="px-5 py-3.5 text-gray-600">{ref.referrer_unit}</td>
                     <td className="px-5 py-3.5">
@@ -211,11 +213,12 @@ export default function ReferralsPage() {
                       </span>
                     </td>
                     <td className="px-5 py-3.5 text-gray-600 text-xs">{formatDate(ref.created_at)}</td>
-                    <td className="px-5 py-3.5 text-right">
+                    <td className="px-5 py-3.5 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-2">
                       <select
                         value={ref.status}
                         onChange={(e) => updateStatus(ref.id, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
                         disabled={updating === ref.id}
                         className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none disabled:opacity-50"
                       >

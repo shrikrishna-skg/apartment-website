@@ -883,7 +883,7 @@ export default function GeneralApplicationPage() {
                       "Living with Friends/Family",
                       "Dorms",
                       "Other",
-                    ])}
+                    ], true)}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <div className="flex flex-col gap-1.5">

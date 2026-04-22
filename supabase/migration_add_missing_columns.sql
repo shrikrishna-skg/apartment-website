@@ -73,3 +73,10 @@ ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_make TEXT;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_year TEXT;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_color TEXT;
 ALTER TABLE applications ADD COLUMN IF NOT EXISTS vehicle2_plate TEXT;
+
+-- Maintenance request additions (traditional form expansion)
+ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS property_name TEXT;
+ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS preferred_date DATE;
+ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS preferred_time TEXT;
+ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS entry_notes TEXT;
+ALTER TABLE maintenance_requests ADD COLUMN IF NOT EXISTS photos JSONB DEFAULT '[]'::jsonb;
