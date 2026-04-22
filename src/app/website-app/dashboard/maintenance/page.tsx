@@ -1,7 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
+
+function StatCard({ label, count, color, dotColor, onClick, active }: { label: string; count: number; color: string; dotColor: string; onClick: () => void; active: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-1 min-w-[140px] p-4 rounded-2xl border text-left transition-all ${
+        active ? `${color} border-current ring-2 ring-current/20` : "bg-white border-gray-100 hover:border-gray-200"
+      }`}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+        <span className="text-xs font-medium text-gray-500">{label}</span>
+      </div>
+      <p className="text-2xl font-bold text-gray-900">{count}</p>
+    </button>
+  );
+}
 
 interface MaintenancePhoto {
   storage_path: string;
@@ -185,6 +202,14 @@ export default function MaintenancePage() {
     }
   };
 
+  const stats = useMemo(() => {
+    const total = requests.length;
+    const open = requests.filter((r) => r.status === "open").length;
+    const in_progress = requests.filter((r) => r.status === "in_progress").length;
+    const resolved = requests.filter((r) => r.status === "resolved").length;
+    return { total, open, in_progress, resolved };
+  }, [requests]);
+
   const filtered = requests.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (urgencyFilter !== "all" && r.urgency !== urgencyFilter) return false;
@@ -243,6 +268,42 @@ export default function MaintenancePage() {
           </svg>
           New Request
         </button>
+      </div>
+
+      {/* Stats */}
+      <div className="flex flex-wrap gap-3">
+        <StatCard
+          label="Total"
+          count={stats.total}
+          color="bg-gray-50 text-gray-700"
+          dotColor="bg-gray-400"
+          onClick={() => setStatusFilter("all")}
+          active={statusFilter === "all"}
+        />
+        <StatCard
+          label="Open"
+          count={stats.open}
+          color="bg-red-50 text-red-700"
+          dotColor="bg-red-400"
+          onClick={() => setStatusFilter(statusFilter === "open" ? "all" : "open")}
+          active={statusFilter === "open"}
+        />
+        <StatCard
+          label="In Progress"
+          count={stats.in_progress}
+          color="bg-yellow-50 text-yellow-700"
+          dotColor="bg-yellow-400"
+          onClick={() => setStatusFilter(statusFilter === "in_progress" ? "all" : "in_progress")}
+          active={statusFilter === "in_progress"}
+        />
+        <StatCard
+          label="Completed"
+          count={stats.resolved}
+          color="bg-green-50 text-green-700"
+          dotColor="bg-green-400"
+          onClick={() => setStatusFilter(statusFilter === "resolved" ? "all" : "resolved")}
+          active={statusFilter === "resolved"}
+        />
       </div>
 
       {/* Filters */}
