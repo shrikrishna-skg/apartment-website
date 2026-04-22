@@ -5,6 +5,10 @@ import { createTourEvent } from "@/lib/google-calendar";
 import { sendTourConfirmation, sendStaffNotification } from "@/lib/email";
 import { getSession } from "@/lib/auth";
 
+// Persistent Google Meet room for all virtual tours (office@collegeplace.us).
+// OFFICE_MEET_LINK env var overrides this if set.
+const DEFAULT_OFFICE_MEET_LINK = "https://meet.google.com/xaw-cqqb-wwd";
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -45,9 +49,9 @@ export async function POST(request: NextRequest) {
       ? body.extra_guests.filter((e: unknown) => typeof e === "string" && e.trim())
       : [];
 
-    // Persistent office Meet link — set via OFFICE_MEET_LINK env var, with per-booking override.
-    const officeMeet = process.env.OFFICE_MEET_LINK || "";
-    let meetLink: string | null = isVirtual ? (body.meet_link?.trim() || officeMeet || null) : null;
+    // Persistent office Meet link — hardcoded default, with env var + per-booking override.
+    const officeMeet = process.env.OFFICE_MEET_LINK || DEFAULT_OFFICE_MEET_LINK;
+    let meetLink: string | null = isVirtual ? (body.meet_link?.trim() || officeMeet) : null;
 
     // Try to create Google Calendar event (graceful fallback if not configured).
     // Calendar event is independent of the Meet link — if API is down, we still save the booking.

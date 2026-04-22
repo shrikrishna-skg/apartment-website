@@ -7,6 +7,6 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.json({
-    meet_link: process.env.OFFICE_MEET_LINK || "",
+    meet_link: process.env.OFFICE_MEET_LINK || "https://meet.google.com/xaw-cqqb-wwd",
   });
 }
