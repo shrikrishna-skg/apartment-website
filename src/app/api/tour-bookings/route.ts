@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "";
     const joinUrl = isVirtual && joinToken ? `${origin}/tour/join/${joinToken}` : null;
 
-    let emailStatus: { confirmation: string; staff: string } = { confirmation: "pending", staff: "pending" };
+    const emailStatus: { confirmation: string; staff: string } = { confirmation: "pending", staff: "pending" };
     try {
       const confirmationId = await sendTourConfirmation({
         to: body.email,
