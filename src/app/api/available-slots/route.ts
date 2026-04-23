@@ -60,13 +60,14 @@ export async function GET(request: NextRequest) {
       return true;
     });
 
-    // Also filter out past slots if the date is today
+    // Also filter out past slots if the date is today (in Central Time, since tour slots run in CT).
+    // Comparing against UTC today would incorrectly treat the next-day-CT as "today" after ~6 PM CT.
     const now = new Date();
-    const todayStr = now.toISOString().split("T")[0];
+    const centralTodayParts = now.toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+    // en-CA returns yyyy-mm-dd directly, matching the `date` query param format.
     let finalSlots = availableSlots;
 
-    if (date === todayStr) {
-      // Get current time in Central Time (approximate: UTC-6 for CST, UTC-5 for CDT)
+    if (date === centralTodayParts) {
       const centralNow = new Date(
         now.toLocaleString("en-US", { timeZone: "America/Chicago" })
       );
