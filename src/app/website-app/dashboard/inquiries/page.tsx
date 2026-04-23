@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
+import DateRangeFilter, { DateRange, defaultDateRange, filterByDateRange } from "@/components/ui/DateRangeFilter";
 
 interface Inquiry {
   id: string;
@@ -30,6 +31,7 @@ export default function InquiriesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
   const [selected, setSelected] = useState<Inquiry | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Inquiry | null>(null);
@@ -94,7 +96,7 @@ export default function InquiriesPage() {
 
   const inquiryTypes = [...new Set(inquiries.map((i) => i.inquiry_type).filter(Boolean))];
 
-  const filtered = inquiries.filter((i) => {
+  const baseFiltered = inquiries.filter((i) => {
     if (statusFilter !== "all" && i.status !== statusFilter) return false;
     if (typeFilter !== "all" && i.inquiry_type !== typeFilter) return false;
     if (search) {
@@ -107,6 +109,7 @@ export default function InquiriesPage() {
     }
     return true;
   });
+  const filtered = filterByDateRange(baseFiltered, (r) => r.created_at, dateRange);
 
   const formatDate = (d: string) => {
     try {
@@ -171,6 +174,7 @@ export default function InquiriesPage() {
             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* Inquiry List */}

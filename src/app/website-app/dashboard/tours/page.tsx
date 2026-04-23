@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
+import DateRangeFilter, { DateRange, defaultDateRange, filterByDateRange } from "@/components/ui/DateRangeFilter";
 
 interface TourBooking {
   id: string;
@@ -46,6 +47,7 @@ export default function ToursPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<"all" | "upcoming" | "past">("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
   const [selected, setSelected] = useState<TourBooking | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<TourBooking | null>(null);
@@ -215,7 +217,7 @@ export default function ToursPage() {
 
   const today = new Date().toISOString().split("T")[0];
 
-  const filtered = tours.filter((t) => {
+  const baseFiltered = tours.filter((t) => {
     if (statusFilter !== "all" && t.status !== statusFilter) return false;
     if (dateFilter === "upcoming" && t.tour_date < today) return false;
     if (dateFilter === "past" && t.tour_date >= today) return false;
@@ -226,6 +228,7 @@ export default function ToursPage() {
     }
     return true;
   });
+  const filtered = filterByDateRange(baseFiltered, (r) => r.created_at, dateRange);
 
   const formatDate = (d: string) => {
     try {
@@ -372,6 +375,7 @@ export default function ToursPage() {
             <option key={s} value={s}>{s === "no_show" ? "No Show" : s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* ── Calendar View ── */}

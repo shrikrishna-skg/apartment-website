@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DateRangeFilter, { DateRange, defaultDateRange, filterByDateRange } from "@/components/ui/DateRangeFilter";
 
 interface Referral {
   id: string;
@@ -36,6 +37,7 @@ export default function ReferralsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
   const [selected, setSelected] = useState<Referral | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Referral | null>(null);
@@ -93,7 +95,7 @@ export default function ReferralsPage() {
     }
   };
 
-  const filtered = referrals.filter((r) => {
+  const baseFiltered = referrals.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -106,6 +108,7 @@ export default function ReferralsPage() {
     }
     return true;
   });
+  const filtered = filterByDateRange(baseFiltered, (r) => r.created_at, dateRange);
 
   const formatDate = (d: string) => {
     try {
@@ -149,6 +152,7 @@ export default function ReferralsPage() {
             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
           ))}
         </select>
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* Pipeline overview */}

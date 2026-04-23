@@ -148,34 +148,47 @@ export async function POST(request: NextRequest) {
     const origin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || "";
     const joinUrl = isVirtual && joinToken ? `${origin}/tour/join/${joinToken}` : null;
 
-    sendTourConfirmation({
-      to: body.email,
-      firstName: body.first_name,
-      lastName: body.last_name,
-      tourDate: body.tour_date,
-      tourTime: body.tour_time,
-      propertyName,
-      isVirtual,
-      joinUrl,
-    }).catch((err) => console.error("Tour confirmation email failed:", err));
+    let emailStatus: { confirmation: string; staff: string } = { confirmation: "pending", staff: "pending" };
+    try {
+      const confirmationId = await sendTourConfirmation({
+        to: body.email,
+        firstName: body.first_name,
+        lastName: body.last_name,
+        tourDate: body.tour_date,
+        tourTime: body.tour_time,
+        propertyName,
+        isVirtual,
+        joinUrl,
+      });
+      emailStatus.confirmation = confirmationId ? `sent:${confirmationId}` : "skipped_no_smtp";
+      console.log(`[tour-bookings] confirmation email: ${emailStatus.confirmation} → ${body.email}`);
+    } catch (err) {
+      emailStatus.confirmation = `failed:${err instanceof Error ? err.message : String(err)}`;
+      console.error("Tour confirmation email failed:", err);
+    }
+    try {
+      const staffId = await sendStaffNotification({
+        type: "tour",
+        name: `${body.first_name} ${body.last_name}`,
+        email: body.email,
+        details: [
+          `Date: ${body.tour_date}`,
+          `Time: ${body.tour_time}`,
+          `Phone: ${body.phone}`,
+          propertyName ? `Property: ${propertyName}` : "",
+          isVirtual ? `Virtual tour: Yes` : "",
+          meetLink ? `Meet link: ${meetLink}` : "",
+          extraGuests.length > 0 ? `Extra guests: ${extraGuests.join(", ")}` : "",
+        ].filter(Boolean).join("\n"),
+      });
+      emailStatus.staff = staffId ? `sent:${staffId}` : "skipped_no_smtp";
+      console.log(`[tour-bookings] staff notification: ${emailStatus.staff}`);
+    } catch (err) {
+      emailStatus.staff = `failed:${err instanceof Error ? err.message : String(err)}`;
+      console.error("Staff notification email failed:", err);
+    }
 
-    // Notify staff (non-blocking)
-    sendStaffNotification({
-      type: "tour",
-      name: `${body.first_name} ${body.last_name}`,
-      email: body.email,
-      details: [
-        `Date: ${body.tour_date}`,
-        `Time: ${body.tour_time}`,
-        `Phone: ${body.phone}`,
-        propertyName ? `Property: ${propertyName}` : "",
-        isVirtual ? `Virtual tour: Yes` : "",
-        meetLink ? `Meet link: ${meetLink}` : "",
-        extraGuests.length > 0 ? `Extra guests: ${extraGuests.join(", ")}` : "",
-      ].filter(Boolean).join("\n"),
-    }).catch((err) => console.error("Staff notification email failed:", err));
-
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json({ ...data, _email_status: emailStatus }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Failed to book tour" }, { status: 500 });
   }

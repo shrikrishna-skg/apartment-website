@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
+import DateRangeFilter, { DateRange, defaultDateRange, filterByDateRange } from "@/components/ui/DateRangeFilter";
 
 function StatCard({ label, count, color, dotColor, onClick, active }: { label: string; count: number; color: string; dotColor: string; onClick: () => void; active: boolean }) {
   return (
@@ -79,6 +80,7 @@ export default function MaintenancePage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [urgencyFilter, setUrgencyFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
   const [selected, setSelected] = useState<MaintenanceRequest | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MaintenanceRequest | null>(null);
@@ -210,7 +212,7 @@ export default function MaintenancePage() {
     return { total, open, in_progress, resolved };
   }, [requests]);
 
-  const filtered = requests.filter((r) => {
+  const baseFiltered = requests.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (urgencyFilter !== "all" && r.urgency !== urgencyFilter) return false;
     if (search) {
@@ -224,6 +226,7 @@ export default function MaintenancePage() {
     }
     return true;
   });
+  const filtered = filterByDateRange(baseFiltered, (r) => r.created_at, dateRange);
 
   const formatDate = (d: string) => {
     try {
@@ -336,6 +339,7 @@ export default function MaintenancePage() {
             <option key={s} value={s}>{STATUS_LABELS[s]}</option>
           ))}
         </select>
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* Request List */}

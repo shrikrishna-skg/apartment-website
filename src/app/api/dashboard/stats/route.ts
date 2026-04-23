@@ -17,11 +17,11 @@ export async function GET() {
       referrals,
       subscribers,
     ] = await Promise.all([
-      supabase.from("applications").select("id, status, applicant_type, created_at"),
-      supabase.from("tour_bookings").select("id, status, tour_date, tour_time, created_at"),
-      supabase.from("contact_inquiries").select("id, status, inquiry_type, created_at"),
-      supabase.from("maintenance_requests").select("id, status, urgency, created_at"),
-      supabase.from("referrals").select("id, status, created_at"),
+      supabase.from("applications").select("id, status, applicant_type, created_at").is("deleted_at", null),
+      supabase.from("tour_bookings").select("id, status, tour_date, tour_time, created_at").is("deleted_at", null),
+      supabase.from("contact_inquiries").select("id, status, inquiry_type, created_at").is("deleted_at", null),
+      supabase.from("maintenance_requests").select("id, status, urgency, created_at").is("deleted_at", null),
+      supabase.from("referrals").select("id, status, created_at").is("deleted_at", null),
       supabase.from("email_subscribers").select("id, created_at"),
     ]);
 

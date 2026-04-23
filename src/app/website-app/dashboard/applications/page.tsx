@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import SonarToast, { useSonarToast } from "@/components/ui/SonarToast";
+import DateRangeFilter, { DateRange, defaultDateRange, filterByDateRange } from "@/components/ui/DateRangeFilter";
 
 /* ─── Types ─── */
 interface Application {
@@ -345,6 +346,7 @@ export default function ApplicationsPage() {
   const [filter, setFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
   const [selected, setSelected] = useState<Application | null>(null);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -570,7 +572,7 @@ export default function ApplicationsPage() {
 
   /* ── Filtering & sorting ── */
   const filtered = useMemo(() => {
-    const result = applications.filter((a) => {
+    const base = applications.filter((a) => {
       if (filter !== "all" && a.applicant_type !== filter) return false;
       if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (search) {
@@ -583,6 +585,7 @@ export default function ApplicationsPage() {
       }
       return true;
     });
+    const result = filterByDateRange(base, (r) => r.created_at, dateRange);
 
     result.sort((a, b) => {
       let aVal: string | number = "";
@@ -600,7 +603,7 @@ export default function ApplicationsPage() {
     });
 
     return result;
-  }, [applications, filter, statusFilter, search, sortKey, sortDir, docCounts]);
+  }, [applications, filter, statusFilter, search, dateRange, sortKey, sortDir, docCounts]);
 
   /* ── Stats ── */
   const stats = useMemo(() => {
@@ -720,6 +723,7 @@ export default function ApplicationsPage() {
             <option key={s} value={s}>{capitalize(s)}</option>
           ))}
         </select>
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
       </div>
 
       {/* Table */}
