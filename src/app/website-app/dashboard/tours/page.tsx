@@ -52,6 +52,132 @@ export default function ToursPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<TourBooking | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editing, setEditing] = useState<TourBooking | null>(null);
+  const [editForm, setEditForm] = useState({
+    first_name: "", last_name: "", email: "", phone: "",
+    tour_date: "", tour_time: "",
+    property_slug: "", floor_plan: "",
+    title: "", location: "", notes: "",
+    is_virtual: false, meet_link: "",
+    extra_guests_raw: "",
+  });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editSlots, setEditSlots] = useState<string[]>([]);
+  const [editLoadingSlots, setEditLoadingSlots] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState<TourBooking | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  useEffect(() => {
+    if (!editing) return;
+    setEditForm({
+      first_name: editing.first_name,
+      last_name: editing.last_name,
+      email: editing.email,
+      phone: editing.phone,
+      tour_date: editing.tour_date,
+      tour_time: editing.tour_time,
+      property_slug: editing.property_slug || "",
+      floor_plan: editing.floor_plan || "",
+      title: editing.title || "",
+      location: editing.location || "",
+      notes: editing.notes || "",
+      is_virtual: !!editing.is_virtual,
+      meet_link: editing.meet_link || "",
+      extra_guests_raw: (editing.extra_guests || []).join(", "),
+    });
+    setEditError("");
+  }, [editing]);
+
+  useEffect(() => {
+    if (!editing || !editForm.tour_date) {
+      setEditSlots([]);
+      return;
+    }
+    setEditLoadingSlots(true);
+    fetch(`/api/available-slots?date=${editForm.tour_date}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const slots: string[] = d.availableSlots || [];
+        // Keep the booking's own current slot selectable even if marked busy
+        if (editForm.tour_date === editing.tour_date && !slots.includes(editing.tour_time)) {
+          slots.unshift(editing.tour_time);
+        }
+        setEditSlots(slots);
+      })
+      .catch(() => setEditSlots([]))
+      .finally(() => setEditLoadingSlots(false));
+  }, [editing, editForm.tour_date]);
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    setEditError("");
+    if (!editForm.first_name.trim() || !editForm.last_name.trim() || !editForm.email.trim() || !editForm.phone.trim() || !editForm.tour_date || !editForm.tour_time) {
+      setEditError("First name, last name, email, phone, date, and time are required.");
+      return;
+    }
+    setEditSaving(true);
+    try {
+      const extraGuests = editForm.extra_guests_raw
+        .split(/[,\s]+/).map((e) => e.trim())
+        .filter((e) => e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e));
+      const res = await fetch(`/api/tour-bookings/${editing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: editForm.first_name,
+          last_name: editForm.last_name,
+          email: editForm.email,
+          phone: editForm.phone,
+          tour_date: editForm.tour_date,
+          tour_time: editForm.tour_time,
+          property_slug: editForm.property_slug || null,
+          floor_plan: editForm.floor_plan || null,
+          title: editForm.title || null,
+          location: editForm.location || null,
+          notes: editForm.notes || null,
+          is_virtual: editForm.is_virtual,
+          meet_link: editForm.is_virtual ? (editForm.meet_link || defaultMeetLink || null) : null,
+          extra_guests: extraGuests,
+        }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error || "Failed to save changes");
+      }
+      const updated = await res.json();
+      setTours((prev) => prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)));
+      if (selected?.id === updated.id) setSelected({ ...selected, ...updated });
+      const kind = updated._email_status?.kind || "updated";
+      showToast(kind === "rescheduled" ? "Rescheduled — reschedule email sent to guest" : "Changes saved — confirmation email sent to guest");
+      setEditing(null);
+    } catch (err: unknown) {
+      setEditError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const cancelBooking = async () => {
+    if (!confirmCancel) return;
+    setCancelling(true);
+    try {
+      const res = await fetch(`/api/tour-bookings/${confirmCancel.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTours((prev) => prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t)));
+        if (selected?.id === updated.id) setSelected({ ...selected, ...updated });
+        showToast("Tour cancelled — cancellation email sent to guest");
+        setConfirmCancel(null);
+      }
+    } finally {
+      setCancelling(false);
+    }
+  };
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
@@ -462,15 +588,17 @@ export default function ToursPage() {
             ) : (
               <div className="divide-y divide-gray-50">
                 {selectedDayTours.map((tour) => (
-                  <div key={tour.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                  <div
+                    key={tour.id}
+                    onClick={() => setSelected(tour)}
+                    className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  >
                     <div className="w-16 text-center">
                       <p className="text-sm font-bold text-gray-900">{formatTime(tour.tour_time)}</p>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <button onClick={() => setSelected(tour)} className="text-left hover:text-blue-600 transition-colors">
-                        <p className="font-medium text-gray-900">{tour.first_name} {tour.last_name}</p>
-                        <p className="text-xs text-gray-600">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
-                      </button>
+                      <p className="font-medium text-gray-900">{tour.first_name} {tour.last_name}</p>
+                      <p className="text-xs text-gray-600">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
                     </div>
                     {tour.floor_plan && (
                       <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hidden sm:inline-flex">{tour.floor_plan}</span>
@@ -487,6 +615,7 @@ export default function ToursPage() {
                     </span>
                     <select
                       value={tour.status}
+                      onClick={(e) => e.stopPropagation()}
                       onChange={(e) => updateStatus(tour.id, e.target.value)}
                       disabled={updating === tour.id}
                       className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none disabled:opacity-50"
@@ -534,15 +663,17 @@ export default function ToursPage() {
                   {groupedByDate[date]
                     .sort((a, b) => a.tour_time.localeCompare(b.tour_time))
                     .map((tour) => (
-                      <div key={tour.id} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                      <div
+                        key={tour.id}
+                        onClick={() => setSelected(tour)}
+                        className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                      >
                         <div className="w-16 text-center">
                           <p className="text-sm font-bold text-gray-900">{formatTime(tour.tour_time)}</p>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <button onClick={() => setSelected(tour)} className="text-left hover:text-blue-600 transition-colors">
-                            <p className="font-medium text-gray-900">{tour.first_name} {tour.last_name}</p>
-                            <p className="text-xs text-gray-600">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
-                          </button>
+                          <p className="font-medium text-gray-900">{tour.first_name} {tour.last_name}</p>
+                          <p className="text-xs text-gray-600">{tour.email} {tour.phone ? `| ${tour.phone}` : ""}</p>
                         </div>
                         {tour.floor_plan && (
                           <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full hidden sm:inline-flex">{tour.floor_plan}</span>
@@ -559,6 +690,7 @@ export default function ToursPage() {
                         </span>
                         <select
                           value={tour.status}
+                          onClick={(e) => e.stopPropagation()}
                           onChange={(e) => updateStatus(tour.id, e.target.value)}
                           disabled={updating === tour.id}
                           className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 bg-white focus:outline-none disabled:opacity-50"
@@ -594,11 +726,24 @@ export default function ToursPage() {
                 <h3 className="text-lg font-bold text-gray-900">{selected.first_name} {selected.last_name}</h3>
                 <p className="text-sm text-gray-600">{selected.email}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setEditing(selected); }}
+                  disabled={selected.status === "cancelled"}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Edit or reschedule"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                  </svg>
+                  Edit
+                </button>
+                <button onClick={() => setSelected(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div className="px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -666,7 +811,13 @@ export default function ToursPage() {
                   {STATUS_OPTIONS.map((s) => (
                     <button
                       key={s}
-                      onClick={() => updateStatus(selected.id, s)}
+                      onClick={() => {
+                        if (s === "cancelled" && selected.status !== "cancelled") {
+                          setConfirmCancel(selected);
+                        } else {
+                          updateStatus(selected.id, s);
+                        }
+                      }}
                       disabled={updating === selected.id || selected.status === s}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all disabled:opacity-40 ${
                         selected.status === s ? STATUS_COLORS[s] : "border-gray-200 text-gray-500 hover:border-gray-300"
@@ -716,6 +867,109 @@ export default function ToursPage() {
           </div>
         </div>
       )}
+      {editing && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4" onClick={() => !editSaving && setEditing(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="px-5 py-3 flex items-center justify-between border-b border-gray-100">
+              <h3 className="text-lg font-bold text-gray-900">Edit Tour</h3>
+              <button onClick={() => !editSaving && setEditing(null)} className="p-2 rounded-lg hover:bg-gray-100">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-5 py-4 space-y-4">
+              <input
+                type="text"
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                placeholder="Title"
+                className="w-full text-xl font-medium text-gray-900 placeholder-gray-400 border-0 border-b-2 border-blue-500 focus:outline-none focus:border-blue-600 pb-1.5 bg-transparent"
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <input type="date" value={editForm.tour_date} onChange={(e) => setEditForm({ ...editForm, tour_date: e.target.value, tour_time: "" })} min={new Date().toISOString().split("T")[0]} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                <select value={editForm.tour_time} onChange={(e) => setEditForm({ ...editForm, tour_time: e.target.value })} disabled={!editForm.tour_date || editLoadingSlots} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50">
+                  <option value="">{editLoadingSlots ? "Loading…" : editSlots.length === 0 ? "No slots" : "Select time"}</option>
+                  {editSlots.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="First name *" value={editForm.first_name} onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                <input type="text" placeholder="Last name *" value={editForm.last_name} onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <input type="email" placeholder="Guest email *" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+                <input type="tel" placeholder="Phone *" value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              </div>
+              <input type="text" value={editForm.extra_guests_raw} onChange={(e) => setEditForm({ ...editForm, extra_guests_raw: e.target.value })} placeholder="Extra staff guests (comma-separated emails)" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditForm({ ...editForm, is_virtual: !editForm.is_virtual })}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editForm.is_virtual ? "bg-blue-600" : "bg-gray-300"}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${editForm.is_virtual ? "translate-x-6" : "translate-x-1"}`} />
+                </button>
+                <span className="text-sm text-gray-900">Google Meet video conferencing</span>
+              </div>
+              {editForm.is_virtual && (
+                <input type="url" value={editForm.meet_link} onChange={(e) => setEditForm({ ...editForm, meet_link: e.target.value })} placeholder={defaultMeetLink || "https://meet.google.com/…"} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              )}
+              <input type="text" value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} placeholder="Location" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              <div className="grid grid-cols-2 gap-3">
+                <select value={editForm.property_slug} onChange={(e) => setEditForm({ ...editForm, property_slug: e.target.value })} className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                  <option value="">Select property</option>
+                  <option value="college-place-apartments">College Place Apartments</option>
+                  <option value="college-pointe-apartments">College Pointe Apartments</option>
+                  <option value="college-center-apartments">College Center Apartments</option>
+                  <option value="university-apartments">University Apartments</option>
+                </select>
+                <input type="text" value={editForm.floor_plan} onChange={(e) => setEditForm({ ...editForm, floor_plan: e.target.value })} placeholder="Floor plan" className="px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              </div>
+              <textarea value={editForm.notes} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} rows={2} placeholder="Notes" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-none" />
+              {editError && <p className="text-red-600 text-sm">{editError}</p>}
+              <p className="text-xs text-gray-500">
+                {editing.tour_date !== editForm.tour_date || editing.tour_time !== editForm.tour_time
+                  ? "Date/time changed — a reschedule email will be sent to the guest on save."
+                  : "An updated confirmation will be sent to the guest on save."}
+              </p>
+            </div>
+            <div className="px-5 py-4 border-t border-gray-100 flex justify-end gap-2">
+              <button onClick={() => !editSaving && setEditing(null)} disabled={editSaving} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50">Cancel</button>
+              <button onClick={saveEdit} disabled={editSaving} className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                {editSaving ? "Saving..." : "Save changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmCancel && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/30 p-4" onClick={() => !cancelling && setConfirmCancel(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-5 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-red-50 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Cancel this tour?</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                The tour for <strong>{confirmCancel.first_name} {confirmCancel.last_name}</strong> on{" "}
+                <strong>{formatDate(confirmCancel.tour_date)}</strong> at <strong>{confirmCancel.tour_time}</strong> will be cancelled
+                and a cancellation email sent to <strong>{confirmCancel.email}</strong>.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button onClick={() => setConfirmCancel(null)} disabled={cancelling} className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 disabled:opacity-50">Keep Tour</button>
+                <button onClick={cancelBooking} disabled={cancelling} className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 disabled:opacity-50">
+                  {cancelling ? "Cancelling..." : "Cancel & Email Guest"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showBook && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={() => !booking && setShowBook(false)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-xl w-full max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>

@@ -152,6 +152,192 @@ export async function sendTourConfirmation(params: {
   return info.messageId;
 }
 
+/** Tour has been rescheduled to a new date/time */
+export async function sendTourRescheduled(params: {
+  to: string;
+  firstName: string;
+  oldDate: string;
+  oldTime: string;
+  newDate: string;
+  newTime: string;
+  propertyName?: string;
+  isVirtual?: boolean;
+  joinUrl?: string | null;
+}) {
+  const transporter = getTransporter();
+  if (!transporter) return null;
+
+  const fmt = (iso: string) =>
+    new Date(iso + "T12:00:00").toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  const oldFormatted = fmt(params.oldDate);
+  const newFormatted = fmt(params.newDate);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <tr>
+          <td style="background:#d97706;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">College Place</h1>
+            <p style="margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;">Apartments</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="margin:0 0 8px;color:#1a1a1a;font-size:22px;">Your Tour Has Been Rescheduled</h2>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Hi ${escapeHtml(params.firstName)}, your apartment tour has been moved to a new time. Here are the updated details:
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
+              <tr><td style="padding:12px 16px;background:#fef3c7;border:1px solid #fde68a;border-radius:8px;">
+                <p style="margin:0 0 4px;color:#92400e;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Previously</p>
+                <p style="margin:0;color:#6b7280;font-size:14px;text-decoration:line-through;">${oldFormatted} at ${escapeHtml(params.oldTime)}</p>
+              </td></tr>
+            </table>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+              <tr><td style="padding:16px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;">
+                <p style="margin:0 0 4px;color:#065f46;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">New Time</p>
+                <p style="margin:0;color:#1a1a1a;font-size:16px;font-weight:700;">${newFormatted}</p>
+                <p style="margin:2px 0 0;color:#1a1a1a;font-size:16px;font-weight:700;">${escapeHtml(params.newTime)}</p>
+                ${params.propertyName ? `<p style="margin:8px 0 0;color:#374151;font-size:13px;">${escapeHtml(params.propertyName)}</p>` : ""}
+              </td></tr>
+            </table>
+
+            ${params.isVirtual && params.joinUrl ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:20px;text-align:center;">
+                <p style="margin:0 0 12px;color:#1e3a8a;font-size:14px;font-weight:600;">This is a virtual tour via Google Meet</p>
+                <a href="${params.joinUrl}" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Join Virtual Tour</a>
+                <p style="margin:12px 0 0;color:#6b7280;font-size:11px;">Use this same link at your new time.</p>
+              </td></tr>
+            </table>` : ""}
+
+            <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
+              If this time doesn't work for you, please contact us right away:<br/>
+              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;color:#9ca3af;font-size:12px;">
+              College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const info = await transporter.sendMail({
+    from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+    to: params.to,
+    subject: `Tour Rescheduled - ${newFormatted} at ${params.newTime} | College Place Apartments`,
+    html,
+  });
+  return info.messageId;
+}
+
+/** Tour has been cancelled */
+export async function sendTourCancelled(params: {
+  to: string;
+  firstName: string;
+  tourDate: string;
+  tourTime: string;
+  propertyName?: string;
+}) {
+  const transporter = getTransporter();
+  if (!transporter) return null;
+
+  const formattedDate = new Date(params.tourDate + "T12:00:00").toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <tr>
+          <td style="background:#dc2626;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">College Place</h1>
+            <p style="margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;">Apartments</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="margin:0 0 8px;color:#1a1a1a;font-size:22px;">Tour Cancelled</h2>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Hi ${escapeHtml(params.firstName)}, your apartment tour has been cancelled.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:20px;">
+                <p style="margin:0 0 4px;color:#991b1b;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Cancelled</p>
+                <p style="margin:0;color:#1a1a1a;font-size:15px;font-weight:600;text-decoration:line-through;">${formattedDate} at ${escapeHtml(params.tourTime)}</p>
+                ${params.propertyName ? `<p style="margin:4px 0 0;color:#6b7280;font-size:13px;">${escapeHtml(params.propertyName)}</p>` : ""}
+              </td></tr>
+            </table>
+
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Still interested in finding your next home? You can schedule a new tour anytime:
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td align="center" style="padding:8px 0 24px;">
+                <a href="https://collegeplace.us/schedule-tour" style="display:inline-block;background:#1a73e8;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;">Book a New Tour</a>
+              </td></tr>
+            </table>
+
+            <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
+              Questions? We're here to help:<br/>
+              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:20px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0;color:#9ca3af;font-size:12px;">
+              College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const info = await transporter.sendMail({
+    from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+    to: params.to,
+    subject: `Tour Cancelled - ${formattedDate} | College Place Apartments`,
+    html,
+  });
+  return info.messageId;
+}
+
 export async function sendStaffNotification(params: {
   type: "tour" | "application" | "inquiry" | "maintenance" | "referral";
   name: string;
