@@ -192,16 +192,10 @@ export function formatSlotTime(totalMinutes: number): string {
 /**
  * Generate all possible 10-minute tour slots for the day.
  * Office hours: 9:00 AM – 4:50 PM (last slot starts at 4:50, ends at 5:00)
- * Lunch break: 12:00 PM – 1:00 PM (no slots)
  */
 export function generateAllSlots(): string[] {
   const slots: string[] = [];
-  // Morning: 9:00 AM (540 min) to 11:50 AM (710 min)
-  for (let m = 540; m <= 710; m += 10) {
-    slots.push(formatSlotTime(m));
-  }
-  // Afternoon: 1:00 PM (780 min) to 4:50 PM (1010 min)
-  for (let m = 780; m <= 1010; m += 10) {
+  for (let m = 540; m <= 1010; m += 10) {
     slots.push(formatSlotTime(m));
   }
   return slots;
