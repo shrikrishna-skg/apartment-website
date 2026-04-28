@@ -38,9 +38,15 @@ export async function PATCH(
       );
     }
 
+    const update: { status: string; resolution_notes?: string | null } = { status: body.status };
+    if (body.status === "resolved") {
+      const notes = typeof body.resolution_notes === "string" ? body.resolution_notes.trim() : "";
+      update.resolution_notes = notes || null;
+    }
+
     const { data, error } = await supabase
       .from("maintenance_requests")
-      .update({ status: body.status })
+      .update(update)
       .eq("id", id)
       .select()
       .single();
@@ -64,6 +70,7 @@ export async function PATCH(
           name: data.full_name,
           apartment: data.apartment,
           description: data.description,
+          resolutionNotes: data.resolution_notes || null,
         });
       } catch {
         // Email is best-effort

@@ -186,7 +186,8 @@ CREATE TABLE IF NOT EXISTS maintenance_requests (
   preferred_date DATE,
   preferred_time TEXT,
   entry_notes TEXT,
-  photos JSONB DEFAULT '[]'::jsonb
+  photos JSONB DEFAULT '[]'::jsonb,
+  resolution_notes TEXT
 );
 
 -- 6. Referrals

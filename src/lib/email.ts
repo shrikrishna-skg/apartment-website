@@ -992,8 +992,8 @@ export async function sendMaintenanceReceived(params: {
             <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
               Dear ${escapeHtml(params.name)},
             </p>
-            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
-              Thank you for reaching out to us about the maintenance issue in your unit. We have recorded your request and our maintenance team will be addressing it shortly. We appreciate your patience and will keep you informed once the work has been scheduled or completed.
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;text-align:justify;">
+              Thank you for reaching out to us about the maintenance issue in your unit. We have recorded your request and our maintenance team will be addressing it during business hours. We appreciate your patience and will keep you informed once the work has been scheduled or completed.
             </p>
 
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:24px;">
@@ -1057,9 +1057,21 @@ export async function sendMaintenanceCompleted(params: {
   name: string;
   apartment: string;
   description: string;
+  resolutionNotes?: string | null;
 }) {
   const transporter = getTransporter();
   if (!transporter) return null;
+
+  const notes = params.resolutionNotes?.trim();
+  const notesBlock = notes
+    ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:20px 24px;">
+                <p style="margin:0 0 8px;color:#92400e;font-size:13px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;">Notes from our team</p>
+                <p style="margin:0;color:#1f2937;font-size:15px;line-height:1.6;">${escapeHtml(notes).replace(/\n/g, "<br/>")}</p>
+              </td></tr>
+            </table>`
+    : "";
 
   const html = `
 <!DOCTYPE html>
@@ -1103,7 +1115,7 @@ export async function sendMaintenanceCompleted(params: {
                 </table>
               </td></tr>
             </table>
-
+            ${notesBlock}
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               If you have any further concerns, please don&rsquo;t hesitate to contact us:<br/>
               <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>

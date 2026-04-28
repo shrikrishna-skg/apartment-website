@@ -86,6 +86,7 @@ export default function MaintenancePage() {
   const [confirmDelete, setConfirmDelete] = useState<MaintenanceRequest | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirmComplete, setConfirmComplete] = useState<MaintenanceRequest | null>(null);
+  const [completeNotes, setCompleteNotes] = useState("");
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -156,19 +157,22 @@ export default function MaintenancePage() {
 
   const requestStatusChange = (req: MaintenanceRequest, status: string) => {
     if (status === "resolved") {
+      setCompleteNotes("");
       setConfirmComplete(req);
       return;
     }
     updateStatus(req.id, status);
   };
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, resolution_notes?: string) => {
     setUpdating(id);
     try {
+      const body: { status: string; resolution_notes?: string } = { status };
+      if (status === "resolved") body.resolution_notes = resolution_notes ?? "";
       const res = await fetch(`/api/maintenance/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -183,6 +187,7 @@ export default function MaintenancePage() {
     } finally {
       setUpdating(null);
       setConfirmComplete(null);
+      setCompleteNotes("");
     }
   };
 
@@ -557,16 +562,29 @@ export default function MaintenancePage() {
       {confirmComplete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => setConfirmComplete(null)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-            <div className="px-6 py-5 text-center">
+            <div className="px-6 py-5">
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Mark as Completed?</h3>
-              <p className="text-sm text-gray-500 mb-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">Mark as Completed?</h3>
+              <p className="text-sm text-gray-500 mb-5 text-center">
                 This will mark <strong>Apt {confirmComplete.apartment}</strong> as completed and email a completion notice to <strong>{confirmComplete.email}</strong>.
               </p>
+              <div className="mb-6">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Customer Notes <span className="text-gray-400 font-normal">(optional — included in tenant email)</span>
+                </label>
+                <textarea
+                  value={completeNotes}
+                  onChange={(e) => setCompleteNotes(e.target.value)}
+                  rows={4}
+                  placeholder="e.g. Replaced the kitchen faucet cartridge. Please run cold water for a minute before regular use."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 resize-none"
+                  disabled={updating === confirmComplete.id}
+                />
+              </div>
               <div className="flex gap-3 justify-center">
                 <button
                   onClick={() => setConfirmComplete(null)}
@@ -576,7 +594,7 @@ export default function MaintenancePage() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => updateStatus(confirmComplete.id, "resolved")}
+                  onClick={() => updateStatus(confirmComplete.id, "resolved", completeNotes.trim())}
                   disabled={updating === confirmComplete.id}
                   className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
                 >

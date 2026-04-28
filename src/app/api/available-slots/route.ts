@@ -72,9 +72,9 @@ export async function GET(request: NextRequest) {
         now.toLocaleString("en-US", { timeZone: "America/Chicago" })
       );
       const currentMinutes = centralNow.getHours() * 60 + centralNow.getMinutes();
-      // Only show slots that start at least 30 minutes from now
+      // Only show slots that start at least 10 minutes from now
       finalSlots = availableSlots.filter(
-        (slot) => timeToMinutes(slot) > currentMinutes + 30
+        (slot) => timeToMinutes(slot) > currentMinutes + 10
       );
     }
 
