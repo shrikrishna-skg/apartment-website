@@ -570,23 +570,43 @@ export default function ApplicationsPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applications, filter, statusFilter, search, sortKey, sortDir, docCounts]);
 
-  /* ── Filtering & sorting ── */
-  const filtered = useMemo(() => {
+  /* ── Pagination ── */
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
+
+  /* ── Filtering & sorting ──
+   * Pipeline (status-card) counts must reflect the type/search/date filters
+   * but NOT the status filter itself — otherwise clicking a status card
+   * would zero-out the other status counts. So we build two stages:
+   *   pipelineBase  → respects type + search + date  (drives the cards)
+   *   filtered      → also respects statusFilter     (drives the table)
+   */
+  const pipelineBase = useMemo(() => {
     const base = applications.filter((a) => {
       if (filter !== "all" && a.applicant_type !== filter) return false;
-      if (statusFilter !== "all" && a.status !== statusFilter) return false;
       if (search) {
         const q = search.toLowerCase();
-        return (
-          a.full_name?.toLowerCase().includes(q) ||
-          a.email?.toLowerCase().includes(q) ||
-          a.mobile_number?.includes(q)
-        );
+        if (
+          !(
+            a.full_name?.toLowerCase().includes(q) ||
+            a.email?.toLowerCase().includes(q) ||
+            a.mobile_number?.includes(q)
+          )
+        ) {
+          return false;
+        }
       }
       return true;
     });
-    const result = filterByDateRange(base, (r) => r.created_at, dateRange);
+    return filterByDateRange(base, (r) => r.created_at, dateRange);
+  }, [applications, filter, search, dateRange]);
 
+  const filtered = useMemo(() => {
+    const base = statusFilter === "all"
+      ? pipelineBase
+      : pipelineBase.filter((a) => a.status === statusFilter);
+
+    const result = [...base];
     result.sort((a, b) => {
       let aVal: string | number = "";
       let bVal: string | number = "";
@@ -603,18 +623,32 @@ export default function ApplicationsPage() {
     });
 
     return result;
-  }, [applications, filter, statusFilter, search, dateRange, sortKey, sortDir, docCounts]);
+  }, [pipelineBase, statusFilter, sortKey, sortDir, docCounts]);
 
-  /* ── Stats ── */
+  /* ── Stats (driven by pipelineBase so they update with date/type/search) ── */
   const stats = useMemo(() => {
-    const total = applications.length;
-    const pending = applications.filter((a) => a.status === "pending").length;
-    const reviewing = applications.filter((a) => a.status === "reviewing").length;
-    const approved = applications.filter((a) => a.status === "approved").length;
-    const denied = applications.filter((a) => a.status === "denied").length;
-    const thisWeek = applications.filter((a) => isThisWeek(a.created_at)).length;
+    const total = pipelineBase.length;
+    const pending = pipelineBase.filter((a) => a.status === "pending").length;
+    const reviewing = pipelineBase.filter((a) => a.status === "reviewing").length;
+    const approved = pipelineBase.filter((a) => a.status === "approved").length;
+    const denied = pipelineBase.filter((a) => a.status === "denied").length;
+    const thisWeek = pipelineBase.filter((a) => isThisWeek(a.created_at)).length;
     return { total, pending, reviewing, approved, denied, thisWeek };
-  }, [applications]);
+  }, [pipelineBase]);
+
+  /* ── Reset to page 1 whenever the filtered set could shrink ── */
+  useEffect(() => {
+    setPage(1);
+  }, [filter, statusFilter, search, dateRange, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = useMemo(
+    () => filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filtered, safePage]
+  );
+  const rangeStart = filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const rangeEnd = Math.min(safePage * PAGE_SIZE, filtered.length);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -752,7 +786,7 @@ export default function ApplicationsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((app) => (
+                {paginated.map((app) => (
                   <tr
                     key={app.id}
                     onClick={() => openApplication(app)}
@@ -834,6 +868,69 @@ export default function ApplicationsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {filtered.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-gray-100 bg-gray-50/40">
+              <p className="text-xs text-gray-600">
+                Showing <span className="font-medium text-gray-900">{rangeStart}</span>–
+                <span className="font-medium text-gray-900">{rangeEnd}</span> of{" "}
+                <span className="font-medium text-gray-900">{filtered.length}</span>
+              </p>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage <= 1}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                {(() => {
+                  // Compact page number list with ellipses
+                  const nums: (number | "…")[] = [];
+                  const add = (n: number | "…") => nums.push(n);
+                  const window = 1;
+                  for (let i = 1; i <= totalPages; i++) {
+                    if (
+                      i === 1 ||
+                      i === totalPages ||
+                      (i >= safePage - window && i <= safePage + window)
+                    ) {
+                      add(i);
+                    } else if (nums[nums.length - 1] !== "…") {
+                      add("…");
+                    }
+                  }
+                  return nums.map((n, idx) =>
+                    n === "…" ? (
+                      <span key={`e-${idx}`} className="px-2 text-xs text-gray-400">
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={n}
+                        onClick={() => setPage(n)}
+                        className={`min-w-[32px] px-2 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                          n === safePage
+                            ? "bg-blue-600 border-blue-600 text-white"
+                            : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {n}
+                      </button>
+                    )
+                  );
+                })()}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage >= totalPages}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
