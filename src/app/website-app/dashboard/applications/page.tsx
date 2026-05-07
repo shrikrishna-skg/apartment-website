@@ -758,6 +758,34 @@ export default function ApplicationsPage() {
           ))}
         </select>
         <DateRangeFilter value={dateRange} onChange={setDateRange} />
+        {(() => {
+          const filtersActive =
+            filter !== "all" ||
+            statusFilter !== "all" ||
+            search.trim() !== "" ||
+            dateRange.preset !== defaultDateRange.preset ||
+            dateRange.from !== defaultDateRange.from ||
+            dateRange.to !== defaultDateRange.to;
+          if (!filtersActive) return null;
+          return (
+            <button
+              type="button"
+              onClick={() => {
+                setFilter("all");
+                setStatusFilter("all");
+                setSearch("");
+                setDateRange(defaultDateRange);
+              }}
+              title="Clear all filters"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              Clear filters
+            </button>
+          );
+        })()}
       </div>
 
       {/* Table */}
