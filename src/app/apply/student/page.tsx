@@ -110,7 +110,7 @@ const REQUIRED_DOCS_STUDENT = [
 ];
 
 const housingOptions = [
-  "Studio",
+  "Small Studio",
   "1 Bed / 1 Bath",
   "2 Bed / 2 Bath",
   "3 Bed / 3 Bath",

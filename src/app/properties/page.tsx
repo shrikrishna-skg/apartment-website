@@ -40,7 +40,7 @@ const LOCATIONS = [
 
 const BEDROOM_OPTIONS = [
   { label: "Any Bedrooms", value: "" },
-  { label: "Studio", value: "studio" },
+  { label: "Small Studio", value: "studio" },
   { label: "1 Bedroom", value: "1" },
   { label: "2 Bedrooms", value: "2" },
   { label: "3 Bedrooms", value: "3" },

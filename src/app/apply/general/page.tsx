@@ -825,7 +825,7 @@ export default function GeneralApplicationPage() {
                     </div>
 
                     {renderRadioGroup("Housing Requirement", "housingRequirement", [
-                      "Studio",
+                      "Small Studio",
                       "1 Bed / 1 Bath",
                       "2 Bed / 2 Bath",
                       "3 Bed / 3 Bath",

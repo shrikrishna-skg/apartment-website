@@ -19,7 +19,7 @@ import { SITE, PROPERTIES } from "@/data/site-data";
 import DatePicker from "@/components/ui/DatePicker";
 
 const bedroomOptions = [
-  "Studio",
+  "Small Studio",
   "1 Bedroom",
   "2 Bedrooms",
   "3 Bedrooms",

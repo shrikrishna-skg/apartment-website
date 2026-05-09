@@ -105,7 +105,7 @@ export const PROPERTIES: Property[] = [
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/a1d476e80_CollegePlaceLeftsideDoorview.png",
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/506200265_CollegePlaceRightsideview.png",
       ] },
-      { name: "Studio", beds: 1, baths: 1, sqft: "275–350", price: 700, photoCount: 8, has3DTour: true, photos: [
+      { name: "Small Studio", beds: 1, baths: 1, sqft: "275–350", price: 700, photoCount: 8, has3DTour: true, photos: [
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/e904ea269_IMG20241226111254.jpg",
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/3bae19b24_IMG20241226111300.jpg",
         "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/9c9e656f9_IMG20241226111307.jpg",
@@ -171,7 +171,7 @@ export const PROPERTIES: Property[] = [
       { id: "RsoupLY68y4", label: "1 Bedroom" },
       { id: "19FrAE6LcKs", label: "2 Bedroom" },
       { id: "MiqAALNUxjg", label: "2 Bed / 2 Bath" },
-      { id: "7p3t4qWMZe4", label: "Studio" },
+      { id: "7p3t4qWMZe4", label: "Small Studio" },
     ],
   },
   {
