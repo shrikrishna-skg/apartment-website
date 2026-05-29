@@ -29,6 +29,12 @@ interface MaintenancePhoto {
   uploaded_at?: string;
 }
 
+interface ActivityEntry {
+  at: string;
+  message: string;
+  by?: string | null;
+}
+
 interface MaintenanceRequest {
   id: string;
   property_name: string | null;
@@ -45,6 +51,9 @@ interface MaintenanceRequest {
   photos: MaintenancePhoto[] | null;
   status: string;
   created_at: string;
+  resolution_notes: string | null;
+  staff_notes: string | null;
+  activity_log: ActivityEntry[] | null;
 }
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -54,17 +63,19 @@ function publicPhotoUrl(storage_path: string) {
   return `${SUPABASE_URL}/storage/v1/object/public/${PHOTO_BUCKET}/${storage_path}`;
 }
 
-const STATUS_OPTIONS = ["open", "in_progress", "resolved"];
+const STATUS_OPTIONS = ["open", "partial", "resolved"];
 const STATUS_COLORS: Record<string, string> = {
   open: "bg-red-50 text-red-700 border-red-200",
-  in_progress: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  partial: "bg-blue-50 text-blue-700 border-blue-200",
   resolved: "bg-green-50 text-green-700 border-green-200",
 };
 const STATUS_LABELS: Record<string, string> = {
   open: "Open",
-  in_progress: "In Progress",
+  partial: "Partially Completed",
   resolved: "Completed",
 };
+// Statuses that capture customer-facing notes + an optional tenant email.
+const NOTE_STATUSES = ["partial", "resolved"];
 
 const URGENCY_COLORS: Record<string, string> = {
   low: "bg-gray-100 text-gray-600",
@@ -85,8 +96,12 @@ export default function MaintenancePage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MaintenanceRequest | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
-  const [confirmComplete, setConfirmComplete] = useState<MaintenanceRequest | null>(null);
-  const [completeNotes, setCompleteNotes] = useState("");
+  const [statusModal, setStatusModal] = useState<{ req: MaintenanceRequest; status: string } | null>(null);
+  const [modalNotes, setModalNotes] = useState("");
+  const [modalStaffNotes, setModalStaffNotes] = useState("");
+  const [modalSendEmail, setModalSendEmail] = useState(true);
+  const [staffNotesDraft, setStaffNotesDraft] = useState("");
+  const [savingStaffNotes, setSavingStaffNotes] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
@@ -143,6 +158,10 @@ export default function MaintenancePage() {
     fetchRequests();
   }, []);
 
+  useEffect(() => {
+    setStaffNotesDraft(selected?.staff_notes || "");
+  }, [selected]);
+
   const fetchRequests = async () => {
     try {
       const res = await fetch("/api/maintenance");
@@ -156,38 +175,61 @@ export default function MaintenancePage() {
   };
 
   const requestStatusChange = (req: MaintenanceRequest, status: string) => {
-    if (status === "resolved") {
-      setCompleteNotes("");
-      setConfirmComplete(req);
+    if (NOTE_STATUSES.includes(status)) {
+      setModalNotes(req.resolution_notes || "");
+      setModalStaffNotes(req.staff_notes || "");
+      setModalSendEmail(true);
+      setStatusModal({ req, status });
       return;
     }
-    updateStatus(req.id, status);
+    updateStatus(req.id, { status });
   };
 
-  const updateStatus = async (id: string, status: string, resolution_notes?: string) => {
+  const updateStatus = async (
+    id: string,
+    payload: { status?: string; resolution_notes?: string; staff_notes?: string; send_email?: boolean }
+  ) => {
     setUpdating(id);
     try {
-      const body: { status: string; resolution_notes?: string } = { status };
-      if (status === "resolved") body.resolution_notes = resolution_notes ?? "";
       const res = await fetch(`/api/maintenance/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         const updated = await res.json();
         setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
         if (selected?.id === id) setSelected({ ...selected, ...updated });
-        if (status === "resolved") {
-          showToast(`Completion notice sent to tenant`);
-        } else {
-          showToast(`Status updated to ${STATUS_LABELS[status] || status}`);
+        if (payload.status && payload.send_email) {
+          showToast(`Status set to ${STATUS_LABELS[payload.status]} — email sent to tenant`);
+        } else if (payload.status) {
+          showToast(`Status updated to ${STATUS_LABELS[payload.status] || payload.status}`);
         }
       }
     } finally {
       setUpdating(null);
-      setConfirmComplete(null);
-      setCompleteNotes("");
+      setStatusModal(null);
+      setModalNotes("");
+      setModalStaffNotes("");
+    }
+  };
+
+  const saveStaffNotes = async (req: MaintenanceRequest) => {
+    setSavingStaffNotes(true);
+    try {
+      const res = await fetch(`/api/maintenance/${req.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ staff_notes: staffNotesDraft }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setRequests((prev) => prev.map((r) => (r.id === req.id ? { ...r, ...updated } : r)));
+        if (selected?.id === req.id) setSelected({ ...selected, ...updated });
+        showToast("Staff notes saved");
+      }
+    } finally {
+      setSavingStaffNotes(false);
     }
   };
 
@@ -212,10 +254,23 @@ export default function MaintenancePage() {
   const stats = useMemo(() => {
     const total = requests.length;
     const open = requests.filter((r) => r.status === "open").length;
-    const in_progress = requests.filter((r) => r.status === "in_progress").length;
+    const partial = requests.filter((r) => r.status === "partial").length;
     const resolved = requests.filter((r) => r.status === "resolved").length;
-    return { total, open, in_progress, resolved };
+    return { total, open, partial, resolved };
   }, [requests]);
+
+  const filtersActive =
+    statusFilter !== "all" ||
+    urgencyFilter !== "all" ||
+    search.trim() !== "" ||
+    dateRange.preset !== defaultDateRange.preset;
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setUrgencyFilter("all");
+    setSearch("");
+    setDateRange(defaultDateRange);
+  };
 
   const baseFiltered = requests.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
@@ -236,6 +291,14 @@ export default function MaintenancePage() {
   const formatDate = (d: string) => {
     try {
       return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return d;
+    }
+  };
+
+  const formatDateTime = (d: string) => {
+    try {
+      return new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
     } catch {
       return d;
     }
@@ -297,12 +360,12 @@ export default function MaintenancePage() {
           active={statusFilter === "open"}
         />
         <StatCard
-          label="In Progress"
-          count={stats.in_progress}
-          color="bg-yellow-50 text-yellow-700"
-          dotColor="bg-yellow-400"
-          onClick={() => setStatusFilter(statusFilter === "in_progress" ? "all" : "in_progress")}
-          active={statusFilter === "in_progress"}
+          label="Partially Completed"
+          count={stats.partial}
+          color="bg-blue-50 text-blue-700"
+          dotColor="bg-blue-400"
+          onClick={() => setStatusFilter(statusFilter === "partial" ? "all" : "partial")}
+          active={statusFilter === "partial"}
         />
         <StatCard
           label="Completed"
@@ -345,6 +408,17 @@ export default function MaintenancePage() {
           ))}
         </select>
         <DateRangeFilter value={dateRange} onChange={setDateRange} />
+        {filtersActive && (
+          <button
+            onClick={clearFilters}
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Request List */}
@@ -472,7 +546,7 @@ export default function MaintenancePage() {
               </div>
               {selected.entry_notes && (
                 <div>
-                  <p className="text-xs text-gray-600 mb-1">Anything to know before entering?</p>
+                  <p className="text-xs text-gray-600 mb-1">Entry Notes</p>
                   <div className="text-sm text-gray-700 bg-amber-50 border border-amber-100 rounded-xl p-4 whitespace-pre-wrap">{selected.entry_notes}</div>
                 </div>
               )}
@@ -507,6 +581,40 @@ export default function MaintenancePage() {
                   </div>
                 </div>
               )}
+              {selected.resolution_notes && (
+                <div>
+                  <p className="text-xs text-gray-600 mb-1">
+                    {selected.status === "partial" ? "Progress Notes" : "Completion Notes"}
+                    <span className="text-gray-400 font-normal"> (shared with tenant)</span>
+                  </p>
+                  <div className="text-sm text-gray-700 bg-green-50 border border-green-100 rounded-xl p-4 whitespace-pre-wrap">{selected.resolution_notes}</div>
+                </div>
+              )}
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  <p className="text-xs font-medium text-gray-600">Internal Staff Notes</p>
+                  <span className="text-[10px] text-gray-400">— staff only, never shown to tenant</span>
+                </div>
+                <textarea
+                  value={staffNotesDraft}
+                  onChange={(e) => setStaffNotesDraft(e.target.value)}
+                  rows={3}
+                  placeholder="Notes for staff only. Not shared with the tenant."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/20 focus:border-gray-300 resize-none"
+                />
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => saveStaffNotes(selected)}
+                    disabled={savingStaffNotes || staffNotesDraft === (selected.staff_notes || "")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-gray-800 hover:bg-gray-900 transition-colors disabled:opacity-40"
+                  >
+                    {savingStaffNotes ? "Saving..." : "Save Notes"}
+                  </button>
+                </div>
+              </div>
               <div className="pt-4 border-t border-gray-100">
                 <p className="text-xs font-medium text-gray-500 mb-2">Update Status</p>
                 <div className="flex flex-wrap gap-2">
@@ -523,6 +631,27 @@ export default function MaintenancePage() {
                     </button>
                   ))}
                 </div>
+              </div>
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-xs font-medium text-gray-500 mb-3">Activity Log</p>
+                {Array.isArray(selected.activity_log) && selected.activity_log.length > 0 ? (
+                  <ol className="space-y-3">
+                    {[...selected.activity_log].reverse().map((a, idx) => (
+                      <li key={idx} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <span className="w-2 h-2 mt-1 rounded-full bg-blue-400 shrink-0" />
+                          {idx < selected.activity_log!.length - 1 && <span className="w-px flex-1 bg-gray-200 mt-1" />}
+                        </div>
+                        <div className="pb-1">
+                          <p className="text-sm text-gray-800 leading-tight">{a.message}</p>
+                          <p className="text-[11px] text-gray-400 mt-0.5">{formatDateTime(a.at)}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="text-xs text-gray-400">No activity recorded yet.</p>
+                )}
               </div>
               <div className="pt-4 border-t border-gray-100 flex justify-end">
                 <button
@@ -559,52 +688,95 @@ export default function MaintenancePage() {
           </div>
         </div>
       )}
-      {confirmComplete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => setConfirmComplete(null)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+      {statusModal && (() => {
+        const isResolved = statusModal.status === "resolved";
+        const busy = updating === statusModal.req.id;
+        const confirmLabel = isResolved ? "Mark Completed" : "Mark Partially Completed";
+        const iconWrap = isResolved ? "bg-green-50" : "bg-blue-50";
+        const iconColor = isResolved ? "text-green-600" : "text-blue-600";
+        const notesFocus = isResolved ? "focus:ring-green-500/20 focus:border-green-400" : "focus:ring-blue-500/20 focus:border-blue-400";
+        return (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/30 p-4" onClick={() => !busy && setStatusModal(null)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-5">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-green-50 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              <div className={`w-14 h-14 mx-auto mb-4 rounded-full ${iconWrap} flex items-center justify-center`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className={`w-7 h-7 ${iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  {isResolved ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  )}
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">Mark as Completed?</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-2 text-center">
+                {isResolved ? "Mark as Completed?" : "Mark as Partially Completed?"}
+              </h3>
               <p className="text-sm text-gray-500 mb-5 text-center">
-                This will mark <strong>Apt {confirmComplete.apartment}</strong> as completed and email a completion notice to <strong>{confirmComplete.email}</strong>.
+                This will set <strong>Apt {statusModal.req.apartment}</strong> to <strong>{STATUS_LABELS[statusModal.status]}</strong>
+                {modalSendEmail ? <> and email <strong>{statusModal.req.email}</strong></> : null}.
               </p>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Customer Notes <span className="text-gray-400 font-normal">(optional — included in tenant email)</span>
+                  Customer Notes <span className="text-gray-400 font-normal">(optional — shared with tenant{modalSendEmail ? " by email" : ""})</span>
                 </label>
                 <textarea
-                  value={completeNotes}
-                  onChange={(e) => setCompleteNotes(e.target.value)}
-                  rows={4}
-                  placeholder="e.g. Replaced the kitchen faucet cartridge. Please run cold water for a minute before regular use."
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-400 resize-none"
-                  disabled={updating === confirmComplete.id}
+                  value={modalNotes}
+                  onChange={(e) => setModalNotes(e.target.value)}
+                  rows={3}
+                  placeholder={isResolved ? "e.g. Replaced the kitchen faucet cartridge. Please run cold water for a minute before use." : "e.g. Replaced the faucet; waiting on a part for the under-sink leak. Will return Friday."}
+                  className={`w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 ${notesFocus} resize-none`}
+                  disabled={busy}
                 />
               </div>
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Internal Staff Notes <span className="text-gray-400 font-normal">(private — never shown to tenant)</span>
+                </label>
+                <textarea
+                  value={modalStaffNotes}
+                  onChange={(e) => setModalStaffNotes(e.target.value)}
+                  rows={2}
+                  placeholder="Private notes for staff only..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/20 resize-none"
+                  disabled={busy}
+                />
+              </div>
+              <label className="flex items-center gap-2 mb-6 text-sm text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={modalSendEmail}
+                  onChange={(e) => setModalSendEmail(e.target.checked)}
+                  disabled={busy}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                Email the tenant a {isResolved ? "completion notice" : "progress update"}
+              </label>
               <div className="flex gap-3 justify-center">
                 <button
-                  onClick={() => setConfirmComplete(null)}
-                  disabled={updating === confirmComplete.id}
+                  onClick={() => setStatusModal(null)}
+                  disabled={busy}
                   className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => updateStatus(confirmComplete.id, "resolved", completeNotes.trim())}
-                  disabled={updating === confirmComplete.id}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
+                  onClick={() => updateStatus(statusModal.req.id, {
+                    status: statusModal.status,
+                    resolution_notes: modalNotes.trim(),
+                    staff_notes: modalStaffNotes.trim(),
+                    send_email: modalSendEmail,
+                  })}
+                  disabled={busy}
+                  className={`px-5 py-2.5 text-sm font-medium text-white rounded-xl transition-colors disabled:opacity-50 ${isResolved ? "bg-green-600 hover:bg-green-700" : "bg-blue-600 hover:bg-blue-700"}`}
                 >
-                  {updating === confirmComplete.id ? "Sending..." : "Mark Completed & Email"}
+                  {busy ? "Saving..." : (modalSendEmail ? `${confirmLabel} & Email` : confirmLabel)}
                 </button>
               </div>
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
       {showCreate && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/30 p-4" onClick={() => !creating && setShowCreate(false)}>
           <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -745,7 +917,7 @@ export default function MaintenancePage() {
                 />
               </div>
               {createError && <p className="text-red-600 text-sm">{createError}</p>}
-              <p className="text-xs text-gray-500">A confirmation email will be sent to the tenant when this request is created.</p>
+              <p className="text-xs text-gray-500">The tenant will receive a confirmation email.</p>
             </div>
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
               <button

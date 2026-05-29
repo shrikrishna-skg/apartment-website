@@ -1148,6 +1148,102 @@ export async function sendMaintenanceCompleted(params: {
   return info.messageId;
 }
 
+export async function sendMaintenanceProgress(params: {
+  to: string;
+  name: string;
+  apartment: string;
+  description: string;
+  resolutionNotes?: string | null;
+}) {
+  const transporter = getTransporter();
+  if (!transporter) return null;
+
+  const notes = params.resolutionNotes?.trim();
+  const notesBlock = notes
+    ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:20px 24px;">
+                <p style="margin:0 0 8px;color:#1e40af;font-size:13px;font-weight:700;letter-spacing:0.4px;text-transform:uppercase;">Update from our team</p>
+                <p style="margin:0;color:#1f2937;font-size:15px;line-height:1.6;">${escapeHtml(notes).replace(/\n/g, "<br/>")}</p>
+              </td></tr>
+            </table>`
+    : "";
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+        <tr>
+          <td style="background:#2563eb;padding:32px 40px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:700;">College Place</h1>
+            <p style="margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;">Apartments</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:40px;">
+            <h2 style="margin:0 0 8px;color:#1a1a1a;font-size:22px;">Maintenance Progress Update</h2>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Dear ${escapeHtml(params.name)},
+            </p>
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              We&rsquo;ve made progress on the maintenance work in your unit. The work is partially completed and we&rsquo;ll follow up to finish the remaining items.
+            </p>
+
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:24px;">
+              <tr><td style="padding:24px;">
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;font-size:14px;width:120px;">Unit</td>
+                    <td style="padding:6px 0;color:#1a1a1a;font-size:14px;font-weight:600;">${escapeHtml(params.apartment)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;font-size:14px;vertical-align:top;">Issue</td>
+                    <td style="padding:6px 0;color:#1a1a1a;font-size:14px;">${escapeHtml(params.description).replace(/\n/g, "<br/>")}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;color:#6b7280;font-size:14px;">Status</td>
+                    <td style="padding:6px 0;color:#2563eb;font-size:14px;font-weight:700;">Partially Completed</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
+            ${notesBlock}
+            <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
+              If you have any questions, please don&rsquo;t hesitate to contact us:<br/>
+              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;padding:28px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 6px;color:#374151;font-size:13px;font-weight:600;">Thanks &amp; Regards,</p>
+            <p style="margin:0 0 4px;color:#6b7280;font-size:13px;">Maintenance Team</p>
+            <p style="margin:0;color:#9ca3af;font-size:12px;">College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  const fromAddress = process.env.SMTP_USER || process.env.GMAIL_USER;
+  const info = await transporter.sendMail({
+    from: `"College Place Apartments" <${fromAddress}>`,
+    to: params.to,
+    cc: "office@collegeplace.us",
+    subject: "Maintenance Progress Update — College Place Apartments",
+    html,
+  });
+
+  return info.messageId;
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")

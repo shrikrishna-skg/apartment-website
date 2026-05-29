@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { sendStaffNotification, sendMaintenanceReceived } from "@/lib/email";
 import { getSession } from "@/lib/auth";
+import { activityEntry } from "@/lib/activity";
 
 const VALID_CATEGORIES = ["plumbing", "electrical", "hvac", "appliance", "pest control", "other"];
 const VALID_URGENCIES = ["low", "medium", "high", "emergency"];
@@ -40,6 +41,10 @@ export async function POST(request: NextRequest) {
         preferred_time: body.preferred_time?.trim() || null,
         entry_notes: body.entry_notes?.trim() || null,
         status: "open",
+        activity_log: [
+          activityEntry(`Request created by ${session.username || "staff"}`, session.username),
+          activityEntry("Confirmation emailed to tenant"),
+        ],
       })
       .select()
       .single();

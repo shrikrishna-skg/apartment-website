@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { sendStaffNotification, sendMaintenanceReceived } from "@/lib/email";
 import { getSession } from "@/lib/auth";
+import { activityEntry } from "@/lib/activity";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +35,10 @@ export async function POST(request: NextRequest) {
         preferred_date: body.preferred_date || null,
         preferred_time: body.preferred_time?.trim() || null,
         entry_notes: body.entry_notes?.trim() || null,
+        activity_log: [
+          activityEntry("Request submitted"),
+          activityEntry("Confirmation emailed to tenant"),
+        ],
       })
       .select()
       .single();
