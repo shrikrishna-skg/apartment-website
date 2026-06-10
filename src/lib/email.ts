@@ -669,11 +669,11 @@ export async function sendApprovalEmail(applicantName: string, applicantEmail: s
 
         <!-- Celebratory Header -->
         <tr>
-          <td style="background:linear-gradient(135deg,#1a73e8 0%,#4a90d9 50%,#1a73e8 100%);padding:40px 40px 32px;text-align:center;">
-            <div style="font-size:48px;line-height:1;margin-bottom:12px;">&#127881; &#127881; &#127881;</div>
-            <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:800;letter-spacing:-0.5px;">&#127881; Great News!</h1>
-            <p style="margin:10px 0 0;color:rgba(255,255,255,0.95);font-size:16px;font-weight:500;">Your Rental Application is Approved!</p>
-            <div style="margin-top:16px;">
+          <td bgcolor="#1a73e8" style="background:#1a73e8;padding:36px 40px 32px;text-align:center;">
+            <div style="font-size:40px;line-height:1;margin-bottom:12px;">&#127881;</div>
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">Your Application is Approved</h1>
+            <p style="margin:10px 0 0;color:#ffffff;font-size:15px;font-weight:500;">Welcome to College Place Apartments</p>
+            <div style="margin-top:18px;">
               <span style="display:inline-block;background:#22c55e;color:#ffffff;font-size:13px;font-weight:700;padding:6px 20px;border-radius:20px;letter-spacing:0.5px;">&#10004; APPROVED</span>
             </div>
           </td>
@@ -685,24 +685,34 @@ export async function sendApprovalEmail(applicantName: string, applicantEmail: s
             <p style="margin:0 0 20px;color:#1a1a1a;font-size:16px;line-height:1.6;">Dear ${escapeHtml(applicantName)},</p>
 
             <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
-              We are excited to inform you that your application for <strong>College Place Apartments</strong> has been approved! &#127968; &#10024;
+              We are pleased to inform you that your application for <strong>College Place Apartments</strong> has been approved.
+            </p>
+
+            <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
+              The next step is to finalize your lease agreement in person at our leasing office. Please reply to this email with a date and time that works for you, and we will confirm your appointment.
             </p>
 
             <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
-              The next step is to finalize your lease agreement. Please let us know a convenient date and time for an office visit to complete this process.
+              <strong>Please note:</strong> We sign leases only within one month of your move-in date. If your move-in date is further away, we will be glad to schedule your lease signing as it gets closer.
             </p>
 
-            <!-- CTA Button -->
+            <!-- CTA Button (table-based for Outlook compatibility) -->
             <table width="100%" cellpadding="0" cellspacing="0">
               <tr>
                 <td align="center" style="padding:8px 0 24px;">
-                  <a href="https://collegeplace.us/schedule-tour" style="display:inline-block;background:linear-gradient(135deg,#1a73e8,#4a90d9);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-size:15px;font-weight:700;letter-spacing:0.3px;box-shadow:0 4px 14px rgba(26,115,232,0.35);">Schedule Your Appointment</a>
+                  <table cellpadding="0" cellspacing="0">
+                    <tr>
+                      <td bgcolor="#1a73e8" style="background:#1a73e8;border-radius:10px;">
+                        <a href="https://collegeplace.us/schedule-tour" style="display:inline-block;color:#ffffff;text-decoration:none;padding:14px 36px;font-size:15px;font-weight:700;letter-spacing:0.3px;">Schedule Your Appointment</a>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
               </tr>
             </table>
 
             <p style="margin:0 0 28px;color:#6b7280;font-size:14px;line-height:1.6;text-align:center;">
-              If you'd prefer a walk-in appointment, you're also welcome to visit us during our office hours.
+              Prefer to walk in? You are welcome to visit us during our office hours below.
             </p>
 
             <!-- Office Hours Box -->
