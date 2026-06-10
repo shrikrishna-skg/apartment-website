@@ -10,11 +10,11 @@ export const SITE = {
   phone: "(615) 200-0620",
   email: "office@collegeplace.us",
   address: {
-    street: "1023 Old Lascassas Rd",
+    street: "1002 Old Lascassas Rd",
     city: "Murfreesboro",
     state: "TN",
     zip: "37130",
-    full: "1023 Old Lascassas Rd, Murfreesboro, TN 37130",
+    full: "1002 Old Lascassas Rd, Murfreesboro, TN 37130",
   },
   hours: {
     weekday: "Monday - Saturday: 9am - 5pm",
@@ -25,9 +25,9 @@ export const SITE = {
     facebook: "https://www.facebook.com/collegeplacecpl/",
   },
   mapsUrl:
-    "https://www.google.com/maps/place/VJ4M%2B9M+Murfreesboro,+Tennessee",
+    "https://www.google.com/maps/search/?api=1&query=1002+Old+Lascassas+Rd%2C+Murfreesboro%2C+TN+37130",
   directionsUrl:
-    "https://www.google.com/maps/dir/MTSU,+Murfreesboro,+TN/VJ4M%2B9M+Murfreesboro,+Tennessee",
+    "https://www.google.com/maps/dir/?api=1&destination=1002+Old+Lascassas+Rd%2C+Murfreesboro%2C+TN+37130",
 };
 
 export interface Property {

@@ -38,7 +38,7 @@ export async function POST(
 Your job is to draft a helpful email reply to a prospective or current resident's inquiry. Be warm, professional, and concise.
 
 Key info about the property:
-- Address: 1023 Old Lascassas Rd, Murfreesboro, TN 37130
+- Address: 1002 Old Lascassas Rd, Murfreesboro, TN 37130
 - Phone: (615) 200-0620
 - Email: office@collegeplace.us
 - Office Hours: Monday-Saturday 9am-5pm, Closed Sunday

@@ -724,9 +724,29 @@ export default function HomePage() {
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem", marginBottom: "1rem" }}>
                   <MapPin size={20} style={{ marginTop: 2, flexShrink: 0, color: "var(--primary)" }} />
                   <div>
-                    <h4 style={{ fontWeight: 600, marginBottom: "0.25rem" }}>Office Address</h4>
+                    <h4 style={{ fontWeight: 600, marginBottom: "0.25rem" }}>Central Leasing Office</h4>
                     <p style={{ fontSize: "0.875rem", color: "var(--on-surface-variant)" }}>
                       {SITE.address.full}
+                    </p>
+                    <p
+                      style={{
+                        fontSize: "0.8125rem",
+                        color: "var(--on-surface-variant)",
+                        marginTop: "0.5rem",
+                        paddingTop: "0.5rem",
+                        borderTop: "1px solid var(--outline-variant, rgba(0,0,0,0.08))",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      This leasing office serves all{" "}
+                      <span style={{ fontWeight: 500, color: "var(--on-surface)" }}>
+                        College Place, College Pointe, College Center,
+                      </span>{" "}
+                      and{" "}
+                      <span style={{ fontWeight: 500, color: "var(--on-surface)" }}>
+                        University Center
+                      </span>{" "}
+                      Apartments.
                     </p>
                   </div>
                 </div>

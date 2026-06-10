@@ -62,7 +62,7 @@ function TourJoinError({ reason }: { reason: "invalid" | "expired" | "cancelled"
     },
     not_virtual: {
       title: "In-person tour",
-      body: "This booking is an in-person tour. Please visit us at 1023 Old Lascassas Rd, Murfreesboro, TN 37130.",
+      body: "This booking is an in-person tour. Please visit us at 1002 Old Lascassas Rd, Murfreesboro, TN 37130.",
     },
   };
   const m = messages[reason];

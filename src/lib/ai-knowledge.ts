@@ -57,7 +57,7 @@ EMOTIONAL INTELLIGENCE:
 NEVER rush. Take a breath. Understand first, then respond.`;
 
 const FALLBACK_KNOWLEDGE = `KEY KNOWLEDGE:
-- Address: 1023 Old Lascassas Rd, Murfreesboro, TN 37130
+- Address: 1002 Old Lascassas Rd, Murfreesboro, TN 37130
 - Phone: (615) 200-0620 | Email: office@collegeplace.us
 - Office Hours: Mon–Sat 9am–5pm, Sunday Closed
 - Location: 0.4 miles from MTSU campus (8-min walk, 2-min drive)

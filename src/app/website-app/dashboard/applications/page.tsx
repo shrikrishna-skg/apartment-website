@@ -1575,7 +1575,7 @@ export default function ApplicationsPage() {
               </div>
               <div className="text-center">
                 <h1 className="text-2xl font-bold text-gray-900">College Place Apartments</h1>
-                <p className="text-sm text-gray-500 mt-1">1023 Old Lascassas Road | Murfreesboro, TN 37130 | (615) 200-0620</p>
+                <p className="text-sm text-gray-500 mt-1">1002 Old Lascassas Road | Murfreesboro, TN 37130 | (615) 200-0620</p>
                 <h2 className="text-lg font-semibold text-blue-700 mt-3">
                   {selected.applicant_type === "student" ? "Student" : selected.applicant_type === "international" ? "International Student" : "Working Professional / General"} Rental Application
                 </h2>
@@ -1887,7 +1887,7 @@ export default function ApplicationsPage() {
 
             {/* Footer */}
             <div className="mt-8 pt-4 border-t-2 border-gray-900 text-center text-xs text-gray-600">
-              <p>College Place Apartments &bull; 1023 Old Lascassas Rd, Murfreesboro, TN 37130 &bull; (615) 200-0620</p>
+              <p>College Place Apartments &bull; 1002 Old Lascassas Rd, Murfreesboro, TN 37130 &bull; (615) 200-0620</p>
               <p className="mt-1">This document is confidential and intended for authorized personnel only.</p>
             </div>
           </div>
