@@ -689,11 +689,24 @@ export async function sendApprovalEmail(applicantName: string, applicantEmail: s
             </p>
 
             <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
-              The next step is to finalize your lease agreement in person at our leasing office. Please reply to this email with a date and time that works for you, and we will confirm your appointment.
+              The next step is to finalize your lease agreement in person at our leasing office.
             </p>
 
             <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
-              <strong>Please note:</strong> We sign leases only within one month of your move-in date. If your move-in date is further away, we will be glad to schedule your lease signing as it gets closer.
+              Please note that we sign leases only within one month of your move-in date. If your move-in date is further away, we will be glad to schedule your lease signing as it gets closer.
+            </p>
+
+            <!-- Good to Know tip -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;margin-bottom:24px;">
+              <tr>
+                <td style="padding:16px 20px;color:#1e3a8a;font-size:14px;line-height:1.7;">
+                  &#128204; <strong>Good to Know:</strong> We recommend giving us a quick call before coming to the office to check availability. Since leases are signed in person and units are offered on a first-come, first-served basis, this helps ensure everything is ready for your visit.
+                </td>
+              </tr>
+            </table>
+
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;text-align:center;">
+              We look forward to welcoming you to College Place Apartments!
             </p>
 
             <!-- CTA Button (table-based for Outlook compatibility) -->
@@ -738,8 +751,11 @@ export async function sendApprovalEmail(applicantName: string, applicantEmail: s
                   <p style="margin:0 0 6px;color:#374151;font-size:14px;">
                     &#9993; <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;font-weight:500;">office@collegeplace.us</a>
                   </p>
-                  <p style="margin:0 0 16px;color:#374151;font-size:14px;">
+                  <p style="margin:0 0 6px;color:#374151;font-size:14px;">
                     &#9742; <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 200-0620</a>
+                  </p>
+                  <p style="margin:0 0 16px;color:#374151;font-size:14px;">
+                    &#9742; <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 900-0166</a>
                   </p>
                   <!-- Social Links -->
                   <p style="margin:0;">
