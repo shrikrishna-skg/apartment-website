@@ -122,6 +122,11 @@ export default function HomePage() {
                 Modern apartments with top-notch facilities, prime location by campus, and individual leasing starting from $600/mo.
               </p>
 
+              {/* Availability disclaimer */}
+              <p className="mt-5 text-sm italic leading-relaxed text-gray-600" style={{ maxWidth: "34rem" }}>
+                &ldquo;The floor plans displayed on our website represent the layouts available at our community and do not indicate current availability. Units are offered on a first-come, first-served basis. Please contact our leasing office for the latest availability.&rdquo;
+              </p>
+
               {/* Location */}
               <div className="mt-6 flex flex-col sm:flex-row gap-4 text-sm text-gray-600">
                 <span className="flex items-center gap-1.5">
@@ -998,7 +1003,7 @@ export default function HomePage() {
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "1rem" }}>
               <Link href="/properties" className="btn-glow" style={{ padding: "0.75rem 2rem" }}>
-                View Available Units
+                View Available Layouts
                 <ArrowRight size={16} />
               </Link>
               <Link href="/schedule-tour" className="btn-outline" style={{ padding: "0.75rem 2rem" }}>
@@ -1027,11 +1032,10 @@ export default function HomePage() {
             <Mail size={40} style={{ margin: "0 auto 1rem", color: "var(--primary)" }} />
             <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 1.875rem)", fontWeight: 700, marginBottom: "0.75rem" }}>
               Get Student{" "}
-              <span className="text-gradient">Housing Tips!</span>
+              <span className="text-gradient">Housing Details!</span>
             </h2>
-            <p style={{ maxWidth: "26rem", margin: "0 auto 2rem", color: "var(--on-surface-variant)" }}>
-              Join our newsletter for exclusive student housing tips, move-in
-              guides, and special offers near MTSU.
+            <p style={{ margin: "0 auto 2rem", color: "var(--on-surface-variant)" }}>
+              Join our newsletter for exclusive student housing details.
             </p>
             <form
               onSubmit={async (e) => {
@@ -1075,10 +1079,10 @@ export default function HomePage() {
                 className="btn-glow"
                 style={{ padding: "0.75rem 1.5rem", borderRadius: "var(--shape-full)" }}
               >
-                Get Free Tips
+                Get in Touch
               </button>
             </form>
-            <p style={{ marginTop: "1rem", fontSize: "0.75rem", color: "var(--outline)" }}>
+            <p style={{ marginTop: "1rem", fontSize: "0.6875rem", color: "var(--outline)" }}>
               By subscribing, you consent to receive email communications from College Place Apartments. You can unsubscribe at any time. We respect your privacy. View our{" "}
               <a href="/privacy-policy" style={{ color: "var(--primary)", textDecoration: "underline" }}>Privacy Policy</a>
               {" "}and{" "}

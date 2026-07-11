@@ -339,7 +339,7 @@ export async function sendTourCancelled(params: {
 }
 
 export async function sendStaffNotification(params: {
-  type: "tour" | "application" | "inquiry" | "maintenance" | "referral";
+  type: "tour" | "application" | "inquiry" | "maintenance" | "referral" | "subscriber";
   name: string;
   email: string;
   details: string;
@@ -355,6 +355,7 @@ export async function sendStaffNotification(params: {
     inquiry: { label: "New Contact Inquiry", icon: "💬", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", dashPath: "/inquiries" },
     maintenance: { label: "New Maintenance Request", icon: "🔧", color: "#dc2626", bg: "#fef2f2", border: "#fecaca", dashPath: "/maintenance" },
     referral: { label: "New Referral", icon: "🤝", color: "#059669", bg: "#ecfdf5", border: "#a7f3d0", dashPath: "/referrals" },
+    subscriber: { label: "New Newsletter Subscriber", icon: "📧", color: "#1a73e8", bg: "#eff6ff", border: "#bfdbfe", dashPath: "/subscribers" },
   };
   const c = config[params.type];
 
@@ -467,6 +468,114 @@ export async function sendStaffNotification(params: {
   });
 
   return info.messageId;
+}
+
+// Welcome email sent to a new newsletter subscriber
+export async function sendSubscriberWelcome(email: string): Promise<boolean> {
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td bgcolor="#1a73e8" style="background:#1a73e8;padding:36px 40px 32px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.5px;">Welcome to College Place Apartments</h1>
+            <p style="margin:10px 0 0;color:#ffffff;font-size:15px;font-weight:500;">Best near MTSU campus apartments in Murfreesboro, TN</p>
+          </td>
+        </tr>
+
+        <!-- Body -->
+        <tr>
+          <td style="padding:40px;">
+            <p style="margin:0 0 20px;color:#374151;font-size:15px;line-height:1.7;">
+              Thank you for subscribing! You are now on our list for exclusive
+              student housing details near MTSU &mdash; floor plans, pricing,
+              leasing information, and community updates.
+            </p>
+
+            <p style="margin:0 0 24px;color:#374151;font-size:15px;line-height:1.7;">
+              Explore our communities and find the space that fits you best. Our
+              prime location, top-notch facilities, and individual leasing per
+              bedroom set us apart.
+            </p>
+
+            <!-- CTA Buttons -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td align="center" style="padding:8px 0 24px;">
+                  <table cellpadding="0" cellspacing="0" style="display:inline-table;">
+                    <tr>
+                      <td bgcolor="#1a73e8" style="background:#1a73e8;border-radius:10px;">
+                        <a href="https://collegeplace.us/properties" style="display:inline-block;color:#ffffff;text-decoration:none;padding:14px 32px;font-size:15px;font-weight:700;">View Floor Plans</a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Office Info -->
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;margin-bottom:8px;">
+              <tr>
+                <td style="padding:24px;text-align:center;">
+                  <p style="margin:0 0 8px;color:#1a1a1a;font-size:15px;font-weight:700;">Central Leasing Office</p>
+                  <p style="margin:0 0 4px;color:#374151;font-size:14px;line-height:1.7;">1002 Old Lascassas Rd, Murfreesboro, TN 37130</p>
+                  <p style="margin:0 0 4px;color:#374151;font-size:14px;">
+                    <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 200-0620</a>
+                    &nbsp;&bull;&nbsp;
+                    <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;font-weight:500;">office@collegeplace.us</a>
+                  </p>
+                  <p style="margin:0;color:#6b7280;font-size:13px;">Open Monday &ndash; Saturday, 9:00 AM &ndash; 5:00 PM</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;line-height:1.6;">
+              College Place Apartments | College Center Apartments<br/>
+              College Pointe Apartments | University Center Apartments
+            </p>
+            <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;">
+              You are receiving this because you subscribed at collegeplace.us.
+              To unsubscribe, email
+              <a href="mailto:office@collegeplace.us?subject=Unsubscribe" style="color:#9ca3af;">office@collegeplace.us</a>.
+            </p>
+            <p style="margin:0;color:#9ca3af;font-size:11px;">
+              &copy; 2026 College Place Apartments. All Rights Reserved.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await transporter.sendMail({
+      from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Welcome to College Place Apartments",
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to send subscriber welcome email:", err);
+    return false;
+  }
 }
 
 // Professional HTML ticket email for AI chatbot tickets
