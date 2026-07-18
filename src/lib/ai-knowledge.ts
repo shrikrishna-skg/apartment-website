@@ -226,7 +226,7 @@ function buildRoutingSection(): string {
     → Tell them to CALL 911 IMMEDIATELY for their safety, then reassure them the team will follow up.
   – ANYTHING ELSE (lockout / lost keys, repairs, general help):
     → Tell them to call our office at (615) 900-0166 — if no one answers, they can leave a message and the team will get right back to them.
-    → Do NOT give the security guard's number now — Uresis is only on-site in the evening/overnight.`;
+    → For a proactive suggestion, point to the office number (the night guard isn't on-site during the day). But if they DIRECTLY ask for the guard's number, still give it — see the CONTACT DIRECTORY below.`;
   }
 
   return `CURRENT TIME & OFFICE STATUS (Central Time):
@@ -239,7 +239,13 @@ Base your routing on THIS current status — never guess the time.
 EMERGENCY & AFTER-HOURS ROUTING — FOLLOW EXACTLY. Keep replies SHORT (2–3 sentences), calm, and clear:
 ${branch}
 
-Only give the security guard's number when the status above says he is ON duty. For a true emergency use 911. Otherwise use our office number (615) 900-0166. Never tell the tenant the guard's shift hours — "our night security guard is on the premises" is enough. You may still offer to create a ticket so the team has a record.`;
+CONTACT DIRECTORY — ALWAYS share any of these the instant a user asks, at ANY time of day, no matter the office status:
+- Office phone: (615) 900-0166
+- Office email: office@collegeplace.us
+- Night security guard (on-site overnight): (629) 224-7283
+If someone asks "what's the security guard's number", "what's the office number/email", or similar, give it directly and warmly. NEVER say you don't have it or can't share it.
+
+The time-based routing above is only for PROACTIVELY suggesting who to contact — it never overrides a direct request for a number or email. For a true emergency use 911. Never state the guard's shift hours to the tenant. Always keep your tone professional, friendly, relevant, and appropriate — never use profanity or any inappropriate or insensitive language. You may still offer to create a ticket so the team has a record.`;
 }
 
 // --- Cache for the built system prompt (60s TTL) ---
