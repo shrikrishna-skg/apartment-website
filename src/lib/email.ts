@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { BLOG_POSTS } from "@/data/site-data";
 
 // Email: collegeplacecpl@gmail.com via Gmail SMTP
 function getTransporter() {
@@ -122,7 +123,7 @@ export async function sendTourConfirmation(params: {
             <!-- Contact -->
             <p style="margin:24px 0 0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               Need to reschedule or have questions? Contact us:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -225,7 +226,7 @@ export async function sendTourRescheduled(params: {
 
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               If this time doesn't work for you, please contact us right away:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -311,7 +312,7 @@ export async function sendTourCancelled(params: {
 
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               Questions? We're here to help:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -450,7 +451,7 @@ export async function sendStaffNotification(params: {
           <td style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
             <p style="margin:0;color:#9ca3af;font-size:11px;">
               College Place Apartments &bull; 1002 Old Lascassas Rd, Murfreesboro, TN 37130<br/>
-              (615) 200-0620 &bull; office@collegeplace.us
+              (615) 900-0166 &bull; office@collegeplace.us
             </p>
           </td>
         </tr>
@@ -529,7 +530,7 @@ export async function sendSubscriberWelcome(email: string): Promise<boolean> {
                   <p style="margin:0 0 8px;color:#1a1a1a;font-size:15px;font-weight:700;">Central Leasing Office</p>
                   <p style="margin:0 0 4px;color:#374151;font-size:14px;line-height:1.7;">1002 Old Lascassas Rd, Murfreesboro, TN 37130</p>
                   <p style="margin:0 0 4px;color:#374151;font-size:14px;">
-                    <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 200-0620</a>
+                    <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 900-0166</a>
                     &nbsp;&bull;&nbsp;
                     <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;font-weight:500;">office@collegeplace.us</a>
                   </p>
@@ -574,6 +575,147 @@ export async function sendSubscriberWelcome(email: string): Promise<boolean> {
     return true;
   } catch (err) {
     console.error("Failed to send subscriber welcome email:", err);
+    return false;
+  }
+}
+
+// Which blog article new subscribers receive. Change this slug to feature a
+// different guide — the email pulls its title/image/content from BLOG_POSTS.
+const FEATURED_ARTICLE_SLUG = "off-campus-housing-near-mtsu-complete-guide";
+
+// Supabase's raw /object/public/ URLs serve the base44-prod images as
+// application/octet-stream, which email clients refuse to render (broken image).
+// The /render/image/ transform endpoint returns a properly typed, resized image,
+// so rewrite Supabase storage URLs for use in email <img> tags.
+function emailImageUrl(url: string): string {
+  if (url.includes("/storage/v1/object/public/")) {
+    const rendered = url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+    return rendered + (rendered.includes("?") ? "&" : "?") + "width=600&quality=75";
+  }
+  return url;
+}
+
+// Inline-style the article's raw HTML so it renders consistently in email
+// clients (which strip <style>/<head> and default-style tags inconsistently).
+function styleArticleForEmail(html: string): string {
+  return html
+    .replace(/<h2>/g, '<h2 style="margin:26px 0 10px;color:#1a1a1a;font-size:19px;font-weight:700;line-height:1.3;">')
+    .replace(/<p>/g, '<p style="margin:0 0 16px;color:#374151;font-size:15px;line-height:1.7;">')
+    .replace(/<ul>/g, '<ul style="margin:0 0 16px;padding-left:22px;color:#374151;font-size:15px;line-height:1.8;">')
+    .replace(/<li>/g, '<li style="margin:0 0 6px;">')
+    .replace(/<strong>/g, '<strong style="color:#1a1a1a;font-weight:700;">');
+}
+
+// Welcome email to a new subscriber that features a full blog guide.
+export async function sendFeaturedArticleWelcome(email: string): Promise<boolean> {
+  const transporter = getTransporter();
+  if (!transporter) return false;
+
+  const post = BLOG_POSTS.find((p) => p.slug === FEATURED_ARTICLE_SLUG) ?? BLOG_POSTS[0];
+  if (!post) return false;
+
+  const articleUrl = `https://collegeplace.us/blog/${post.slug}`;
+  const articleBody = styleArticleForEmail(post.content);
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0;padding:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+        <!-- Header -->
+        <tr>
+          <td bgcolor="#1a73e8" style="background:#1a73e8;padding:36px 40px 30px;text-align:center;">
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.4px;">Welcome to College Place Apartments</h1>
+            <p style="margin:10px 0 0;color:#ffffff;font-size:14px;font-weight:500;">Thanks for subscribing — here's our top guide to get you started</p>
+          </td>
+        </tr>
+
+        <!-- Hero image -->
+        <tr>
+          <td>
+            <img src="${emailImageUrl(post.image)}" alt="${escapeHtml(post.title)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;" />
+          </td>
+        </tr>
+
+        <!-- Article -->
+        <tr>
+          <td style="padding:32px 40px 8px;">
+            <span style="display:inline-block;background:#eff6ff;color:#1a73e8;font-size:11px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:5px 12px;border-radius:20px;">${escapeHtml(post.category)}</span>
+            <h2 style="margin:16px 0 6px;color:#1a1a1a;font-size:22px;font-weight:800;line-height:1.25;">${escapeHtml(post.title)}</h2>
+            <p style="margin:0 0 20px;color:#9ca3af;font-size:13px;">${escapeHtml(post.date)} &bull; ${escapeHtml(post.readTime)}</p>
+            ${articleBody}
+          </td>
+        </tr>
+
+        <!-- CTA -->
+        <tr>
+          <td style="padding:12px 40px 32px;" align="center">
+            <table cellpadding="0" cellspacing="0"><tr>
+              <td bgcolor="#1a73e8" style="background:#1a73e8;border-radius:10px;">
+                <a href="${articleUrl}" style="display:inline-block;color:#ffffff;text-decoration:none;padding:14px 32px;font-size:15px;font-weight:700;">Read the full guide on our site</a>
+              </td>
+            </tr></table>
+          </td>
+        </tr>
+
+        <!-- Office Info -->
+        <tr>
+          <td style="padding:0 40px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;">
+              <tr>
+                <td style="padding:22px;text-align:center;">
+                  <p style="margin:0 0 8px;color:#1a1a1a;font-size:15px;font-weight:700;">Ready to see it in person?</p>
+                  <p style="margin:0 0 4px;color:#374151;font-size:14px;line-height:1.7;">1002 Old Lascassas Rd, Murfreesboro, TN 37130</p>
+                  <p style="margin:0 0 4px;color:#374151;font-size:14px;">
+                    <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 900-0166</a>
+                    &nbsp;&bull;&nbsp;
+                    <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;font-weight:500;">office@collegeplace.us</a>
+                  </p>
+                  <p style="margin:0;color:#6b7280;font-size:13px;">Open Monday &ndash; Saturday, 9:00 AM &ndash; 5:00 PM</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="background:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
+            <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;line-height:1.6;">
+              College Place Apartments | College Center Apartments<br/>
+              College Pointe Apartments | University Center Apartments
+            </p>
+            <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;">
+              You are receiving this because you subscribed at collegeplace.us.
+              To unsubscribe, email
+              <a href="mailto:office@collegeplace.us?subject=Unsubscribe" style="color:#9ca3af;">office@collegeplace.us</a>.
+            </p>
+            <p style="margin:0;color:#9ca3af;font-size:11px;">
+              &copy; 2026 College Place Apartments. All Rights Reserved.
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+  try {
+    await transporter.sendMail({
+      from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
+      to: email,
+      subject: "Your MTSU off-campus housing guide is inside — Welcome to College Place",
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.error("Failed to send featured article email:", err);
     return false;
   }
 }
@@ -738,7 +880,7 @@ export async function sendTicketEmail(params: {
           <td style="background:#f9fafb;padding:16px 32px;text-align:center;border-top:1px solid #e5e7eb;">
             <p style="margin:0;color:#9ca3af;font-size:11px;">
               Auto-generated by College Place AI Assistant • ${now}<br/>
-              1002 Old Lascassas Rd, Murfreesboro, TN 37130 • (615) 200-0620
+              1002 Old Lascassas Rd, Murfreesboro, TN 37130 • (615) 900-0166
             </p>
           </td>
         </tr>
@@ -860,9 +1002,6 @@ export async function sendApprovalEmail(applicantName: string, applicantEmail: s
                   <p style="margin:0 0 6px;color:#374151;font-size:14px;">
                     &#9993; <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;font-weight:500;">office@collegeplace.us</a>
                   </p>
-                  <p style="margin:0 0 6px;color:#374151;font-size:14px;">
-                    &#9742; <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 200-0620</a>
-                  </p>
                   <p style="margin:0 0 16px;color:#374151;font-size:14px;">
                     &#9742; <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;font-weight:500;">(615) 900-0166</a>
                   </p>
@@ -968,7 +1107,7 @@ export async function sendInquiryReply(params: {
             <!-- Contact -->
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               Have more questions? Feel free to reply to this email or contact us:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -1066,7 +1205,7 @@ export async function sendApplicationReceived(params: {
 
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               Questions in the meantime?<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -1156,7 +1295,7 @@ export async function sendMaintenanceReceived(params: {
 
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               If your issue is urgent or requires immediate attention, please contact us directly:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -1253,7 +1392,7 @@ export async function sendMaintenanceCompleted(params: {
             ${notesBlock}
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               If you have any further concerns, please don&rsquo;t hesitate to contact us:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>
@@ -1349,7 +1488,7 @@ export async function sendMaintenanceProgress(params: {
             ${notesBlock}
             <p style="margin:0;padding-top:20px;border-top:1px solid #e5e7eb;color:#6b7280;font-size:13px;line-height:1.6;">
               If you have any questions, please don&rsquo;t hesitate to contact us:<br/>
-              <strong>Phone:</strong> <a href="tel:6152000620" style="color:#1a73e8;text-decoration:none;">(615) 200-0620</a><br/>
+              <strong>Phone:</strong> <a href="tel:6159000166" style="color:#1a73e8;text-decoration:none;">(615) 900-0166</a><br/>
               <strong>Email:</strong> <a href="mailto:office@collegeplace.us" style="color:#1a73e8;text-decoration:none;">office@collegeplace.us</a>
             </p>
           </td>

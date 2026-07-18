@@ -50,15 +50,15 @@ function TourJoinError({ reason }: { reason: "invalid" | "expired" | "cancelled"
   const messages: Record<string, { title: string; body: string }> = {
     invalid: {
       title: "Invalid link",
-      body: "This tour link isn't valid. Please check your confirmation email for the correct link, or call (615) 200-0620.",
+      body: "This tour link isn't valid. Please check your confirmation email for the correct link, or call (615) 900-0166.",
     },
     expired: {
       title: "Link expired",
-      body: "This tour link has expired. Please contact us at (615) 200-0620 to reschedule.",
+      body: "This tour link has expired. Please contact us at (615) 900-0166 to reschedule.",
     },
     cancelled: {
       title: "Tour cancelled",
-      body: "This tour has been cancelled. Contact us at (615) 200-0620 if you'd like to book another.",
+      body: "This tour has been cancelled. Contact us at (615) 900-0166 if you'd like to book another.",
     },
     not_virtual: {
       title: "In-person tour",
@@ -72,7 +72,7 @@ function TourJoinError({ reason }: { reason: "invalid" | "expired" | "cancelled"
       <div className="glass p-10 text-center max-w-lg">
         <h1 className="text-2xl font-bold text-gray-900 mb-3">{m.title}</h1>
         <p className="text-gray-600 text-sm mb-6">{m.body}</p>
-        <a href="tel:+16152000620" className="btn-outline text-sm inline-block">Call (615) 200-0620</a>
+        <a href="tel:+16159000166" className="btn-outline text-sm inline-block">Call (615) 900-0166</a>
       </div>
     </div>
   );

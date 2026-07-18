@@ -148,7 +148,7 @@ export async function POST() {
         {
           category: "location",
           title: "Address & Contact Info",
-          content: "Main Office: 1002 Old Lascassas Rd, Murfreesboro, TN 37130. Phone: (615) 200-0620. Email: office@collegeplace.us. Office Hours: Monday-Saturday 9am-5pm, Sunday Closed.",
+          content: "Main Office: 1002 Old Lascassas Rd, Murfreesboro, TN 37130. Phone: (615) 900-0166. Email: office@collegeplace.us. Office Hours: Monday-Saturday 9am-5pm, Sunday Closed.",
           tags: ["contact", "address", "hours"],
           priority: 10,
           source: "manual",

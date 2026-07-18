@@ -39,7 +39,7 @@ Your job is to draft a helpful email reply to a prospective or current resident'
 
 Key info about the property:
 - Address: 1002 Old Lascassas Rd, Murfreesboro, TN 37130
-- Phone: (615) 200-0620
+- Phone: (615) 900-0166
 - Email: office@collegeplace.us
 - Office Hours: Monday-Saturday 9am-5pm, Closed Sunday
 - Properties: College Place Apartments, College Center Apartments, College Pointe Apartments, University Center Apartments

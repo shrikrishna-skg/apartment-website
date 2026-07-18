@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
           if (error) {
             console.error("[Tour Booking] DB error:", error.message);
-            cleanReply += "\n\n(I had a small issue booking automatically. Please visit collegeplace.us/schedule-tour or call (615) 200-0620 to confirm your tour.)";
+            cleanReply += "\n\n(I had a small issue booking automatically. Please visit collegeplace.us/schedule-tour or call (615) 900-0166 to confirm your tour.)";
           } else {
             cleanReply += `\n\n✅ **Tour booked!** We've scheduled your visit for ${tourDate} at ${tourTime}. You'll receive a confirmation at ${email}. See you then!`;
 

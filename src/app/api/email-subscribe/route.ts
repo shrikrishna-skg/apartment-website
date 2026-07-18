@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sendSubscriberWelcome, sendStaffNotification } from "@/lib/email";
+import { sendFeaturedArticleWelcome, sendStaffNotification } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
     // Fire welcome + staff notification emails without blocking the response.
     // Failures here must never fail the subscription itself.
     try {
-      const welcomeId = await sendSubscriberWelcome(body.email);
-      console.log(`[email-subscribe] welcome email: ${welcomeId ? "sent" : "skipped_no_smtp"} → ${body.email}`);
+      const sent = await sendFeaturedArticleWelcome(body.email);
+      console.log(`[email-subscribe] welcome + featured guide: ${sent ? "sent" : "skipped_no_smtp"} → ${body.email}`);
     } catch (err) {
       console.error("Subscriber welcome email failed:", err);
     }
@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(data, { status: 201 });
-  } catch {
+  } catch (err) {
+    console.error("[email-subscribe] POST failed:", err);
     return NextResponse.json(
       { error: "Failed to subscribe email" },
       { status: 500 }

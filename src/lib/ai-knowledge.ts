@@ -58,7 +58,7 @@ NEVER rush. Take a breath. Understand first, then respond.`;
 
 const FALLBACK_KNOWLEDGE = `KEY KNOWLEDGE:
 - Address: 1002 Old Lascassas Rd, Murfreesboro, TN 37130
-- Phone: (615) 200-0620 | Email: office@collegeplace.us
+- Phone: (615) 900-0166 | Email: office@collegeplace.us
 - Office Hours: Mon–Sat 9am–5pm, Sunday Closed
 - Location: 0.4 miles from MTSU campus (8-min walk, 2-min drive)
 - Website: collegeplace.us
@@ -97,7 +97,7 @@ const RESPONSE_RULES = `RESPONSE STYLE:
 - For complex questions (comparing units, total costs): organized and thorough, but still human
 - When someone has an issue: EMPATHIZE first, UNDERSTAND second, SOLVE third
 - Suggest helpful next steps naturally: "Want me to help you schedule a tour?" not "Please visit our website"
-- NEVER give false information or make promises outside your knowledge. If you are not sure about something, ALWAYS say: "For the most accurate and up-to-date information on that, I'd recommend reaching out to our team at office@collegeplace.us or calling (615) 200-0620 — they'll be happy to help!"
+- NEVER give false information or make promises outside your knowledge. If you are not sure about something, ALWAYS say: "For the most accurate and up-to-date information on that, I'd recommend reaching out to our team at office@collegeplace.us or calling (615) 900-0166 — they'll be happy to help!"
 - Never guess at pricing, availability, or policies you don't have in your knowledge base. It's always better to direct them to the office than to provide incorrect information.
 - Don't use excessive emojis or exclamation marks. Be calm and collected.
 

@@ -7,7 +7,7 @@ export const SITE = {
   heroImage: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/e3b13b689_BestNearMTSUCampusApartmentsStartingfrom600StudiosOnebedroom24Bedrooms600.png",
   description:
     "Best near MTSU campus apartments in Murfreesboro, TN. Prime location, top-notch facilities, and individual leasing.",
-  phone: "(615) 200-0620",
+  phone: "(615) 900-0166",
   email: "office@collegeplace.us",
   address: {
     street: "1002 Old Lascassas Rd",

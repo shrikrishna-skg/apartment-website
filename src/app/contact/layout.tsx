@@ -4,12 +4,12 @@ import { SITE } from "@/data/site-data";
 export const metadata: Metadata = {
   title: "Contact Us | College Place Apartments Murfreesboro, TN",
   description:
-    "Get in touch with College Place Apartments near MTSU. Call (615) 200-0620, email office@collegeplace.us, or visit us at 1002 Old Lascassas Rd, Murfreesboro, TN 37130. Office open Mon-Sat 9am-5pm.",
+    "Get in touch with College Place Apartments near MTSU. Call (615) 900-0166, email office@collegeplace.us, or visit us at 1002 Old Lascassas Rd, Murfreesboro, TN 37130. Office open Mon-Sat 9am-5pm.",
   alternates: { canonical: "/contact" },
   openGraph: {
     title: "Contact College Place Apartments | Murfreesboro, TN",
     description:
-      "Call (615) 200-0620 or visit us at 1002 Old Lascassas Rd, Murfreesboro, TN. Student apartments near MTSU. Open Mon-Sat 9-5.",
+      "Call (615) 900-0166 or visit us at 1002 Old Lascassas Rd, Murfreesboro, TN. Student apartments near MTSU. Open Mon-Sat 9-5.",
     url: "/contact",
   },
 };

@@ -143,7 +143,7 @@ export default function ChatWidget() {
         {
           role: "assistant",
           content:
-            "Sorry, something went wrong. Please try again or call us at (615) 200-0620.",
+            "Sorry, something went wrong. Please try again or call us at (615) 900-0166.",
         },
       ]);
     } finally {
@@ -248,14 +248,14 @@ export default function ChatWidget() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: "Sorry, there was an issue creating the ticket. Please try again or call (615) 200-0620." },
+          { role: "assistant", content: "Sorry, there was an issue creating the ticket. Please try again or call (615) 900-0166." },
         ]);
         setPendingTicket(null);
       }
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Couldn't create the ticket right now. Please call (615) 200-0620 for immediate help." },
+        { role: "assistant", content: "Couldn't create the ticket right now. Please call (615) 900-0166 for immediate help." },
       ]);
       setPendingTicket(null);
     } finally {

@@ -28,7 +28,7 @@ Property details for context:
 - College Center Apartments: 1023 Old Lascassas Rd. 2BR/2BA $550/room, 4BR/4BA $500/room (most affordable)
 - College Pointe: 915 Brown Dr. 2BR/1BA $600/room
 - University Center: 1030 Greenland Dr. 2BR/2BA $600/room
-- Office: (615) 200-0620, office@collegeplace.us, Mon-Sat 9am-5pm
+- Office: (615) 900-0166, office@collegeplace.us, Mon-Sat 9am-5pm
 - Utilities: $100/person/month (water, internet, trash)
 - Pets: $200 deposit + $25/month rent, ESA no fees
 - Lease terms: 6, 9, 12, or 18 months

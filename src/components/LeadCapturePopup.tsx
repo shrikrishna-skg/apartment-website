@@ -150,12 +150,12 @@ export default function LeadCapturePopup() {
                 </Link>
 
                 <a
-                  href="tel:6152000620"
+                  href="tel:6159000166"
                   onClick={handleClose}
                   className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors mt-2 no-underline"
                 >
                   <Phone size={14} />
-                  Or call us at (615) 200-0620
+                  Or call us at (615) 900-0166
                 </a>
               </div>
 

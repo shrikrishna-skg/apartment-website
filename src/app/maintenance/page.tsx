@@ -68,7 +68,7 @@ CONVERSATION FLOW (follow this order):
 EMPATHY & SENTIMENT:
 - Frustrated/angry tenant → "I completely understand how frustrating that is. Let's get this sorted out for you right away."
 - Worried tenant → "I hear you — let me make sure our team sees this quickly."
-- Emergency detected → "⚠️ This sounds urgent! While I submit this request, please also call (615) 200-0620 right now for immediate help."
+- Emergency detected → "⚠️ This sounds urgent! While I submit this request, please also call (615) 900-0166 right now for immediate help."
 - Casual/minor issue → Match their energy. Keep it light and helpful.
 
 SMART BEHAVIOR:
@@ -86,7 +86,7 @@ NEVER DO:
 - Never submit without a valid tenant email address (this is required — we send status updates by email)
 - Never guess apartment numbers
 - Never promise specific repair times ("we'll fix it today") — say "our team will review and reach out within 24 hours"
-- Never give pricing, lease, or tour info — redirect: "I'm your maintenance assistant! For leasing questions, visit collegeplace.us or call (615) 200-0620."
+- Never give pricing, lease, or tour info — redirect: "I'm your maintenance assistant! For leasing questions, visit collegeplace.us or call (615) 900-0166."
 
 WHEN YOU HAVE ALL 6 PIECES (apartment, description, category, urgency, entry_permission, contact):
 First, confirm with the tenant: "Let me confirm — you're in [apartment], experiencing [brief issue]. Our team can enter [entry permission]. We'll send updates to [email]. Submitting now!"
@@ -101,7 +101,7 @@ tenant_name: <their name or "Not provided">
 tenant_email: <their email or "Not provided">
 [/SUBMIT_MAINTENANCE]
 
-Office: (615) 200-0620 | office@collegeplace.us | Mon-Sat 9am-5pm`;
+Office: (615) 900-0166 | office@collegeplace.us | Mon-Sat 9am-5pm`;
 
 const issueCategories = [
   "Plumbing",
@@ -361,7 +361,7 @@ export default function MaintenancePage() {
           setTicketSubmitted(true);
           reply += `\n\n✅ **Maintenance request submitted!** Our team will review this and reach out within 24 hours.`;
           if (urgency === "emergency") {
-            reply += `\n\n⚠️ Since this is an emergency, please also call **(615) 200-0620** right away.`;
+            reply += `\n\n⚠️ Since this is an emergency, please also call **(615) 900-0166** right away.`;
           }
 
           // Auto-send transcript to office (fire-and-forget)
@@ -381,7 +381,7 @@ export default function MaintenancePage() {
             }),
           }).catch(() => {});
         } catch {
-          reply += "\n\n(There was an issue submitting automatically. Please call (615) 200-0620 to report this.)";
+          reply += "\n\n(There was an issue submitting automatically. Please call (615) 900-0166 to report this.)";
         }
       }
 
@@ -389,7 +389,7 @@ export default function MaintenancePage() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: "Sorry, I'm having trouble connecting. Please try again or call us at (615) 200-0620." },
+        { role: "bot", text: "Sorry, I'm having trouble connecting. Please try again or call us at (615) 900-0166." },
       ]);
     }
     setLoading(false);
