@@ -1,5 +1,5 @@
 import nodemailer from "nodemailer";
-import { BLOG_POSTS } from "@/data/site-data";
+import { BLOG_POSTS, type BlogPost } from "@/data/site-data";
 
 // Email: collegeplacecpl@gmail.com via Gmail SMTP
 function getTransporter() {
@@ -581,7 +581,7 @@ export async function sendSubscriberWelcome(email: string): Promise<boolean> {
 
 // Which blog article new subscribers receive. Change this slug to feature a
 // different guide — the email pulls its title/image/content from BLOG_POSTS.
-const FEATURED_ARTICLE_SLUG = "off-campus-housing-near-mtsu-complete-guide";
+export const FEATURED_ARTICLE_SLUG = "off-campus-housing-near-mtsu-complete-guide";
 
 // Supabase's raw /object/public/ URLs serve the base44-prod images as
 // application/octet-stream, which email clients refuse to render (broken image).
@@ -606,18 +606,26 @@ function styleArticleForEmail(html: string): string {
     .replace(/<strong>/g, '<strong style="color:#1a1a1a;font-weight:700;">');
 }
 
-// Welcome email to a new subscriber that features a full blog guide.
-export async function sendFeaturedArticleWelcome(email: string): Promise<boolean> {
-  const transporter = getTransporter();
-  if (!transporter) return false;
+// Public unsubscribe link built from a subscriber's one-time token.
+export function unsubscribeUrl(token?: string | null): string {
+  const base = "https://collegeplace.us/unsubscribe";
+  return token ? `${base}?token=${encodeURIComponent(token)}` : base;
+}
 
-  const post = BLOG_POSTS.find((p) => p.slug === FEATURED_ARTICLE_SLUG) ?? BLOG_POSTS[0];
-  if (!post) return false;
-
+// Shared builder: a branded email featuring one blog post. Used by both the
+// welcome email and the weekly rotation email.
+function buildArticleEmailHtml(opts: {
+  post: BlogPost;
+  token?: string | null;
+  headline: string;
+  subhead: string;
+}): string {
+  const { post, token, headline, subhead } = opts;
   const articleUrl = `https://collegeplace.us/blog/${post.slug}`;
   const articleBody = styleArticleForEmail(post.content);
+  const unsubUrl = unsubscribeUrl(token);
 
-  const html = `
+  return `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
@@ -629,8 +637,8 @@ export async function sendFeaturedArticleWelcome(email: string): Promise<boolean
         <!-- Header -->
         <tr>
           <td bgcolor="#1a73e8" style="background:#1a73e8;padding:36px 40px 30px;text-align:center;">
-            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.4px;">Welcome to College Place Apartments</h1>
-            <p style="margin:10px 0 0;color:#ffffff;font-size:14px;font-weight:500;">Thanks for subscribing — here's our top guide to get you started</p>
+            <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:800;letter-spacing:-0.4px;">${escapeHtml(headline)}</h1>
+            <p style="margin:10px 0 0;color:#ffffff;font-size:14px;font-weight:500;">${escapeHtml(subhead)}</p>
           </td>
         </tr>
 
@@ -686,13 +694,11 @@ export async function sendFeaturedArticleWelcome(email: string): Promise<boolean
         <tr>
           <td style="background:#f9fafb;padding:24px 40px;text-align:center;border-top:1px solid #e5e7eb;">
             <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;line-height:1.6;">
-              College Place Apartments | College Center Apartments<br/>
-              College Pointe Apartments | University Center Apartments
+              College Place Apartments &bull; 1002 Old Lascassas Rd, Murfreesboro, TN 37130
             </p>
             <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;">
-              You are receiving this because you subscribed at collegeplace.us.
-              To unsubscribe, email
-              <a href="mailto:office@collegeplace.us?subject=Unsubscribe" style="color:#9ca3af;">office@collegeplace.us</a>.
+              You are receiving this because you subscribed at collegeplace.us.<br/>
+              <a href="${unsubUrl}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe from these emails</a>
             </p>
             <p style="margin:0;color:#9ca3af;font-size:11px;">
               &copy; 2026 College Place Apartments. All Rights Reserved.
@@ -706,18 +712,54 @@ export async function sendFeaturedArticleWelcome(email: string): Promise<boolean
 </body>
 </html>`;
 
+}
+
+// Send one article email with a List-Unsubscribe header (native Gmail unsubscribe).
+async function sendArticleMail(email: string, subject: string, html: string, token?: string | null): Promise<boolean> {
+  const transporter = getTransporter();
+  if (!transporter) return false;
   try {
     await transporter.sendMail({
       from: `"College Place Apartments" <${process.env.SMTP_USER || process.env.GMAIL_USER}>`,
       to: email,
-      subject: "Your MTSU off-campus housing guide is inside — Welcome to College Place",
+      subject,
       html,
+      ...(token ? { headers: { "List-Unsubscribe": `<${unsubscribeUrl(token)}>` } } : {}),
     });
     return true;
   } catch (err) {
-    console.error("Failed to send featured article email:", err);
+    console.error("Failed to send article email:", err);
     return false;
   }
+}
+
+// Welcome email to a new subscriber — features the configured guide.
+export async function sendFeaturedArticleWelcome(email: string, token?: string | null): Promise<boolean> {
+  const post = BLOG_POSTS.find((p) => p.slug === FEATURED_ARTICLE_SLUG) ?? BLOG_POSTS[0];
+  if (!post) return false;
+  const html = buildArticleEmailHtml({
+    post,
+    token,
+    headline: "Welcome to College Place Apartments",
+    subhead: "Thanks for subscribing — here's our top guide to get you started",
+  });
+  return sendArticleMail(
+    email,
+    "Your MTSU off-campus housing guide is inside — Welcome to College Place",
+    html,
+    token
+  );
+}
+
+// Weekly rotation email — sends one Student Life Hub guide to a subscriber.
+export async function sendRotationArticle(email: string, token: string | null, post: BlogPost): Promise<boolean> {
+  const html = buildArticleEmailHtml({
+    post,
+    token,
+    headline: "This week from College Place",
+    subhead: "Another guide from our Student Life Hub for MTSU students",
+  });
+  return sendArticleMail(email, post.title, html, token);
 }
 
 // Professional HTML ticket email for AI chatbot tickets

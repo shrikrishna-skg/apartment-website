@@ -8,6 +8,8 @@ interface Subscriber {
   name: string | null;
   source: string | null;
   created_at: string;
+  subscribed?: boolean;
+  unsubscribed_at?: string | null;
 }
 
 export default function SubscribersPage() {
@@ -129,6 +131,7 @@ export default function SubscribersPage() {
                   <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Email</th>
                   <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Name</th>
                   <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Source</th>
+                  <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Status</th>
                   <th className="text-left px-5 py-3.5 font-semibold text-gray-600">Subscribed</th>
                   <th className="text-right px-5 py-3.5 font-semibold text-gray-600">Actions</th>
                 </tr>
@@ -146,6 +149,13 @@ export default function SubscribersPage() {
                         <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">{sub.source}</span>
                       ) : (
                         <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {sub.subscribed === false || sub.unsubscribed_at ? (
+                        <span className="text-xs bg-red-50 text-red-600 px-2 py-1 rounded-full font-medium">Unsubscribed</span>
+                      ) : (
+                        <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-1 rounded-full font-medium">Active</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5 text-gray-600 text-xs">{formatDate(sub.created_at)}</td>

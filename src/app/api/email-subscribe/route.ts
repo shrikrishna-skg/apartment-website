@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { sendFeaturedArticleWelcome, sendStaffNotification } from "@/lib/email";
+import { sendFeaturedArticleWelcome, sendStaffNotification, FEATURED_ARTICLE_SLUG } from "@/lib/email";
 
 export async function GET() {
   try {
@@ -55,12 +55,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // One-time token used to build this subscriber's unsubscribe link.
+    const unsubscribe_token = crypto.randomUUID();
+
     const { data, error } = await supabase
       .from("email_subscribers")
       .insert({
         email: body.email,
         name: body.name || null,
         source: body.source || null,
+        unsubscribe_token,
+        // The welcome email sends the featured guide, so mark it already sent
+        // — the weekly rotation will then continue with the OTHER articles.
+        sent_slugs: [FEATURED_ARTICLE_SLUG],
+        // Count the welcome as this week's send so rotation waits ~a week.
+        last_sent_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -81,7 +90,7 @@ export async function POST(request: NextRequest) {
     // Fire welcome + staff notification emails without blocking the response.
     // Failures here must never fail the subscription itself.
     try {
-      const sent = await sendFeaturedArticleWelcome(body.email);
+      const sent = await sendFeaturedArticleWelcome(body.email, data.unsubscribe_token);
       console.log(`[email-subscribe] welcome + featured guide: ${sent ? "sent" : "skipped_no_smtp"} → ${body.email}`);
     } catch (err) {
       console.error("Subscriber welcome email failed:", err);
