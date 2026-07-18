@@ -1079,7 +1079,7 @@ export default function HomePage() {
                 className="btn-glow"
                 style={{ padding: "0.75rem 1.5rem", borderRadius: "var(--shape-full)" }}
               >
-                Get in Touch
+                Subscribe
               </button>
             </form>
             <p style={{ marginTop: "1rem", fontSize: "0.6875rem", color: "var(--outline)" }}>
