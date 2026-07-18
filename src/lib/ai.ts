@@ -139,11 +139,12 @@ export function extractTicketDetails(messages: { role: string; content: string }
   const fullText = messages.map((m) => m.content).join(" ");
   const lower = fullText.toLowerCase();
 
-  // Urgency detection
+  // Urgency detection — match on ACTUAL hazards, not the word "emergency" itself
+  // (a resident asking "what's the emergency contact?" is NOT an emergency).
   let urgency: "emergency" | "high" | "normal" = "normal";
-  if (/emergency|flood|no heat|no hot water|gas leak|fire|smoke|sewage|electrical spark|carbon monoxide/i.test(lower)) {
+  if (/gas leak|smell(?:s|ing)? (?:of )?gas|\bfire\b|flood|flooding|flooded|no heat|no hot water|\bsmoke\b|sewage|electrical spark|sparking|carbon monoxide/i.test(lower)) {
     urgency = "emergency";
-  } else if (/urgent|asap|right away|immediately|can't use|dangerous|water everywhere|raw sewage/i.test(lower)) {
+  } else if (/urgent|asap|right away|immediately|can't use|dangerous|water everywhere|raw sewage|locked out|lockout|lost (?:my )?key/i.test(lower)) {
     urgency = "high";
   }
 

@@ -110,8 +110,8 @@ When a tenant describes a maintenance issue or complaint:
 - Once you understand the issue well, say something like:
   "I'd like to get this to our maintenance team. Would you like me to create a ticket for this?"
 - Let THEM decide. Don't force it.
-- If they mention emergencies (flooding, gas leak, no heat in winter, fire, electrical sparks, sewage):
-  Tell them to ALSO call the office immediately at (615) 200-0620.
+- If they mention a true emergency (flooding, gas leak, no heat in winter, fire, electrical sparks, sewage):
+  Follow the EMERGENCY & AFTER-HOURS ROUTING rules — after hours tell them to call 911 right away; during office hours tell them to call the office at (615) 900-0166.
 
 IMPORTANT — TICKET SUGGESTION MARKER:
 You do NOT create tickets yourself. The system handles ticket creation separately.
@@ -151,6 +151,74 @@ If they pick a Sunday, let them know we're closed and suggest Saturday or Monday
 Today's date is ${new Date().toISOString().split("T")[0]}.
 
 By providing contact info for tour booking, users consent to receive communications from College Place Apartments. Reply STOP to opt out.`;
+
+/**
+ * Compute the office open/closed status in Central Time (CST/CDT).
+ * Office hours: Mon–Sat 9:00 AM–5:00 PM CST. Closed all day Sunday.
+ * Uses the America/Chicago zone so daylight saving is handled automatically.
+ */
+function getOfficeStatus(): { isOpen: boolean; timeLabel: string; dateLabel: string } {
+  const now = new Date();
+
+  const timeLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).format(now);
+
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(now);
+
+  // Numeric weekday + hour (00–23) for the open/closed decision
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    weekday: "short",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(now);
+
+  const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
+  const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
+  const isSunday = weekday === "Sun";
+  const isOpen = !isSunday && hour >= 9 && hour < 17;
+
+  return { isOpen, timeLabel, dateLabel };
+}
+
+/**
+ * Time-aware EMERGENCY & AFTER-HOURS routing block.
+ * Rebuilt whenever the system-prompt cache refreshes (≤60s), so the
+ * open/closed status and the numbers the bot gives stay current.
+ */
+function buildRoutingSection(): string {
+  const { isOpen, timeLabel, dateLabel } = getOfficeStatus();
+
+  const openBranch = `• OFFICE IS OPEN RIGHT NOW: For any issue or urgent help, tell them to call the office at (615) 900-0166 — the team will help right away.`;
+
+  const closedBranch = `• OFFICE IS CLOSED RIGHT NOW (after hours):
+  – TRUE EMERGENCY (gas leak, fire, flooding, no heat in winter, electrical sparks, smoke, sewage, carbon monoxide):
+    → Tell them to CALL 911 IMMEDIATELY for their safety, then reassure them the team will follow up.
+  – ANYTHING ELSE (lockout / lost keys, repairs, general help):
+    → Our night security guard, Uresis, is on-site and can help — give this number: (629) 224-7283.
+    → They can also reach the after-hours office line: (615) 900-0166.`;
+
+  return `CURRENT TIME & OFFICE STATUS (Central Time):
+- Today is ${dateLabel}. Right now it is ${timeLabel} CST.
+- Office hours: Mon–Sat 9:00 AM–5:00 PM CST. Closed Sunday.
+- The office is RIGHT NOW: ${isOpen ? "OPEN" : "CLOSED (after hours)"}.
+Base your routing on THIS current status — never guess the time.
+
+EMERGENCY & AFTER-HOURS ROUTING — FOLLOW EXACTLY. Keep these replies SHORT (2–3 sentences), calm, and clear:
+${isOpen ? openBranch : closedBranch}
+
+For emergencies and after-hours help, ALWAYS use the numbers above — do not send them to the general leasing line for these. You may still offer to create a ticket so the team has a record.`;
+}
 
 // --- Cache for the built system prompt (60s TTL) ---
 let _promptCache: { prompt: string; settings: AISettings; timestamp: number } | null = null;
@@ -280,7 +348,7 @@ export async function getSystemPrompt(): Promise<{ prompt: string; settings: AIS
     knowledgeSection = FALLBACK_KNOWLEDGE;
   }
 
-  const prompt = [PERSONALITY_CORE, knowledgeSection, RESPONSE_RULES].join("\n\n");
+  const prompt = [PERSONALITY_CORE, knowledgeSection, buildRoutingSection(), RESPONSE_RULES].join("\n\n");
 
   // Cache it
   _promptCache = { prompt, settings, timestamp: Date.now() };
