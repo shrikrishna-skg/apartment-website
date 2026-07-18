@@ -86,6 +86,7 @@ export async function POST(req: NextRequest) {
           preferredTime: details.preferredTime,
           availability: details.availability,
           userName: details.userName,
+          email: details.email,
         },
       });
     }

@@ -110,6 +110,7 @@ When a tenant describes a maintenance issue or complaint:
 - Once you understand the issue well, say something like:
   "I'd like to get this to our maintenance team. Would you like me to create a ticket for this?"
 - Let THEM decide. Don't force it.
+- COLLECT TENANT INFO before creating a maintenance ticket so staff can identify who it's from: their name, unit / apartment number, and email. Ask naturally, 1–2 at a time (e.g., "Sure — can I get your name and unit number?" then "And the best email to reach you at?"). This matters most for maintenance/repairs — staff need to know which unit and resident. If they decline, still create the ticket but note what's missing.
 - If they mention a true emergency (flooding, gas leak, no heat in winter, fire, electrical sparks, sewage):
   Follow the EMERGENCY & AFTER-HOURS ROUTING rules — after hours tell them to call 911 right away; during office hours tell them to call the office at (615) 900-0166.
 
@@ -123,6 +124,7 @@ Only add [SUGGEST_TICKET] when ALL of these are true:
 - You've shown empathy and understanding first
 - The issue is specific enough to act on (if they say "things are broken" — ask WHAT specifically before suggesting)
 - You've asked them if they'd like a ticket created (e.g., "Want me to create a ticket for our team?")
+- For maintenance/repair issues, you've also asked for their name, unit number, and email so staff can identify them
 
 NEVER add [SUGGEST_TICKET] for:
 - General questions about apartments, pricing, tours, policies
@@ -157,7 +159,7 @@ By providing contact info for tour booking, users consent to receive communicati
  * Office hours: Mon–Sat 9:00 AM–5:00 PM CST. Closed all day Sunday.
  * Uses the America/Chicago zone so daylight saving is handled automatically.
  */
-function getOfficeStatus(): { isOpen: boolean; timeLabel: string; dateLabel: string } {
+function getOfficeStatus(): { isOpen: boolean; isGuardOnDuty: boolean; timeLabel: string; dateLabel: string } {
   const now = new Date();
 
   const timeLabel = new Intl.DateTimeFormat("en-US", {
@@ -187,8 +189,12 @@ function getOfficeStatus(): { isOpen: boolean; timeLabel: string; dateLabel: str
   const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10);
   const isSunday = weekday === "Sun";
   const isOpen = !isSunday && hour >= 9 && hour < 17;
+  // Night security guard Uresis is on duty 6 PM–6 AM (any day). Outside
+  // office hours but during the day (e.g., Sunday daytime, or the 6–9 AM
+  // gap before the office opens) he is NOT on duty.
+  const isGuardOnDuty = hour >= 18 || hour < 6;
 
-  return { isOpen, timeLabel, dateLabel };
+  return { isOpen, isGuardOnDuty, timeLabel, dateLabel };
 }
 
 /**
@@ -197,27 +203,43 @@ function getOfficeStatus(): { isOpen: boolean; timeLabel: string; dateLabel: str
  * open/closed status and the numbers the bot gives stay current.
  */
 function buildRoutingSection(): string {
-  const { isOpen, timeLabel, dateLabel } = getOfficeStatus();
+  const { isOpen, isGuardOnDuty, timeLabel, dateLabel } = getOfficeStatus();
 
-  const openBranch = `• OFFICE IS OPEN RIGHT NOW: For any issue or urgent help, tell them to call the office at (615) 900-0166 — the team will help right away.`;
+  let statusLine: string;
+  let branch: string;
 
-  const closedBranch = `• OFFICE IS CLOSED RIGHT NOW (after hours):
+  if (isOpen) {
+    statusLine = "OPEN";
+    branch = `• OFFICE IS OPEN RIGHT NOW: For any issue or urgent help, tell them to call our office at (615) 900-0166 — the team will help right away.`;
+  } else if (isGuardOnDuty) {
+    statusLine = "CLOSED — night security guard ON duty";
+    branch = `• OFFICE IS CLOSED (evening/overnight — our night security guard is on duty):
   – TRUE EMERGENCY (gas leak, fire, flooding, no heat in winter, electrical sparks, smoke, sewage, carbon monoxide):
     → Tell them to CALL 911 IMMEDIATELY for their safety, then reassure them the team will follow up.
   – ANYTHING ELSE (lockout / lost keys, repairs, general help):
-    → Our night security guard, Uresis, is on-site and can help — give this number: (629) 224-7283.
-    → They can also reach the after-hours office line: (615) 900-0166.`;
+    → Say it simply, like: "Our night security guard is on the premises and can help — call (629) 224-7283, or call our office at (615) 900-0166."
+    → Do NOT state the guard's shift hours — just say he's on the premises.`;
+  } else {
+    statusLine = "CLOSED — night security guard OFF duty (daytime)";
+    branch = `• OFFICE IS CLOSED (daytime — our night security guard is NOT on duty right now):
+  – TRUE EMERGENCY (gas leak, fire, flooding, no heat in winter, electrical sparks, smoke, sewage, carbon monoxide):
+    → Tell them to CALL 911 IMMEDIATELY for their safety, then reassure them the team will follow up.
+  – ANYTHING ELSE (lockout / lost keys, repairs, general help):
+    → Tell them to call our office at (615) 900-0166 — if no one answers, they can leave a message and the team will get right back to them.
+    → Do NOT give the security guard's number now — Uresis is only on-site in the evening/overnight.`;
+  }
 
   return `CURRENT TIME & OFFICE STATUS (Central Time):
 - Today is ${dateLabel}. Right now it is ${timeLabel} CST.
 - Office hours: Mon–Sat 9:00 AM–5:00 PM CST. Closed Sunday.
-- The office is RIGHT NOW: ${isOpen ? "OPEN" : "CLOSED (after hours)"}.
+- Night security guard Uresis is on-site in the evening/overnight only (never during the daytime).
+- Right now the office is: ${statusLine}.
 Base your routing on THIS current status — never guess the time.
 
-EMERGENCY & AFTER-HOURS ROUTING — FOLLOW EXACTLY. Keep these replies SHORT (2–3 sentences), calm, and clear:
-${isOpen ? openBranch : closedBranch}
+EMERGENCY & AFTER-HOURS ROUTING — FOLLOW EXACTLY. Keep replies SHORT (2–3 sentences), calm, and clear:
+${branch}
 
-For emergencies and after-hours help, ALWAYS use the numbers above — do not send them to the general leasing line for these. You may still offer to create a ticket so the team has a record.`;
+Only give the security guard's number when the status above says he is ON duty. For a true emergency use 911. Otherwise use our office number (615) 900-0166. Never tell the tenant the guard's shift hours — "our night security guard is on the premises" is enough. You may still offer to create a ticket so the team has a record.`;
 }
 
 // --- Cache for the built system prompt (60s TTL) ---

@@ -134,13 +134,22 @@ export function extractTicketDetails(messages: { role: string; content: string }
   availability: string | null;
   unitInfo: string | null;
   userName: string | null;
+  email: string | null;
   issue: string;
 } {
   const fullText = messages.map((m) => m.content).join(" ");
   const lower = fullText.toLowerCase();
 
+  // Tenant-provided facts (unit, email, name, availability) must come from the
+  // RESIDENT's own words — never scrape them from the assistant's replies, or
+  // the bot's own "help is available…" text ends up in the ticket.
+  const userMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
+  const userText = userMessages.join(" ");
+  const userLower = userText.toLowerCase();
+
   // Urgency detection — match on ACTUAL hazards, not the word "emergency" itself
   // (a resident asking "what's the emergency contact?" is NOT an emergency).
+  // Scans the whole conversation so image analysis can flag hazards too.
   let urgency: "emergency" | "high" | "normal" = "normal";
   if (/gas leak|smell(?:s|ing)? (?:of )?gas|\bfire\b|flood|flooding|flooded|no heat|no hot water|\bsmoke\b|sewage|electrical spark|sparking|carbon monoxide/i.test(lower)) {
     urgency = "emergency";
@@ -148,29 +157,43 @@ export function extractTicketDetails(messages: { role: string; content: string }
     urgency = "high";
   }
 
-  // Preferred contact time
+  // Preferred contact time — resident's own words only
   let preferredTime: string | null = null;
-  const timeMatch = lower.match(/(?:call|contact|reach|available|free|best time).{0,30}?(morning|afternoon|evening|after \d|before \d|\d{1,2}\s*(?:am|pm)|\d{1,2}:\d{2})/i);
+  const timeMatch = userLower.match(/(?:call|contact|reach|available|free|best time).{0,30}?(morning|afternoon|evening|after \d|before \d|\d{1,2}\s*(?:am|pm)|\d{1,2}:\d{2})/i);
   if (timeMatch) preferredTime = timeMatch[0].trim();
 
-  // Availability / holiday / leaving
+  // Availability / holiday / leaving — resident's own words only
   let availability: string | null = null;
-  const availMatch = fullText.match(/(?:leaving|gone|away|vacation|holiday|out of town|travel|not (?:home|here|around)|back on|return|available|spring break|winter break|summer).{0,80}/i);
+  const availMatch = userText.match(/(?:leaving|gone|away|vacation|holiday|out of town|travel|not (?:home|here|around)|back on|return|available|spring break|winter break|summer).{0,80}/i);
   if (availMatch) availability = availMatch[0].trim();
 
-  // Unit / apartment number
+  // Unit / apartment number — resident's own words only
   let unitInfo: string | null = null;
-  const unitMatch = fullText.match(/(?:unit|apt|apartment|room|#)\s*[A-Za-z]?\d{1,4}[A-Za-z]?/i);
-  if (unitMatch) unitInfo = unitMatch[0].trim();
+  const unitMatch = userText.match(/(?:unit|apt|apartment|room|#)\s*[A-Za-z]?\d{1,4}[A-Za-z]?/i);
+  if (unitMatch) {
+    unitInfo = unitMatch[0].trim();
+  } else {
+    // Fallback: a short standalone unit token the resident typed on its own when
+    // asked (e.g., "C308A", "305", "12B") — requires a letter+digits or 2–4 digits
+    // so single digits (bedroom counts, etc.) don't get misread as a unit.
+    const shortUnit = userMessages
+      .map((s) => s.trim())
+      .find((s) => /^#?(?:[A-Za-z]\d{1,4}[A-Za-z]?|\d{2,4}[A-Za-z]?)$/.test(s));
+    if (shortUnit) unitInfo = shortUnit.replace(/^#/, "").trim();
+  }
 
-  // Name extraction
+  // Email — resident's own words only
+  let email: string | null = null;
+  const emailMatch = userText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  if (emailMatch) email = emailMatch[0].trim();
+
+  // Name extraction — resident's own words only
   let userName: string | null = null;
-  const nameMatch = fullText.match(/(?:my name is|i'm|i am|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
+  const nameMatch = userText.match(/(?:my name is|i'm|i am|this is)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/);
   if (nameMatch) userName = nameMatch[1];
 
   // Extract the core issue from user messages only
-  const userMessages = messages.filter((m) => m.role === "user").map((m) => m.content);
   const issue = userMessages.slice(-3).join(" | ").slice(0, 300);
 
-  return { urgency, preferredTime, availability, unitInfo, userName, issue };
+  return { urgency, preferredTime, availability, unitInfo, userName, email, issue };
 }

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const now = new Date().toISOString();
 
     const userName = userInfo?.name || ticketPreview.userName || "Website Visitor";
-    const userEmail = userInfo?.email || "Not provided";
+    const userEmail = userInfo?.email || ticketPreview.email || "Not provided";
     const urgency = ticketPreview.urgency || "normal";
     const unitInfo = ticketPreview.unitInfo || null;
     const preferredTime = userInfo?.preferredTime || ticketPreview.preferredTime || null;

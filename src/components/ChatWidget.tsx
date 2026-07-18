@@ -33,6 +33,7 @@ interface TicketPreview {
   preferredTime?: string | null;
   availability?: string | null;
   userName?: string | null;
+  email?: string | null;
   imageDescription?: string | null;
 }
 
