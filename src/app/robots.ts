@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { SITE } from "@/data/site-data";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -24,7 +25,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/", "/staff/", "/website-app/"],
       },
     ],
-    sitemap: "https://www.collegeplace.us/sitemap.xml",
-    host: "https://www.collegeplace.us",
+    sitemap: `${SITE.url}/sitemap.xml`,
+    host: SITE.url,
   };
 }

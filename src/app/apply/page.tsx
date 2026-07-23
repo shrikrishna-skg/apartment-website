@@ -107,7 +107,7 @@ export default function ApplyPage() {
           >
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               <span className="text-gradient">
-                Let&apos;s Get Started With Your Application
+                Apply for an Apartment
               </span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">

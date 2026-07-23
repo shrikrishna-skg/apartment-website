@@ -49,7 +49,7 @@ export default async function Layout({ params, children }: Props) {
     author: {
       "@type": "Organization",
       name: "College Place Apartments",
-      url: "https://www.collegeplace.us",
+      url: SITE.url,
     },
     publisher: {
       "@type": "Organization",
@@ -61,7 +61,7 @@ export default async function Layout({ params, children }: Props) {
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://www.collegeplace.us/blog/${slug}`,
+      "@id": `${SITE.url}/blog/${slug}`,
     },
   };
 
@@ -73,19 +73,19 @@ export default async function Layout({ params, children }: Props) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://www.collegeplace.us",
+        item: SITE.url,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Student Life Hub",
-        item: "https://www.collegeplace.us/blog",
+        item: `${SITE.url}/blog`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: post.title,
-        item: `https://www.collegeplace.us/blog/${slug}`,
+        item: `${SITE.url}/blog/${slug}`,
       },
     ],
   };

@@ -1,32 +1,32 @@
 import type { MetadataRoute } from "next";
-import { PROPERTIES, BLOG_POSTS } from "@/data/site-data";
+import { PROPERTIES, BLOG_POSTS, SITE } from "@/data/site-data";
 
-const SITE_URL = "https://www.collegeplace.us";
+const SITE_URL = SITE.url;
 
 export default function sitemap(): MetadataRoute.Sitemap {
   // ─── High-Priority Pages (conversion-focused) ───
   const highPriority: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "weekly",
       priority: 1.0,
     },
     {
       url: `${SITE_URL}/properties`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "weekly",
       priority: 0.95,
     },
     {
       url: `${SITE_URL}/schedule-tour`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
       priority: 0.9,
     },
     {
       url: `${SITE_URL}/apply`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
       priority: 0.9,
     },
@@ -44,19 +44,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${SITE_URL}/virtual-tour`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
       priority: 0.85,
     },
     {
       url: `${SITE_URL}/lease-inquiry`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
       priority: 0.85,
     },
     {
       url: `${SITE_URL}/contact`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
       priority: 0.8,
     },
@@ -78,7 +78,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${SITE_URL}/testimonials`,
-      lastModified: new Date("2026-03-27"),
+      lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
       priority: 0.7,
     },

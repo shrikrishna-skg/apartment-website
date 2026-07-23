@@ -3,6 +3,7 @@
 export const SITE = {
   name: "College Place",
   tagline: "Apartments",
+  url: "https://collegeplace.us",
   logo: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/9eae94968_CollegeplaceIcon.png",
   heroImage: "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/e3b13b689_BestNearMTSUCampusApartmentsStartingfrom600StudiosOnebedroom24Bedrooms600.png",
   description:
@@ -1038,11 +1039,10 @@ export const NEARBY_PLACES = [
 ];
 
 export const NAV_LINKS = [
-  { label: "Home", href: "/" },
-  { label: "Floor Plans", href: "/properties" },
-  { label: "3D Tour", href: "/virtual-tour" },
-  { label: "Schedule Tour", href: "/schedule-tour" },
-  { label: "Contact", href: "/contact" },
+  { label: "Floor Plans & Pricing", href: "/properties" },
+  { label: "3D Virtual Tours", href: "/virtual-tour" },
+  { label: "Schedule a Tour", href: "/schedule-tour" },
+  { label: "Contact & Leasing Office", href: "/contact" },
   { label: "Apply Now", href: "/apply" },
 ];
 
@@ -1053,12 +1053,11 @@ export const TENANT_LINKS = [
 
 export const FOOTER_LINKS = {
   quickLinks: [
-    { label: "Schedule Tour", href: "/schedule-tour" },
-    { label: "Lease Inquiry", href: "/lease-inquiry" },
-    { label: "Student Life Hub", href: "/blog" },
-    { label: "FAQ", href: "/faq" },
-    { label: "Location Guide", href: "/location-guide" },
-    { label: "Move-In Guide", href: "/move-in-guide" },
+    { label: "Floor Plans & Pricing", href: "/properties" },
+    { label: "Schedule a Tour", href: "/schedule-tour" },
+    { label: "Apply Now", href: "/apply" },
+    { label: "3D Virtual Tours", href: "/virtual-tour" },
+    { label: "Contact & Leasing Office", href: "/contact" },
     { label: "Student Reviews", href: "/testimonials" },
   ],
   tenant: [

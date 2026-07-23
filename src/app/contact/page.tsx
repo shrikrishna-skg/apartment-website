@@ -140,7 +140,7 @@ export default function ContactPage() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
-              <span className="text-gradient">Get In Touch</span>
+              <span className="text-gradient">Contact &amp; Leasing Office</span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Have a question or need assistance? We&apos;re here to help. Send

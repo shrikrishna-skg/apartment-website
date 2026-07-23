@@ -23,13 +23,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://www.collegeplace.us",
+        item: SITE.url,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Location Guide",
-        item: "https://www.collegeplace.us/location-guide",
+        item: `${SITE.url}/location-guide`,
       },
     ],
   };

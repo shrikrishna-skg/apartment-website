@@ -50,7 +50,7 @@ export default function TestimonialsPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="mt-6 text-4xl font-bold md:text-5xl"
           >
-            <span className="text-gradient">Student Testimonials</span>
+            <span className="text-gradient">Student Reviews</span>
           </motion.h1>
 
           <motion.p

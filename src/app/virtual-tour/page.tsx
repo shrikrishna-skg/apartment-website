@@ -77,7 +77,7 @@ export default function VirtualTourPage() {
             className="text-center mb-12"
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-5">
-              <span className="text-gradient">3D Virtual Tour</span>
+              <span className="text-gradient">3D Virtual Tours</span>
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Walk through our apartments virtually. Explore every room, check

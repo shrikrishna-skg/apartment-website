@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { TESTIMONIALS, SITE } from "@/data/site-data";
 
 export const metadata: Metadata = {
-  title: "Resident Reviews | What MTSU Students Say About College Place",
+  title: "Student Reviews",
   description:
     "Read real reviews from MTSU students living at College Place Apartments in Murfreesboro, TN. See why students choose our pet-friendly, affordable apartments near campus.",
   alternates: { canonical: "/testimonials" },
   openGraph: {
-    title: "Resident Reviews | MTSU Student Housing Reviews",
+    title: "Student Reviews",
     description:
       "Real reviews from MTSU students at College Place Apartments. See why students love living near campus in Murfreesboro, TN.",
     url: "/testimonials",
@@ -22,7 +22,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     "@context": "https://schema.org",
     "@type": "ApartmentComplex",
     name: "College Place Apartments",
-    url: "https://www.collegeplace.us",
+    url: SITE.url,
     image: SITE.logo,
     address: {
       "@type": "PostalAddress",
@@ -61,13 +61,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://www.collegeplace.us",
+        item: SITE.url,
       },
       {
         "@type": "ListItem",
         position: 2,
-        name: "Resident Reviews",
-        item: "https://www.collegeplace.us/testimonials",
+        name: "Student Reviews",
+        item: `${SITE.url}/testimonials`,
       },
     ],
   };

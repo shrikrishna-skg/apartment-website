@@ -51,7 +51,7 @@ export default async function Layout({ params, children }: Props) {
     "@type": "ApartmentComplex",
     name: property.name,
     description: property.description,
-    url: `https://www.collegeplace.us/properties/${slug}`,
+    url: `${SITE.url}/properties/${slug}`,
     image: property.image,
     address: {
       "@type": "PostalAddress",
@@ -92,19 +92,19 @@ export default async function Layout({ params, children }: Props) {
         "@type": "ListItem",
         position: 1,
         name: "Home",
-        item: "https://www.collegeplace.us",
+        item: SITE.url,
       },
       {
         "@type": "ListItem",
         position: 2,
         name: "Floor Plans",
-        item: "https://www.collegeplace.us/properties",
+        item: `${SITE.url}/properties`,
       },
       {
         "@type": "ListItem",
         position: 3,
         name: property.name,
-        item: `https://www.collegeplace.us/properties/${slug}`,
+        item: `${SITE.url}/properties/${slug}`,
       },
     ],
   };

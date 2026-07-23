@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE } from "@/data/site-data";
 
 export const metadata: Metadata = {
   title: "Student Life Hub | MTSU Off-Campus Living Tips & Guides",
@@ -18,8 +19,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.collegeplace.us" },
-      { "@type": "ListItem", position: 2, name: "Student Life Hub", item: "https://www.collegeplace.us/blog" },
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE.url },
+      { "@type": "ListItem", position: 2, name: "Student Life Hub", item: `${SITE.url}/blog` },
     ],
   };
 
@@ -28,11 +29,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     "@type": "Blog",
     name: "Student Life Hub",
     description: "Tips, guides, and local insights for MTSU students living off campus in Murfreesboro, TN.",
-    url: "https://www.collegeplace.us/blog",
+    url: `${SITE.url}/blog`,
     publisher: {
       "@type": "Organization",
       name: "College Place Apartments",
-      url: "https://www.collegeplace.us",
+      url: SITE.url,
     },
   };
 

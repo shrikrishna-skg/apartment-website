@@ -159,8 +159,7 @@ export default function PropertiesPage() {
           transition={{ duration: 0.6 }}
         >
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
-            MTSU Off-Campus Housing &{" "}
-            <span className="text-gradient">Floor Plans</span>
+            <span className="text-gradient">Floor Plans &amp; Pricing Near MTSU</span>
           </h1>
           <p className="mt-4 max-w-2xl text-gray-600">
             Browse our available apartments near Middle Tennessee State

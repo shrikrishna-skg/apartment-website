@@ -9,9 +9,13 @@ import type { Property } from "@/data/site-data";
 
 interface PropertyCardProps {
   property: Property;
+  showPrice?: boolean;
 }
 
-export default function PropertyCard({ property }: PropertyCardProps) {
+export default function PropertyCard({
+  property,
+  showPrice = true,
+}: PropertyCardProps) {
   const router = useRouter();
 
   return (
@@ -78,7 +82,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
             letterSpacing: "0.01em",
           }}
         >
-          Starting at ${property.startingPrice}/mo
+          {showPrice
+            ? `Starting at $${property.startingPrice}/mo`
+            : "Contact for current pricing"}
         </span>
 
         {/* Popular Badge - top left */}

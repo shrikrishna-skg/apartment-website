@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SITE } from "@/data/site-data";
 
 export const metadata: Metadata = {
   title: "Move-In Guide | Everything You Need for Moving to MTSU Apartments",
@@ -18,8 +19,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.collegeplace.us" },
-      { "@type": "ListItem", position: 2, name: "Move-In Guide", item: "https://www.collegeplace.us/move-in-guide" },
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE.url },
+      { "@type": "ListItem", position: 2, name: "Move-In Guide", item: `${SITE.url}/move-in-guide` },
     ],
   };
 

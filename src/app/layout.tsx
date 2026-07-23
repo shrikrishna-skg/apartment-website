@@ -17,16 +17,16 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-const SITE_URL = "https://www.collegeplace.us";
+const SITE_URL = SITE.url;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "College Place Apartments | Student Housing Near MTSU in Murfreesboro, TN",
+    default: "College Place Apartments | Student Housing Near MTSU",
     template: "%s | College Place Apartments",
   },
   description:
-    "Affordable student apartments near MTSU starting at $500/mo. Studios, 1, 2 & 4 bedroom floor plans with individual leasing, pet-friendly units, and free parking in Murfreesboro, TN.",
+    "Explore College Place student apartments near MTSU in Murfreesboro, with studio, one-, two-, and four-bedroom layouts, individual leasing, pet-friendly options, and free parking. Contact the leasing office for current pricing and availability.",
   keywords: [
     "apartments near MTSU",
     "student housing Murfreesboro TN",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     siteName: "College Place Apartments",
     title: "College Place Apartments | Student Housing Near MTSU",
     description:
-      "Affordable student apartments near MTSU starting at $500/mo. Studios, 1, 2 & 4 bedroom floor plans with individual leasing in Murfreesboro, TN.",
+      "Explore student apartments near MTSU with flexible individual leasing, pet-friendly options, and free parking. Contact the leasing office for current pricing and availability.",
     images: [
       {
         url: SITE.logo,
@@ -78,7 +78,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "College Place Apartments | Student Housing Near MTSU",
     description:
-      "Affordable student apartments near MTSU starting at $500/mo. Individual leasing, pet-friendly, free parking.",
+      "Student apartments near MTSU with individual leasing, pet-friendly options, and free parking. Contact leasing for current pricing and availability.",
     images: [SITE.logo],
   },
   robots: {
@@ -126,7 +126,7 @@ export default async function RootLayout({
     "@context": "https://schema.org",
     "@type": "ApartmentComplex",
     name: "College Place Apartments",
-    description: "Affordable student apartments near MTSU in Murfreesboro, TN. Studios, 1, 2 & 4 bedroom floor plans with individual leasing starting at $500/month.",
+    description: "Student apartments near MTSU in Murfreesboro, TN, with studio, one-, two-, and four-bedroom floor plans and individual leasing. Contact the leasing office for current pricing and availability.",
     url: SITE_URL,
     logo: SITE.logo,
     image: SITE.logo,
@@ -154,7 +154,6 @@ export default async function RootLayout({
       },
     ],
     sameAs: [SITE.social.instagram, SITE.social.facebook],
-    priceRange: "$500 - $900",
     amenityFeature: [
       { "@type": "LocationFeatureSpecification", name: "Pet-Friendly", value: true },
       { "@type": "LocationFeatureSpecification", name: "Free Parking", value: true },
@@ -203,14 +202,6 @@ export default async function RootLayout({
       "@type": "Organization",
       name: "College Place Apartments",
       logo: { "@type": "ImageObject", url: SITE.logo },
-    },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE_URL}/properties?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
     },
   };
 

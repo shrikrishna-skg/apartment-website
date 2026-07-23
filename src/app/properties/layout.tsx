@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
-import { PROPERTIES } from "@/data/site-data";
+import { PROPERTIES, SITE } from "@/data/site-data";
 
 export const metadata: Metadata = {
-  title: "Floor Plans & Pricing | Apartments Near MTSU from $500/mo",
+  title: "Floor Plans & Pricing Near MTSU",
   description:
-    "Browse studio, 1, 2 & 4 bedroom apartment floor plans near MTSU in Murfreesboro, TN. Starting at $500/month with individual leasing, pet-friendly units, free parking, and on-site laundry. Compare layouts and photos.",
+    "Compare studio, one-, two-, and four-bedroom floor plans near MTSU with individual leasing, pet-friendly options, free parking, and on-site laundry. Contact leasing for current pricing and availability.",
   alternates: { canonical: "/properties" },
   openGraph: {
-    title: "Floor Plans & Pricing | Student Apartments Near MTSU",
+    title: "Floor Plans & Pricing Near MTSU",
     description:
-      "Studio, 1, 2 & 4 bedroom apartments near MTSU from $500/mo. Individual leasing, pet-friendly, free parking in Murfreesboro, TN.",
+      "Compare student apartment layouts near MTSU and contact leasing for current pricing and availability.",
     url: "/properties",
   },
 };
@@ -19,8 +19,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://www.collegeplace.us" },
-      { "@type": "ListItem", position: 2, name: "Floor Plans & Pricing", item: "https://www.collegeplace.us/properties" },
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE.url },
+      { "@type": "ListItem", position: 2, name: "Floor Plans & Pricing", item: `${SITE.url}/properties` },
     ],
   };
 
@@ -34,7 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       "@type": "ListItem",
       position: i + 1,
       name: p.name,
-      url: `https://www.collegeplace.us/properties/${p.slug}`,
+      url: `${SITE.url}/properties/${p.slug}`,
       image: p.image,
     })),
   };

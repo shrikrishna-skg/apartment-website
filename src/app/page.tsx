@@ -27,7 +27,11 @@ import {
   BookOpen,
   CheckCircle,
 } from "lucide-react";
-import { SITE, PROPERTIES, type Property } from "@/data/site-data";
+import {
+  SITE,
+  PROPERTIES,
+  FOOTER_LINKS,
+} from "@/data/site-data";
 import PropertyCard from "@/components/PropertyCard";
 const PropertyMap = dynamic(() => import("@/components/PropertyMap"), { ssr: false });
 
@@ -119,7 +123,7 @@ export default function HomePage() {
 
               {/* Description */}
               <p className="mt-6 text-gray-600 text-lg leading-relaxed" style={{ maxWidth: "28rem" }}>
-                Modern apartments with top-notch facilities, prime location by campus, and individual leasing starting from $600/mo.
+                Modern student apartments near MTSU with flexible individual leasing. Contact our leasing office for current pricing and availability.
               </p>
 
               {/* Availability disclaimer */}
@@ -225,9 +229,16 @@ export default function HomePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.8, ease: EASE }}
               >
-                <p className="text-xs text-gray-500 font-medium">Starting from</p>
-                <p className="text-2xl font-bold text-gray-900">$600<span className="text-sm font-medium text-gray-500">/mo</span></p>
-                <p className="text-xs text-[#1a73e8] font-medium mt-1">Per bedroom</p>
+                <p className="text-xs text-gray-500 font-medium">
+                  Pricing &amp; Availability
+                </p>
+                <Link
+                  href="/lease-inquiry"
+                  className="mt-1 inline-flex items-center gap-1 text-base font-bold text-[#1a73e8] hover:text-[#1557b0]"
+                >
+                  Contact Leasing
+                  <ArrowRight size={15} />
+                </Link>
               </motion.div>
             </motion.div>
 
@@ -249,6 +260,36 @@ export default function HomePage() {
               />
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* ━━━━━━━━━━━ LEASING SHORTCUTS ━━━━━━━━━━━ */}
+      <section
+        aria-labelledby="leasing-shortcuts-heading"
+        className="border-y border-gray-200 bg-white px-4 py-8 sm:px-6"
+      >
+        <div className="mx-auto max-w-6xl">
+          <h2
+            id="leasing-shortcuts-heading"
+            className="text-center text-lg font-bold text-gray-900"
+          >
+            Leasing Shortcuts
+          </h2>
+          <nav
+            aria-label="Leasing shortcuts"
+            className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+          >
+            {FOOTER_LINKS.quickLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex items-center justify-between rounded-xl border border-gray-200 bg-[#f8fafe] px-4 py-3 text-sm font-semibold text-gray-800 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+              >
+                {link.label}
+                <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            ))}
+          </nav>
         </div>
       </section>
 
@@ -624,7 +665,7 @@ export default function HomePage() {
           >
             {PROPERTIES.map((property) => (
               <motion.div key={property.id} variants={fadeUp}>
-                <PropertyCard property={property} />
+                <PropertyCard property={property} showPrice={false} />
               </motion.div>
             ))}
           </motion.div>
