@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendOTPEmail } from "@/lib/email";
+import { sendOTPEmail, isEmailConfigured } from "@/lib/email";
 import crypto from "crypto";
 
 // In-memory OTP store (works for single-instance Vercel deployments)
@@ -39,11 +39,25 @@ export async function POST(request: NextRequest) {
     });
     rateLimitStore.set(username, now);
 
-    // Send email
+    // Send email — distinguish "not configured" from "send failed" so the
+    // cause is obvious in the logs instead of one generic message.
+    if (!isEmailConfigured()) {
+      console.error(
+        "[send-otp] SMTP is NOT configured — set SMTP_USER and SMTP_PASS (Gmail App Password) in the environment."
+      );
+      return NextResponse.json(
+        { error: "Email service isn't configured. Please contact the administrator." },
+        { status: 500 }
+      );
+    }
+
     const sent = await sendOTPEmail(code);
     if (!sent) {
+      console.error(
+        "[send-otp] SMTP is configured but the send FAILED — the Gmail App Password in SMTP_PASS is likely revoked or invalid (a Google account password change revokes App Passwords). Generate a new App Password and update SMTP_PASS, then redeploy."
+      );
       return NextResponse.json(
-        { error: "Failed to send verification code. Please try again." },
+        { error: "Couldn't send the verification code right now. Please try again or contact the administrator." },
         { status: 500 }
       );
     }

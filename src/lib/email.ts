@@ -2,6 +2,15 @@ import nodemailer from "nodemailer";
 import { BLOG_POSTS, type BlogPost } from "@/data/site-data";
 
 // Email: collegeplacecpl@gmail.com via Gmail SMTP
+/** True when SMTP credentials are present. Lets callers tell "not configured"
+ *  apart from "configured but the send failed" (e.g. a revoked App Password). */
+export function isEmailConfigured(): boolean {
+  return Boolean(
+    (process.env.SMTP_USER || process.env.GMAIL_USER) &&
+      (process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD)
+  );
+}
+
 function getTransporter() {
   const user = process.env.SMTP_USER || process.env.GMAIL_USER;
   const pass = process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD;
