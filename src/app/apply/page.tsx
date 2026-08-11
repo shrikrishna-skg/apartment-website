@@ -115,6 +115,27 @@ export default function ApplyPage() {
               application process. Each path is tailored to gather the right
               information for a smooth experience.
             </p>
+            <p className="mt-8 max-w-2xl mx-auto text-xs text-gray-500 italic leading-relaxed text-pretty">
+              <span className="font-semibold">Please note:</span> Apartments are
+              offered on a first-come, first-served basis, availability can
+              change quickly. To make sure your preferred unit is still
+              available, we recommend checking with us before submitting your
+              application at{" "}
+              <a
+                href="mailto:office@collegeplace.us"
+                className="font-medium text-gray-700 underline underline-offset-2 hover:text-gray-900"
+              >
+                office@collegeplace.us
+              </a>{" "}
+              or{" "}
+              <a
+                href="tel:+16159000166"
+                className="font-medium text-gray-700 underline underline-offset-2 hover:text-gray-900"
+              >
+                (615) 900-0166
+              </a>
+              . We&apos;re always happy to assist!
+            </p>
           </motion.div>
 
           {/* Applicant Type Cards */}
