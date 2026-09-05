@@ -31,18 +31,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/apply/student`,
-      lastModified: new Date("2026-03-27"),
-      changeFrequency: "monthly",
-      priority: 0.85,
-    },
-    {
-      url: `${SITE_URL}/apply/general`,
-      lastModified: new Date("2026-03-27"),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
       url: `${SITE_URL}/virtual-tour`,
       lastModified: new Date("2026-07-23"),
       changeFrequency: "monthly",
@@ -121,27 +109,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     };
   });
 
-  // ─── Legal Pages (low priority) ───
-  const legalPages: MetadataRoute.Sitemap = [
-    {
-      url: `${SITE_URL}/privacy-policy`,
-      lastModified: new Date("2026-01-01"),
-      changeFrequency: "yearly",
-      priority: 0.2,
-    },
-    {
-      url: `${SITE_URL}/terms`,
-      lastModified: new Date("2026-01-01"),
-      changeFrequency: "yearly",
-      priority: 0.2,
-    },
-  ];
-
+  // Application variants canonicalize to /apply; legal pages are noindex.
   return [
     ...highPriority,
     ...propertyPages,
     ...contentPages,
     ...blogPages,
-    ...legalPages,
   ];
 }
